@@ -4,9 +4,12 @@
 
 #include "random.h"
 
+
+void init_random() {
+    srand((unsigned int) time(NULL));
+}
+
 float random_float(float min, float max) {
-    unsigned int seed = (unsigned int)time(NULL);
-    srand(seed);
     return rand() / (float)RAND_MAX  *  (max - min) + min;
 }
 

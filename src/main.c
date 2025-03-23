@@ -9,6 +9,8 @@ void fork_players(Team team, int num_players);
 
 int main() {
 
+    init_random();
+
     int id = fork();
 
     if (id == 0) {
@@ -35,7 +37,7 @@ void fork_players(Team team, int num_players) {
 
     Player players[num_players];
     for (int i = 0; i < num_players; i++) {
-        pid_t pid = fork();
+        const pid_t pid = fork();
 
         if (pid == -1) {
             perror("fork");
@@ -46,6 +48,7 @@ void fork_players(Team team, int num_players) {
             char buffer[100];
 
             generate_random_player(&players[i], &config, team, i);
+            print_player(&players[i]);
             serialize_player(&players[i], buffer);
             if (execl("./bin/player", "player", buffer, NULL)) {
                 perror("execl");
