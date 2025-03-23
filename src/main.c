@@ -1,11 +1,15 @@
 #include "common.h"
 #include "config.h"
 #include "random.h"
-#include "player.h"
+#include "player_utils.h"
 
 Config config;
 
+void fork_players(Team team, int num_players);
+
 int main() {
+
+    init_random();
 
     int id = fork();
 
@@ -33,7 +37,7 @@ void fork_players(Team team, int num_players) {
 
     Player players[num_players];
     for (int i = 0; i < num_players; i++) {
-        pid_t pid = fork();
+        const pid_t pid = fork();
 
         if (pid == -1) {
             perror("fork");
@@ -42,7 +46,10 @@ void fork_players(Team team, int num_players) {
         else if (pid == 0) {
 
             char buffer[100];
-            config_to_string(&config, buffer);
+
+            generate_random_player(&players[i], &config, team, i);
+            print_player(&players[i]);
+            serialize_player(&players[i], buffer);
             if (execl("./bin/player", "player", buffer, NULL)) {
                 perror("execl");
             }
@@ -54,6 +61,5 @@ void fork_players(Team team, int num_players) {
     }
 
 }
-
 
 
