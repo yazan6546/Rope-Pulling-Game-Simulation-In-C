@@ -3,7 +3,8 @@ project(Rope_Pulling_Game_Simulation_In_C C)
 
 set(CMAKE_C_STANDARD 11)
 
-add_executable(Rope_Pulling_Game_Simulation_In_C src/main.c src/utils/config.c)
+add_executable(Rope_Pulling_Game_Simulation_In_C src/main.c src/utils/config.c
+src/utils/random.c)
 
 
 set_target_properties(Rope_Pulling_Game_Simulation_In_C
