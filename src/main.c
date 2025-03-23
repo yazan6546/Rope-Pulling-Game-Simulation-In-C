@@ -20,10 +20,15 @@ int main() {
 
     print_config(&config);
 
-    fork_players(TEAM_A, config.NUM_PLAYERS);
-    fork_players(TEAM_B, config.NUM_PLAYERS);
+    fork_players(TEAM_A, config.NUM_PLAYERS/2);
 
-    while (1) {}
+    wait(NULL);
+
+    fork_players(TEAM_B, config.NUM_PLAYERS/2);
+
+    wait(NULL);
+
+    // while (1) {}
 }
 
 void fork_players(Team team, int num_players) {
@@ -34,12 +39,16 @@ void fork_players(Team team, int num_players) {
             perror("fork");
         }
 
-        if (pid == 0) {
+        else if (pid == 0) {
+            printf("ok\n\n");
             char buffer[100];
             config_to_string(&config, buffer);
-            execl("player", "player", buffer, team, NULL);
+            if (execl("./player", "player", buffer, team, NULL)) {
+                perror("execl");
+            }
         }
         else {
+            printf("Parent process\n");
         }
     }
 
