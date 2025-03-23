@@ -24,5 +24,4 @@ typedef struct {
 
 int load_config(const char *filename, Config *config);
 void print_config(Config *config);
-void config_to_string(const Config *config, char *buffer);
 #endif // CONFIG_H
