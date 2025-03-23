@@ -21,9 +21,6 @@ int main() {
     print_config(&config);
 
     fork_players(TEAM_A, config.NUM_PLAYERS/2);
-
-    wait(NULL);
-
     fork_players(TEAM_B, config.NUM_PLAYERS/2);
 
     wait(NULL);
@@ -32,6 +29,8 @@ int main() {
 }
 
 void fork_players(Team team, int num_players) {
+
+    Player players[num_players];
     for (int i = 0; i < num_players; i++) {
         pid_t pid = fork();
 
@@ -40,7 +39,7 @@ void fork_players(Team team, int num_players) {
         }
 
         else if (pid == 0) {
-            printf("ok\n\n");
+
             char buffer[100];
             config_to_string(&config, buffer);
             if (execl("./player", "player", buffer, NULL)) {

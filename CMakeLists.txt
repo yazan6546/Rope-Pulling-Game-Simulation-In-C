@@ -26,3 +26,4 @@ add_custom_target(
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
 )
 include_directories(include)
+add_executable(test test.c src/utils/config.c src/utils/random.c)
