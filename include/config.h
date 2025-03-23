@@ -19,6 +19,7 @@ typedef struct {
     float MAX_RECOVERY_TIME;
     float WINNING_THRESHOLD;
     int NUM_PLAYERS;
+    float UPDATE_RATE;
 } Config;
 
 int load_config(const char *filename, Config *config);

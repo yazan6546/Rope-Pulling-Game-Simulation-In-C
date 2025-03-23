@@ -6,6 +6,7 @@ set(CMAKE_C_STANDARD 11)
 add_executable(Rope_Pulling_Game_Simulation_In_C src/main.c src/utils/config.c
 src/utils/random.c)
 
+
 add_executable(player src/player.c)
 
 
@@ -25,5 +26,6 @@ add_custom_target(
     DEPENDS Rope_Pulling_Game_Simulation_In_C
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
 )
+
 include_directories(include)
 add_executable(test test.c src/utils/config.c src/utils/random.c)
