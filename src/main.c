@@ -1,5 +1,6 @@
 #include "common.h"
 #include "config.h"
+#include "random.h"
 
 int main() {
 
@@ -16,4 +17,7 @@ int main() {
     load_config("../config.txt", &config);
 
     print_config(&config);
+
+    int x = random_float(10, 20);
+    printf("Random float: %f\n", x);
 }
