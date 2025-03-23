@@ -1,0 +1,11 @@
+# Configurations
+
+## Game settings
+
+MAX_SCORE=100    # Maximum score to end the game
+MAX_TIME=100    # Maximum time for the game (sec)
+MIN_ENERGY=30
+MAX_ENERGY=100
+NUM_ROUNDS = 10
+MIN_RATE_DECAY = 0.1
+MAX_RATE_DECAY = 0.5
