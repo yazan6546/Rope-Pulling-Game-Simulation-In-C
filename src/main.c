@@ -1,6 +1,9 @@
 #include "common.h"
 #include "config.h"
 #include "random.h"
+#include "player.h"
+
+Config config;
 
 int main() {
 
@@ -13,11 +16,44 @@ int main() {
         wait(NULL);
         printf("Parent process\n");
     }
-    Config config;
     load_config("../config.txt", &config);
 
     print_config(&config);
 
-    int x = random_float(10, 20);
-    printf("Random float: %f\n", x);
+    fork_players(TEAM_A, config.NUM_PLAYERS/2);
+
+    wait(NULL);
+
+    fork_players(TEAM_B, config.NUM_PLAYERS/2);
+
+    wait(NULL);
+
+    // while (1) {}
 }
+
+void fork_players(Team team, int num_players) {
+    for (int i = 0; i < num_players; i++) {
+        pid_t pid = fork();
+
+        if (pid == -1) {
+            perror("fork");
+        }
+
+        else if (pid == 0) {
+            printf("ok\n\n");
+            char buffer[100];
+            config_to_string(&config, buffer);
+            if (execl("./player", "player", buffer, NULL)) {
+                perror("execl");
+            }
+        }
+        else {
+            printf("Parent process\n");
+            fflush(stdout);
+        }
+    }
+
+}
+
+
+
