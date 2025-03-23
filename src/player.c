@@ -12,6 +12,8 @@ int main(int argc, char *argv[]) {
     Config config;
     deserialize_player(&config, argv[1]);
 
+    fflush(stdout);
+
     return 0;
 }
 

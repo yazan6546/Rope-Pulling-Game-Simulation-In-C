@@ -43,13 +43,17 @@ void fork_players(Team team, int num_players) {
             printf("ok\n\n");
             char buffer[100];
             config_to_string(&config, buffer);
-            if (execl("./player", "player", buffer, team, NULL)) {
+            if (execl("./player", "player", buffer, NULL)) {
                 perror("execl");
             }
         }
         else {
             printf("Parent process\n");
+            fflush(stdout);
         }
     }
 
 }
+
+
+
