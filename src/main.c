@@ -13,7 +13,7 @@ int main() {
         printf("Parent process\n");
     }
     Config config;
-    load_config("config.txt", &config);
+    load_config("../config.txt", &config);
 
     print_config(&config);
 }

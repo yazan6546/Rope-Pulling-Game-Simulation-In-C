@@ -17,6 +17,9 @@ int load_config(const char *filename, Config *config) {
     config->NUM_ROUNDS = -1;
     config->MIN_RATE_DECAY = -1;
     config->MAX_RATE_DECAY = -1;
+    config->MIN_RECOVERY_TIME = -1;
+    config->MAX_RECOVERY_TIME = -1;
+    config->WINNING_THRESHOLD = -1;
 
     // Buffer to hold each line from the configuration file
     char line[256];
@@ -27,8 +30,8 @@ int load_config(const char *filename, Config *config) {
 
         // Parse each line as a key-value pair
         char key[50];
-        int value;
-        if (sscanf(line, "%40[^=]=%d", key, &value) == 2) {
+        float value;
+        if (sscanf(line, "%40[^=]=%f", key, &value) == 2) {
 
             printf("key = %s\n", key);
             // Set corresponding config fields based on the key
@@ -39,6 +42,9 @@ int load_config(const char *filename, Config *config) {
             else if (strcmp(key, "NUM_ROUNDS") == 0) config->NUM_ROUNDS = value;
             else if (strcmp(key, "MIN_RATE_DECAY") == 0) config->MIN_RATE_DECAY = value;
             else if (strcmp(key, "MAX_RATE_DECAY") == 0) config->MAX_RATE_DECAY = value;
+            else if (strcmp(key, "MIN_RECOVERY_TIME") == 0) config->MIN_RECOVERY_TIME = value;
+            else if (strcmp(key, "MAX_RECOVERY_TIME") == 0) config->MAX_RECOVERY_TIME = value;
+            else if (strcmp(key, "WINNING_THRESHOLD") == 0) config->WINNING_THRESHOLD = value;
         }
     }
 
@@ -63,7 +69,8 @@ fflush(stdout);
 #endif
 
     // Check that all necessary configuration values have been set
-    if (config->MIN_ENERGY == -1 || config->MAX_ENERGY == -1 || config->MAX_SCORE == -1 || config->MAX_TIME == -1 || config->NUM_ROUNDS == -1 || config->MIN_RATE_DECAY == -1 || config->MAX_RATE_DECAY == -1) {
+    if (config->MIN_ENERGY == -1 || config->MAX_ENERGY == -1 || config->MAX_SCORE == -1 || config->MAX_TIME == -1 || config->NUM_ROUNDS == -1 || config->MIN_RATE_DECAY == -1 || config->MAX_RATE_DECAY == -1
+        || config->MIN_RECOVERY_TIME == -1 || config->MAX_RECOVERY_TIME == -1 || config->WINNING_THRESHOLD == -1) {
         return -1; // Return error if any required value is missing
     }
 
@@ -73,15 +80,21 @@ fflush(stdout);
 
 
 void print_config(Config *config) {
-    printf("Config values: \n MIN_ENERGY: %d\n"
-           "MAX_ENERGY: %d\n MAX_SCORE: %d\n"
-           "MAX_TIME: %d\n NUM_ROUNDS: %d\n"
-           "MIN_RATE_DECAY: %d\n MAX_RATE_DECAY: %d\n"
-           , config->MIN_ENERGY,
+    printf("Config values: \n MIN_ENERGY: %f\n"
+           "MAX_ENERGY: %f\n MAX_SCORE: %f\n"
+           "MAX_TIME: %f\n NUM_ROUNDS: %f\n"
+           "MIN_RATE_DECAY: %f\n MAX_RATE_DECAY: %f\n"
+           "MIN RECOVERY TIME: %f\n MAX RECOVERY TIME: %f\n"
+           "WINNING THRESHOLD: %f\n",
+           config->MIN_ENERGY,
            config->MAX_ENERGY,
            config->MAX_SCORE,
            config->MAX_TIME,
            config->NUM_ROUNDS,
            config->MIN_RATE_DECAY,
-           config->MAX_RATE_DECAY);
+           config->MAX_RATE_DECAY,
+           config->MIN_RECOVERY_TIME,
+           config->MAX_RECOVERY_TIME,
+           config->WINNING_THRESHOLD
+           );
 }

@@ -7,13 +7,16 @@
 #include <string.h>
 
 typedef struct {
-    int MIN_RATE_DECAY;
-    int MAX_RATE_DECAY;
-    int MIN_ENERGY;
-    int MAX_ENERGY;
-    int MAX_SCORE;
-    int MAX_TIME;
-    int NUM_ROUNDS
+    float MIN_RATE_DECAY;
+    float MAX_RATE_DECAY;
+    float MIN_ENERGY;
+    float MAX_ENERGY;
+    float MAX_SCORE;
+    float MAX_TIME;
+    float NUM_ROUNDS;
+    float MIN_RECOVERY_TIME;
+    float MAX_RECOVERY_TIME;
+    float WINNING_THRESHOLD;
 } Config;
 
 int load_config(const char *filename, Config *config);
