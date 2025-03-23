@@ -26,9 +26,9 @@ Player* create_player(int number, Team team, float energy, float rate_decay, flo
 }
 
 void deserialize_player(Config *config, char *buffer) {
-    sscanf(buffer, "%f %f %f %f %f %f %f %f %f %f %d", config->MIN_RATE_DECAY, config->MAX_RATE_DECAY,
-            config->MIN_ENERGY, config->MAX_ENERGY, config->MAX_SCORE,
-            config->MAX_TIME, config->NUM_ROUNDS, config->MIN_RECOVERY_TIME,
-            config->MAX_RECOVERY_TIME, config->WINNING_THRESHOLD, config->NUM_PLAYERS);
+    sscanf(buffer, "%f %f %f %f %f %f %f %f %f %f %d", &config->MIN_RATE_DECAY, &config->MAX_RATE_DECAY,
+            &config->MIN_ENERGY, &config->MAX_ENERGY, &config->MAX_SCORE,
+            &config->MAX_TIME, &config->NUM_ROUNDS, &config->MIN_RECOVERY_TIME,
+            &config->MAX_RECOVERY_TIME, &config->WINNING_THRESHOLD, &config->NUM_PLAYERS);
 }
 

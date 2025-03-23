@@ -37,7 +37,7 @@ void fork_players(Team team, int num_players) {
         if (pid == 0) {
             char buffer[100];
             config_to_string(&config, buffer);
-            execl("player", "player", buffer, team);
+            execl("player", "player", buffer, team, NULL);
         }
         else {
         }

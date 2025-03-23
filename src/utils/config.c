@@ -27,7 +27,6 @@ int load_config(const char *filename, Config *config) {
     while (fgets(line, sizeof(line), file)) {
         // Ignore comments and empty lines
         if (line[0] == '#' || line[0] == '\n') continue;
-        printf(line);
 
         // Parse each line as a key-value pair
         char key[50];
