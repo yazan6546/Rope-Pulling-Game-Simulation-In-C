@@ -20,6 +20,7 @@ int load_config(const char *filename, Config *config) {
     config->MIN_RECOVERY_TIME = -1;
     config->MAX_RECOVERY_TIME = -1;
     config->WINNING_THRESHOLD = -1;
+    config->NUM_PLAYERS = -1;
 
     // Buffer to hold each line from the configuration file
     char line[256];
@@ -45,6 +46,7 @@ int load_config(const char *filename, Config *config) {
             else if (strcmp(key, "MIN_RECOVERY_TIME") == 0) config->MIN_RECOVERY_TIME = value;
             else if (strcmp(key, "MAX_RECOVERY_TIME") == 0) config->MAX_RECOVERY_TIME = value;
             else if (strcmp(key, "WINNING_THRESHOLD") == 0) config->WINNING_THRESHOLD = value;
+            else if (strcmp(key, "NUM_PLAYERS") == 0) config->NUM_PLAYERS = value;
         }
     }
 
@@ -70,7 +72,7 @@ fflush(stdout);
 
     // Check that all necessary configuration values have been set
     if (config->MIN_ENERGY == -1 || config->MAX_ENERGY == -1 || config->MAX_SCORE == -1 || config->MAX_TIME == -1 || config->NUM_ROUNDS == -1 || config->MIN_RATE_DECAY == -1 || config->MAX_RATE_DECAY == -1
-        || config->MIN_RECOVERY_TIME == -1 || config->MAX_RECOVERY_TIME == -1 || config->WINNING_THRESHOLD == -1) {
+        || config->MIN_RECOVERY_TIME == -1 || config->MAX_RECOVERY_TIME == -1 || config->WINNING_THRESHOLD == -1 || config->NUM_PLAYERS == -1) {
         return -1; // Return error if any required value is missing
     }
 
@@ -85,7 +87,8 @@ void print_config(Config *config) {
            "MAX_TIME: %f\n NUM_ROUNDS: %f\n"
            "MIN_RATE_DECAY: %f\n MAX_RATE_DECAY: %f\n"
            "MIN RECOVERY TIME: %f\n MAX RECOVERY TIME: %f\n"
-           "WINNING THRESHOLD: %f\n",
+           "WINNING THRESHOLD: %f\n"
+           "NUM_PLAYERS: %d\n",
            config->MIN_ENERGY,
            config->MAX_ENERGY,
            config->MAX_SCORE,
@@ -95,6 +98,14 @@ void print_config(Config *config) {
            config->MAX_RATE_DECAY,
            config->MIN_RECOVERY_TIME,
            config->MAX_RECOVERY_TIME,
-           config->WINNING_THRESHOLD
+           config->WINNING_THRESHOLD,
+              config->NUM_PLAYERS
            );
+}
+
+void config_to_string(const Config *config, char *buffer) {
+    sprintf(buffer, "%f %f %f %f %f %f %f %f %f %f %d", config->MIN_RATE_DECAY, config->MAX_RATE_DECAY,
+        config->MIN_ENERGY, config->MAX_ENERGY, config->MAX_SCORE,
+        config->MAX_TIME, config->NUM_ROUNDS, config->MIN_RECOVERY_TIME,
+        config->MAX_RECOVERY_TIME, config->WINNING_THRESHOLD, config->NUM_PLAYERS);
 }
