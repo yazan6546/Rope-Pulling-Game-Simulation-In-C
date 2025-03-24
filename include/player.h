@@ -18,6 +18,7 @@ typedef struct Player {
     float energy;
     float rate_decay;
     float recovery_time;
+    float falling_chance;
 } Player;
 
 void print_player(Player *player);

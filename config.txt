@@ -14,3 +14,5 @@ MAX_RECOVERY_TIME=20    # Maximum recovery time for a player
 WINNING_THRESHOLD=4     # Score threshold to win a round
 NUM_PLAYERS=8           # Number of players in the game
 UPDATE_RATE=1           # Update rate for the game (sec)
+MIN_FALLING_CHANCE=0.1
+MAX_FALLING_CHANCE=0.7

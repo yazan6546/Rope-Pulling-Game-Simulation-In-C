@@ -21,7 +21,8 @@ int load_config(const char *filename, Config *config) {
     config->MAX_RECOVERY_TIME = -1;
     config->WINNING_THRESHOLD = -1;
     config->NUM_PLAYERS = -1;
-    config->UPDATE_RATE;
+    config->UPDATE_RATE = -1;
+    config->FALLING_CHANCE = -1;
 
     // Buffer to hold each line from the configuration file
     char line[256];
@@ -48,6 +49,7 @@ int load_config(const char *filename, Config *config) {
             else if (strcmp(key, "WINNING_THRESHOLD") == 0) config->WINNING_THRESHOLD = value;
             else if (strcmp(key, "NUM_PLAYERS") == 0) config->NUM_PLAYERS = value;
             else if (strcmp(key, "UPDATE_RATE") == 0) config->UPDATE_RATE = value;
+            else if (strcmp(key, "FALLING_CHANCE") == 0) config->FALLING_CHANCE = value;
         }
     }
 
