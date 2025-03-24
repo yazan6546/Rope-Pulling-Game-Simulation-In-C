@@ -14,13 +14,3 @@ void serialize_player(Player *player, char *buffer) {
     sprintf(buffer, "%f %f %f %d %d", player->rate_decay, player->energy, player->recovery_time,
             player->team, player->number);
 }
-
-
-void print_player(Player *player) {
-    printf("Player: \n"
-           "rate_decay: %f\n"
-           "energy: %f\n"
-           "recovery_time: %f\n"
-           "team: %d\n"
-           "number: %d\n", player->rate_decay, player->energy, player->recovery_time, player->team, player->number);
-}

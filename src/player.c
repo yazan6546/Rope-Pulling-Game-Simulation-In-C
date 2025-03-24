@@ -13,7 +13,7 @@ int main(int argc, char *argv[]) {
     Player player;
     deserialize_player(&player, argv[1]);
 
-
+    print_player(&player);
     fflush(stdout);
 
     return 0;
