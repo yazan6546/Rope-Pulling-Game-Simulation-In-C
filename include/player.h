@@ -25,6 +25,7 @@ typedef struct Player {
     float energy;
     float rate_decay;
     float recovery_time;
+    float falling_chance;
     State state;
 } Player;
 

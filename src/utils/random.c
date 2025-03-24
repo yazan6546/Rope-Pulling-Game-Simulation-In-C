@@ -18,4 +18,5 @@ void generate_random_player(Player *player, Config *configs, Team team, int numb
     player->recovery_time = random_float(configs->MIN_RECOVERY_TIME, configs->MAX_RECOVERY_TIME);
     player->team = team;
     player->number = number;
+    player->falling_chance = random_float(configs->MIN_FALLING_CHANCE, configs->MAX_FALLING_CHANCE);
 }
