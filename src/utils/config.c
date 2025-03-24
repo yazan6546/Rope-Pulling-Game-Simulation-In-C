@@ -50,7 +50,7 @@ int load_config(const char *filename, Config *config) {
             else if (strcmp(key, "WINNING_THRESHOLD") == 0) config->WINNING_THRESHOLD = value;
             else if (strcmp(key, "NUM_PLAYERS") == 0) config->NUM_PLAYERS = value;
             else if (strcmp(key, "UPDATE_RATE") == 0) config->UPDATE_RATE = value;
-            else if (strcmp(key, "FALLING_CHANCE") == 0) config->MIN_FALLING_CHANCE = value;
+            else if (strcmp(key, "MIN_FALLING_CHANCE") == 0) config->MIN_FALLING_CHANCE = value;
             else if (strcmp(key, "MAX_FALLING_CHANCE") == 0) config->MAX_FALLING_CHANCE = value;
         }
     }
