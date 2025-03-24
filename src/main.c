@@ -44,8 +44,6 @@ void fork_players(Team team, int num_players) {
 
         else if (pid == 0) {
 
-            printf(" child %d\n", i);
-
             char buffer[100];
 
             generate_random_player(&players[i], &config, team, i);
@@ -53,6 +51,7 @@ void fork_players(Team team, int num_players) {
 
             if (execl("./bin/player", "player", buffer, NULL)) {
                 perror("execl");
+                exit(1);
             }
         }
         else {
