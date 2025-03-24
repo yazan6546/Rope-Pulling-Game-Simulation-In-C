@@ -20,6 +20,8 @@ typedef struct {
     float WINNING_THRESHOLD;
     int NUM_PLAYERS;
     float UPDATE_RATE;
+    float MIN_FALLING_CHANCE;
+    float MAX_FALLING_CHANCE;
 } Config;
 
 int load_config(const char *filename, Config *config);

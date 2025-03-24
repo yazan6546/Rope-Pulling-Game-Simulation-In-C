@@ -13,7 +13,6 @@ int main(int argc, char *argv[]) {
     Player player;
     deserialize_player(&player, argv[1]);
 
-    print_player(&player);
     fflush(stdout);
 
     return 0;
@@ -26,5 +25,6 @@ void print_player(Player *player) {
            "energy: %f\n"
            "recovery_time: %f\n"
            "team: %d\n"
-           "number: %d\n", player->rate_decay, player->energy, player->recovery_time, player->team, player->number);
+           "number: %d\n"
+           "falling_chance: %f", player->rate_decay, player->energy, player->recovery_time, player->team, player->number, player->falling_chance);
 }
