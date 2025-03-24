@@ -108,9 +108,9 @@ void print_config(Config *config) {
            config->MAX_RECOVERY_TIME,
            config->WINNING_THRESHOLD,
            config->NUM_PLAYERS,
-              config->UPDATE_RATE
-                ,config->MIN_FALLING_CHANCE
-                ,config->MAX_FALLING_CHANCE
+           config->UPDATE_RATE,
+           config->MIN_FALLING_CHANCE,
+           config->MAX_FALLING_CHANCE
            );
 }
 

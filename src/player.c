@@ -48,7 +48,6 @@ void simulate_pulling() {
         printf("Player %d (Team %d) recovering\n", current_player->number, my_team);
         fflush(stdout);
         sleep((unsigned int) current_player->recovery_time);
-        current_player->energy = random_float(config.MIN_ENERGY/2, config.MAX_ENERGY/2);  // Recover some energy
         current_player->state = PULLING;
         printf("Player %d (Team %d) rejoining with energy %.2f\n",
                current_player->number, my_team, current_player->energy);
@@ -88,7 +87,6 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    return 0;
 }
 
 
