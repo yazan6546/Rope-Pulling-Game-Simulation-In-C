@@ -24,11 +24,10 @@ int main() {
     print_config(&config);
 
     fork_players(TEAM_A, config.NUM_PLAYERS/2);
-    // fork_players(TEAM_B, config.NUM_PLAYERS/2);
+    fork_players(TEAM_B, config.NUM_PLAYERS/2);
 
     wait(NULL);
-
-    // while (1) {}
+    while (1) {}
 }
 
 void fork_players(Team team, int num_players) {
@@ -50,14 +49,13 @@ void fork_players(Team team, int num_players) {
             char buffer[100];
 
             generate_random_player(&players[i], &config, team, i);
-            print_player(&players[i]);
             serialize_player(&players[i], buffer);
+
             if (execl("./bin/player", "player", buffer, NULL)) {
                 perror("execl");
             }
         }
         else {
-            printf("Parent process\n");
             fflush(stdout);
         }
     }
