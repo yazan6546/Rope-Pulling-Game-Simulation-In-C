@@ -10,8 +10,10 @@
 #define PATH_MAX 4096
 Config config;
 
-void fork_players(Team team, int num_players, char *binary_path);
+void fork_players(Player *players, int num_players, Team team, char *binary_path);
 int main(int argc, char *argv[]) {
+
+    printf("%s\n", argv[0]);
 
     Player players_teamA[config.NUM_PLAYERS/2];
     Player players_teamB[config.NUM_PLAYERS/2];
@@ -23,13 +25,10 @@ int main(int argc, char *argv[]) {
 
     load_config(config_path, &config);
 
-
-
-    fork_players(TEAM_A, players_teamA, bin_path);
-    fork_players(TEAM_B, players_teamB, bin_path);
+    fork_players(players_teamA, config.NUM_PLAYERS/2, TEAM_A, bin_path);
+    fork_players(players_teamB, config.NUM_PLAYERS/2, TEAM_B, bin_path);
 
     wait(NULL);
-
 
     // Send get ready signal to all players
     for (int i = 0; i < config.NUM_PLAYERS/2; i++) {
@@ -40,8 +39,6 @@ int main(int argc, char *argv[]) {
     align(players_teamA, config.NUM_PLAYERS/2);
     align(players_teamB, config.NUM_PLAYERS/2);
 
-
-
     sleep(2); // Wait for players to get ready
 
     // Send start signal to all players
@@ -50,11 +47,12 @@ int main(int argc, char *argv[]) {
         kill(players_teamB[i].pid, SIGUSR2);
     }
 
+    free(bin_path);
+
     while (1) {}
 
     return 0;
 
-    free(bin_path);
 }
 
 void fork_players(Player *players, int num_players, Team team, char *binary_path) {
