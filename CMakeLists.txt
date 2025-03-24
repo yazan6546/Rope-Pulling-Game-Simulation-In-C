@@ -28,4 +28,4 @@ add_custom_target(
 )
 
 include_directories(include)
-add_executable(test test.c src/utils/config.c src/utils/random.c)
+add_executable(test test.c src/utils/random.c)

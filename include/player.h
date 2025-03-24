@@ -19,4 +19,6 @@ typedef struct Player {
     float rate_decay;
     float recovery_time;
 } Player;
+
+void print_player(Player *player);
 #endif //PLAYER_H
