@@ -13,19 +13,22 @@ Config config;
 void fork_players(Team team, int num_players, char *binary_path, pid_t* team_pids);
 int main(int argc, char *argv[]) {
 
+    Player players_teamA[config.NUM_PLAYERS/2];
+    Player players_teamB[config.NUM_PLAYERS/2];
+
     char *config_path = NULL;
     handling_file(argc, argv[0], &config_path);
     char *bin_path = binary_dir(config_path);
 
 
     // Allocate memory for player PIDs
-    pid_t team_a_pids[sizeof(pid_t) * config.NUM_PLAYERS/2];
-    pid_t team_b_pids[sizeof(pid_t) * config.NUM_PLAYERS/2];
+    pid_t team_a_pids[config.NUM_PLAYERS/2];
+    pid_t team_b_pids[config.NUM_PLAYERS/2];
 
     load_config(config_path, &config);
 
-    fork_players(TEAM_A, config.NUM_PLAYERS/2, bin_path, team_a_pids);
-    fork_players(TEAM_B, config.NUM_PLAYERS/2, bin_path, team_b_pids);
+    fork_players(TEAM_A, players_teamA, bin_path, team_a_pids);
+    fork_players(TEAM_B, players_teamB, bin_path, team_b_pids);
 
     wait(NULL);
 
@@ -55,9 +58,8 @@ int main(int argc, char *argv[]) {
     free(bin_path);
 }
 
-void fork_players(Team team, int num_players, char *binary_path, pid_t* team_pids) {
+void fork_players(Player *players, int num_players, Team team, char *binary_path) {
 
-    Player players[num_players];
     int pipefd[2];
 
     for (int i = 0; i < num_players; i++) {
@@ -77,7 +79,7 @@ void fork_players(Team team, int num_players, char *binary_path, pid_t* team_pid
             close(pipefd[0]); // Close read end in child
 
             char buffer[100];
-            generate_random_player(&players[i], &config, team, i);
+            generate_random_player(&players[i], &config, team, pid);
             serialize_player(&players[i], buffer);
 
             char player_path[PATH_MAX];
@@ -94,8 +96,6 @@ void fork_players(Team team, int num_players, char *binary_path, pid_t* team_pid
 
         else {
             close(pipefd[1]); // Close write end in parent
-            // Store PID in appropriate array
-            team_pids[i] = pid;
             printf("Parent process spawned player with PID: %d\n", pid);
             fflush(stdout);
 

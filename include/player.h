@@ -6,6 +6,7 @@
 #define PLAYER_H
 
 #include <stdio.h>
+#include <unistd.h>
 
 typedef enum Team {
     TEAM_A,
@@ -27,6 +28,7 @@ typedef struct Player {
     float recovery_time;
     float falling_chance;
     State state;
+    pid_t pid;
 } Player;
 
 void print_player(Player *player);
