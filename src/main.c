@@ -3,15 +3,19 @@
 #include "random.h"
 #include "player_utils.h"
 #include "file.h"
+#include "player.h"
 
 #include <unistd.h>
 #include <stdlib.h>
 #include <sys/wait.h>
+#include <stdio.h>
+#include <string.h>
 
 #define PATH_MAX 4096
+
 Config config;
 
-void fork_players(Team team, int num_players, char *bin_path,float energies[]);
+void fork_players(Team team, int num_players, char *bin_path, int pipe_fds[]);
 
 int main(int argc, char *argv[]) {
 
@@ -19,39 +23,49 @@ int main(int argc, char *argv[]) {
     handling_file(argc, argv[0], &config_path);
     char *bin_path = binary_dir(config_path);
 
-    printf("Config path: %s\n", argv[0]);
     printf("Config path: %s\n", config_path);
-
     load_config(config_path, &config);
     print_config(&config);
 
-    int num_players_per_team = config.NUM_PLAYERS / 2;
+    int pipe_fds_team_A[config.NUM_PLAYERS/2];
+    int pipe_fds_team_B[config.NUM_PLAYERS/2];
 
-    float energies_A[num_players_per_team];
-    float energies_B[num_players_per_team];
+    fork_players(TEAM_A, config.NUM_PLAYERS/2, bin_path, pipe_fds_team_A);
+    fork_players(TEAM_B, config.NUM_PLAYERS/2, bin_path, pipe_fds_team_B);
 
-    fork_players(TEAM_A, num_players_per_team, bin_path, energies_A);
-    fork_players(TEAM_B, num_players_per_team, bin_path, energies_B);
+    while (1) {
+        float total_A = 0.0, total_B = 0.0;
 
-    float total_energy_A = 0.0, total_energy_B = 0.0;
+        for (int i = 0; i < config.NUM_PLAYERS/2; i++) {
+            float energy;
+            ssize_t bytes = read(pipe_fds_team_A[i], &energy, sizeof(float));
+            if (bytes == sizeof(float)) {
+                printf("Team A - Player %d energy: %.2f\n", i, energy);
+                total_A += energy;
+            }
+        }
 
-    for (int i = 0; i < num_players_per_team; i++) {
-        total_energy_A += energies_A[i];
-        total_energy_B += energies_B[i];
-    }
+        for (int i = 0; i < config.NUM_PLAYERS/2; i++) {
+            float energy;
+            ssize_t bytes = read(pipe_fds_team_B[i], &energy, sizeof(float));
+            if (bytes == sizeof(float)) {
+                printf("Team B - Player %d energy: %.2f\n", i, energy);
+                total_B += energy;
+            }
+        }
 
-    int score = total_energy_A - total_energy_B;
+        int score = total_A - total_B;
+        printf("\nTotal Energy A: %.2f | Total Energy B: %.2f | Score: %d\n\n", total_A, total_B, score);
 
-    printf("\nTotal Energy For Team A: %.2f\n", total_energy_A);
-    printf("Total Energy For Team B: %.2f\n", total_energy_B);
-    printf("Current Score: %d\n", score);
+        if (score >= config.MAX_SCORE) {
+            printf("🏆 Team A wins!\n");
+            break;
+        } else if (score <= -config.MAX_SCORE) {
+            printf("🏆 Team B wins!\n");
+            break;
+        }
 
-    if (score > 0) {
-        printf("Team A is currently winning.\n");
-    } else if (score < 0) {
-        printf("Team B is currently winning.\n");
-    } else {
-        printf("It's a tie!\n");
+        sleep(1);
     }
 
     free(bin_path);
@@ -59,7 +73,7 @@ int main(int argc, char *argv[]) {
 }
 
 
-void fork_players(Team team, int num_players, char *binary_path, float energies[]) {
+void fork_players(Team team, int num_players, char *binary_path, int pipe_fds[]) {
     Player players[num_players];
 
     for (int i = 0; i < num_players; i++) {
@@ -77,7 +91,7 @@ void fork_players(Team team, int num_players, char *binary_path, float energies[
         }
 
         else if (pid == 0) {
-            close(pipefd[0]); // Close read end in child
+            close(pipefd[0]); // child closes read end
 
             char buffer[100];
             generate_random_player(&players[i], &config, team, i);
@@ -96,20 +110,8 @@ void fork_players(Team team, int num_players, char *binary_path, float energies[
         }
 
         else {
-            close(pipefd[1]); // Close write end in parent
-
-            float energy;
-            ssize_t bytes_read = read(pipefd[0], &energy, sizeof(float));
-            if (bytes_read == sizeof(float)) {
-                printf("Received energy from player %d: %.2f\n", i, energy);
-                energies[i] = energy;
-            } else {
-                printf("Failed to read energy from player %d\n", i);
-                energies[i] = 0.0;
-            }
-
-            close(pipefd[0]);
+            close(pipefd[1]); // parent closes write end
+            pipe_fds[i] = pipefd[0]; // store read end
         }
     }
 }
-
