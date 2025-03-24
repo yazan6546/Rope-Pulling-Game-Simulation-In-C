@@ -12,6 +12,10 @@ int main(int argc, char *argv[]) {
     printf("argv[1] = %s\n", argv[1]);
     Player player;
     deserialize_player(&player, argv[1]);
+    //
+    // printf("in player....");
+    // print_player(&player);
+
 
     fflush(stdout);
 

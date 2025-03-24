@@ -4,9 +4,8 @@
 
 #include "random.h"
 
-
-void init_random() {
-    srand((unsigned int) time(NULL));
+void init_random(pid_t pid) {
+    srand(pid);
 }
 
 float random_float(float min, float max) {

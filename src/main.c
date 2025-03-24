@@ -9,8 +9,6 @@ void fork_players(Team team, int num_players);
 
 int main() {
 
-    init_random();
-
     int id = fork();
 
     if (id == 0) {
@@ -26,7 +24,7 @@ int main() {
     print_config(&config);
 
     fork_players(TEAM_A, config.NUM_PLAYERS/2);
-    fork_players(TEAM_B, config.NUM_PLAYERS/2);
+    // fork_players(TEAM_B, config.NUM_PLAYERS/2);
 
     wait(NULL);
 
@@ -39,11 +37,15 @@ void fork_players(Team team, int num_players) {
     for (int i = 0; i < num_players; i++) {
         const pid_t pid = fork();
 
+        init_random(getpid());
+
         if (pid == -1) {
             perror("fork");
         }
 
         else if (pid == 0) {
+
+            printf(" child %d\n", i);
 
             char buffer[100];
 
