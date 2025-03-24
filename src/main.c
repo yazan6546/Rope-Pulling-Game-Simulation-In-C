@@ -1,7 +1,6 @@
 #include "common.h"
 #include "config.h"
 #include "random.h"
-#include "player.h"
 #include <signal.h>
 #include "referee_orders.h"
 #include "player_utils.h"
@@ -9,11 +8,8 @@
 
 #define PATH_MAX 4096
 Config config;
-pid_t *team_a_pids;
-pid_t *team_b_pids;
 
-void fork_players(Team team, int num_players, char *bin_path);
-
+void fork_players(Team team, int num_players, char *binary_path, pid_t* team_pids);
 int main(int argc, char *argv[]) {
 
     char *config_path = NULL;
@@ -23,14 +19,19 @@ int main(int argc, char *argv[]) {
     printf("Config path: %s\n", argv[0]);
 
     // Allocate memory for player PIDs
-    team_a_pids = malloc(sizeof(pid_t) * config.NUM_PLAYERS/2);
-    team_b_pids = malloc(sizeof(pid_t) * config.NUM_PLAYERS/2);
+    pid_t team_a_pids[sizeof(pid_t) * config.NUM_PLAYERS/2];
+    pid_t team_b_pids[sizeof(pid_t) * config.NUM_PLAYERS/2];
 
-    fork_players(TEAM_A, config.NUM_PLAYERS/2);
-    sleep(1); // Give time for processes to start
+    printf("Config path: %s\n", config_path);
+    load_config(config_path, &config);
 
-    fork_players(TEAM_B, config.NUM_PLAYERS/2);
-    sleep(1);
+    print_config(&config);
+
+    fork_players(TEAM_A, config.NUM_PLAYERS/2, bin_path, team_a_pids);
+    fork_players(TEAM_B, config.NUM_PLAYERS/2, bin_path, team_b_pids);
+
+    wait(NULL);
+
 
     // Send get ready signal to all players
     for (int i = 0; i < config.NUM_PLAYERS/2; i++) {
@@ -50,26 +51,14 @@ int main(int argc, char *argv[]) {
         kill(team_b_pids[i], SIGUSR2);
     }
 
-    // Clean up
-    free(team_a_pids);
-    free(team_b_pids);
+    while (1) {}
 
     return 0;
-    printf("Config path: %s\n", config_path);
-    load_config(config_path, &config);
-
-    print_config(&config);
-
-    fork_players(TEAM_A, config.NUM_PLAYERS/2, bin_path);
-    fork_players(TEAM_B, config.NUM_PLAYERS/2, bin_path);
-
-    wait(NULL);
-    // while (1) {}
 
     free(bin_path);
 }
 
-void fork_players(Team team, int num_players, char *binary_path) {
+void fork_players(Team team, int num_players, char *binary_path, pid_t* team_pids) {
 
     Player players[num_players];
     for (int i = 0; i < num_players; i++) {
@@ -100,11 +89,7 @@ void fork_players(Team team, int num_players, char *binary_path) {
         }
         else {
             // Store PID in appropriate array
-            if (team == TEAM_A) {
-                team_a_pids[i] = pid;
-            } else {
-                team_b_pids[i] = pid;
-            }
+            team_pids[i] = pid;
             printf("Parent process spawned player with PID: %d\n", pid);
             fflush(stdout);
         }

@@ -8,7 +8,6 @@
 
 #define FALL_CHANCE 0.05  // 5% chance to fall each second
 
-Config config;
 Team my_team;
 Player *current_player;
 
@@ -61,9 +60,9 @@ int main(int argc, char *argv[]) {
     printf("argv[1] = %s\n", argv[1]);
 
     // Parse config and team
-    deserialize_player(&config, argv[1]);
-    my_team = atoi(argv[2]);
-    
+    deserialize_player(current_player, argv[1]);
+    my_team = current_player->team;
+
     // Create player with random attributes
     current_player = create_player(
         getpid(),
