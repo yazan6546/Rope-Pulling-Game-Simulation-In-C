@@ -4,25 +4,23 @@
 #include "player.h"
 #include <signal.h>
 #include "referee_orders.h"
+#include "player_utils.h"
+#include "file.h"
 
+#define PATH_MAX 4096
 Config config;
 pid_t *team_a_pids;
 pid_t *team_b_pids;
 
-int main() {
+void fork_players(Team team, int num_players, char *bin_path);
 
-    int id = fork();
+int main(int argc, char *argv[]) {
 
-    if (id == 0) {
-        printf("Child process\n");
-        execl("/bin/pwd", "pwd", NULL);
-    } else {
-        wait(NULL);
-        printf("Parent process\n");
-    }
-    load_config("../config.txt", &config);
+    char *config_path = NULL;
+    handling_file(argc, argv[0], &config_path);
+    char *bin_path = binary_dir(config_path);
 
-    print_config(&config);
+    printf("Config path: %s\n", argv[0]);
 
     // Allocate memory for player PIDs
     team_a_pids = malloc(sizeof(pid_t) * config.NUM_PLAYERS/2);
@@ -57,25 +55,47 @@ int main() {
     free(team_b_pids);
 
     return 0;
+    printf("Config path: %s\n", config_path);
+    load_config(config_path, &config);
+
+    print_config(&config);
+
+    fork_players(TEAM_A, config.NUM_PLAYERS/2, bin_path);
+    fork_players(TEAM_B, config.NUM_PLAYERS/2, bin_path);
+
+    wait(NULL);
+    // while (1) {}
+
+    free(bin_path);
 }
 
-void fork_players(Team team, int num_players) {
+void fork_players(Team team, int num_players, char *binary_path) {
+
+    Player players[num_players];
     for (int i = 0; i < num_players; i++) {
-        pid_t pid = fork();
+        const pid_t pid = fork();
+
+        init_random(getpid());
 
         if (pid == -1) {
             perror("fork");
         }
 
         else if (pid == 0) {
+
             char buffer[100];
-            config_to_string(&config, buffer);
-            char team_str[2];
-            // Convert team to string to send through execl
-            sprintf(team_str, "%d", team);
-            // Execl sends buffer and team_str as arguments to player
-            if (execl("./player", "player", buffer, team_str, NULL)) {
+
+            generate_random_player(&players[i], &config, team, i);
+            serialize_player(&players[i], buffer);
+
+            // Create full path to player executable
+            char player_path[PATH_MAX];
+            snprintf(player_path, PATH_MAX, "%s/player", binary_path);
+
+            // When executing:
+            if (execl(player_path, "player", buffer, NULL)) {
                 perror("execl");
+                exit(1);
             }
         }
         else {
@@ -91,6 +111,5 @@ void fork_players(Team team, int num_players) {
     }
 
 }
-
 
 

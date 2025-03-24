@@ -4,6 +4,7 @@
 
 #include "player.h"
 #include <signal.h>
+#include "player_utils.h"
 
 #define FALL_CHANCE 0.05  // 5% chance to fall each second
 
@@ -71,6 +72,11 @@ int main(int argc, char *argv[]) {
         random_float(config.MIN_RATE_DECAY, config.MAX_RATE_DECAY),
         random_float(config.MIN_RECOVERY_TIME, config.MAX_RECOVERY_TIME)
     );
+    Player player;
+    deserialize_player(&player, argv[1]);
+
+    print_player(&player);
+    fflush(stdout);
 
     // Setup signal handlers
     signal(SIGUSR1, handle_get_ready);
@@ -88,21 +94,13 @@ int main(int argc, char *argv[]) {
     return 0;
 }
 
-Player* create_player(int number, Team team, float energy, float rate_decay, float recovery_time) {
-    Player* player = malloc(sizeof(Player));
-    player->number = number;
-    player->team = team;
-    player->energy = energy;
-    player->rate_decay = rate_decay;
-    player->recovery_time = recovery_time;
-    player->state = IDLE;
-    return player;
-}
 
-void deserialize_player(Config *config, char *buffer) {
-    sscanf(buffer, "%f %f %f %f %f %f %f %f %f %f %d", &config->MIN_RATE_DECAY, &config->MAX_RATE_DECAY,
-            &config->MIN_ENERGY, &config->MAX_ENERGY, &config->MAX_SCORE,
-            &config->MAX_TIME, &config->NUM_ROUNDS, &config->MIN_RECOVERY_TIME,
-            &config->MAX_RECOVERY_TIME, &config->WINNING_THRESHOLD, &config->NUM_PLAYERS);
-}
 
+void print_player(Player *player) {
+    printf("Player: \n"
+           "rate_decay: %f\n"
+           "energy: %f\n"
+           "recovery_time: %f\n"
+           "team: %d\n"
+           "number: %d\n", player->rate_decay, player->energy, player->recovery_time, player->team, player->number);
+}

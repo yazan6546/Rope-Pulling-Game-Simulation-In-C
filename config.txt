@@ -2,14 +2,15 @@
 
 ## Game settings
 
-MAX_SCORE=100    # Maximum score to end the game
-MAX_TIME=100    # Maximum time for the game (sec)
-MIN_ENERGY=30
-MAX_ENERGY=100
-NUM_ROUNDS=10
-MIN_RATE_DECAY=0.1
-MAX_RATE_DECAY=0.5
-MIN_RECOVERY_TIME=10
-MAX_RECOVERY_TIME=20
-WINNING_THRESHOLD=4
-NUM_PLAYERS=2
+MAX_SCORE=100           # Maximum score to end the game
+MAX_TIME=100            # Maximum time for the game (sec)
+MIN_ENERGY=30           # Minimum energy for a player
+MAX_ENERGY=100          # Maximum energy for a player
+NUM_ROUNDS=10           # Number of rounds in a game
+MIN_RATE_DECAY=0.1      # Minimum rate of decay for energy
+MAX_RATE_DECAY=0.5      # Maximum rate of decay for energy
+MIN_RECOVERY_TIME=10    # Minimum recovery time for a player
+MAX_RECOVERY_TIME=20    # Maximum recovery time for a player
+WINNING_THRESHOLD=4     # Score threshold to win a round
+NUM_PLAYERS=8           # Number of players in the game
+UPDATE_RATE=1           # Update rate for the game (sec)
