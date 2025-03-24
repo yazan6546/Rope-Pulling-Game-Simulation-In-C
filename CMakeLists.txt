@@ -7,7 +7,7 @@ add_executable(Rope_Pulling_Game_Simulation_In_C src/main.c src/utils/config.c
 src/utils/random.c src/utils/player_utils.c src/utils/file.c src/utils/referee_orders.c)
 
 
-add_executable(player src/player.c src/utils/player_utils.c )
+add_executable(player src/player.c src/utils/player_utils.c src/utils/random.c)
 
 
 set_target_properties(Rope_Pulling_Game_Simulation_In_C
