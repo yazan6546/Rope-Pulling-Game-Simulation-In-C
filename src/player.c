@@ -62,19 +62,6 @@ int main(int argc, char *argv[]) {
     // Parse config and team
     deserialize_player(current_player, argv[1]);
     my_team = current_player->team;
-
-    // Create player with random attributes
-    current_player = create_player(
-        getpid(),
-        my_team,
-        random_float(config.MIN_ENERGY, config.MAX_ENERGY),
-        random_float(config.MIN_RATE_DECAY, config.MAX_RATE_DECAY),
-        random_float(config.MIN_RECOVERY_TIME, config.MAX_RECOVERY_TIME)
-    );
-    Player player;
-    deserialize_player(&player, argv[1]);
-
-    print_player(&player);
     fflush(stdout);
 
     // Setup signal handlers
