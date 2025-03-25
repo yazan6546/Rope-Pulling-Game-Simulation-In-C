@@ -14,6 +14,7 @@
 Config config;
 
 void fork_players(Player *players, int num_players, Team team, char *binary_path, int pipe_fds[]);
+void generate_and_align(Player *players, int num_players, Team team);
 
 int main(int argc, char *argv[]) {
 
@@ -31,14 +32,13 @@ int main(int argc, char *argv[]) {
     int pipe_fds_team_A[config.NUM_PLAYERS/2];
     int pipe_fds_team_B[config.NUM_PLAYERS/2];
 
+
+    generate_and_align(players_teamA, config.NUM_PLAYERS/2, TEAM_A);
+    generate_and_align(players_teamB, config.NUM_PLAYERS/2, TEAM_B);
+
     fork_players(players_teamA, config.NUM_PLAYERS/2, TEAM_A, bin_path, pipe_fds_team_A);
     fork_players(players_teamB, config.NUM_PLAYERS/2, TEAM_B, bin_path, pipe_fds_team_B);
 
-    for (int i = 0; i<config.NUM_PLAYERS/2;i++) {
-        print_player(&players_teamA[i]);
-        printf("\n\n");
-        print_player(&players_teamB[i]);
-    }
 
 
 
@@ -46,16 +46,12 @@ int main(int argc, char *argv[]) {
 
     printf("\n\n");
 
-
     // Send get ready signal to all players
     for (int i = 0; i < config.NUM_PLAYERS/2; i++) {
         kill(players_teamA[i].pid, SIGUSR1);
         kill(players_teamB[i].pid, SIGUSR1);
     }
 
-    // align(players_teamA, config.NUM_PLAYERS/2);
-    // align(players_teamB, config.NUM_PLAYERS/2);
-    //
 
     sleep(2); // Wait for players to get ready
     //
@@ -119,9 +115,6 @@ void fork_players(Player *players, int num_players, Team team, char *binary_path
             exit(EXIT_FAILURE);
         }
 
-
-        generate_random_player(&players[i], &config, team, i);
-
         const pid_t pid = fork();
 
         if (pid == -1) {
@@ -129,8 +122,6 @@ void fork_players(Player *players, int num_players, Team team, char *binary_path
         }
 
         else if (pid == 0) {
-
-            init_random(getpid());
 
             close(pipefd[0]); // Close read end in child
 
@@ -156,6 +147,21 @@ void fork_players(Player *players, int num_players, Team team, char *binary_path
             pipe_fds[i] = pipefd[0]; // store read end
         }
     }
+}
+
+void generate_and_align(Player *players, int num_players, Team team) {
+
+    for (int i = 0; i<num_players; i++) {
+        generate_random_player(&players[i], &config, team, i);
+    }
+
+    for (int i = 0; i<config.NUM_PLAYERS/2;i++) {
+        print_player(&players[i]);
+        printf("\n\n");
+    }
+
+    align(players, num_players);
+
 }
 
 
