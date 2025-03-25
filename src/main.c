@@ -32,9 +32,11 @@ int main(int argc, char *argv[]) {
     fork_players(players_teamA, config.NUM_PLAYERS/2, TEAM_A, bin_path, pipe_fds_team_A);
     fork_players(players_teamB, config.NUM_PLAYERS/2, TEAM_B, bin_path, pipe_fds_team_B);
 
+
+
     printf("Energy : %f\n", players_teamA[0].energy);
 
-    //
+
     // // Send get ready signal to all players
     // for (int i = 0; i < config.NUM_PLAYERS/2; i++) {
     //     kill(players_teamA[i].pid, SIGUSR1);
@@ -51,46 +53,47 @@ int main(int argc, char *argv[]) {
     //     kill(players_teamA[i].pid, SIGUSR2);
     //     kill(players_teamB[i].pid, SIGUSR2);
     // }
+
+    while (1) {}
+
     //
-
-
-    while (1) {
-        float total_A = 0.0, total_B = 0.0;
-
-        for (int i = 0; i < config.NUM_PLAYERS/2; i++) {
-            float energy;
-            ssize_t bytes = read(pipe_fds_team_A[i], &energy, sizeof(float));
-
-
-            if (bytes == sizeof(float)) {
-                printf("Team A - Player %d energy: %.2f\n", i, energy);
-                total_A += energy;
-            }
-        }
-
-        for (int i = 0; i < config.NUM_PLAYERS/2; i++) {
-            float energy;
-            ssize_t bytes = read(pipe_fds_team_B[i], &energy, sizeof(float));
-            if (bytes == sizeof(float)) {
-                printf("Team B - Player %d energy: %.2f\n", i, energy);
-                total_B += energy;
-            }
-        }
-
-        int score = total_A - total_B;
-        printf("\nTotal Energy A: %.2f | Total Energy B: %.2f | Score: %d\n\n", total_A, total_B, score);
-
-        if (score >= config.MAX_SCORE) {
-            printf("🏆 Team A wins!\n");
-            break;
-        }
-        if (score <= -config.MAX_SCORE) {
-            printf("🏆 Team B wins!\n");
-            break;
-        }
-
-        sleep(1);
-    }
+    // while (1) {
+    //     float total_A = 0.0, total_B = 0.0;
+    //
+    //     for (int i = 0; i < config.NUM_PLAYERS/2; i++) {
+    //         float energy;
+    //         ssize_t bytes = read(pipe_fds_team_A[i], &energy, sizeof(float));
+    //
+    //
+    //         if (bytes == sizeof(float) || bytes == 0) {
+    //             printf("Team A - Player %d energy: %.2f\n", i, energy);
+    //             total_A += energy;
+    //         }
+    //     }
+    //
+    //     for (int i = 0; i < config.NUM_PLAYERS/2; i++) {
+    //         float energy;
+    //         ssize_t bytes = read(pipe_fds_team_B[i], &energy, sizeof(float));
+    //         if (bytes == sizeof(float) || bytes == 0) {
+    //             printf("Team B - Player %d energy: %.2f\n", i, energy);
+    //             total_B += energy;
+    //         }
+    //     }
+    //
+    //     float score = total_A - total_B;
+    //     printf("\nTotal Energy A: %.2f | Total Energy B: %.2f | Score: %.2f\n\n", total_A, total_B, score);
+    //
+    //     if (score >= config.MAX_SCORE) {
+    //         printf("🏆 Team A wins!\n");
+    //         break;
+    //     }
+    //     if (score <= -config.MAX_SCORE) {
+    //         printf("🏆 Team B wins!\n");
+    //         break;
+    //     }
+    //
+    //     sleep(1);
+    // }
 
     free(bin_path);
     return 0;
@@ -106,6 +109,7 @@ void fork_players(Player *players, int num_players, Team team, char *binary_path
             exit(EXIT_FAILURE);
         }
 
+
         generate_random_player(&players[i], &config, team, i);
 
         const pid_t pid = fork();
@@ -117,6 +121,7 @@ void fork_players(Player *players, int num_players, Team team, char *binary_path
         }
 
         else if (pid == 0) {
+
             close(pipefd[0]); // Close read end in child
 
             char buffer[100];
@@ -127,6 +132,7 @@ void fork_players(Player *players, int num_players, Team team, char *binary_path
 
             char write_fd_str[10];
             sprintf(write_fd_str, "%d", pipefd[1]);
+
 
             if (execl(player_path, "player", buffer, write_fd_str, NULL)) {
                 perror("execl");

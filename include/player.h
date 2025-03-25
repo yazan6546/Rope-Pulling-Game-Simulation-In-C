@@ -31,4 +31,7 @@ typedef struct Player {
     pid_t pid;
 } Player;
 
+
+Player *create_player(Team team, pid_t pid);
+
 #endif //PLAYER_H

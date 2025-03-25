@@ -16,7 +16,7 @@ Player *current_player;
 void send_energy(int signum) {
     // Decrease energy based on rate_decay * position
     const int position = current_player->number + 1;
-    current_player->energy -= current_player->rate_decay * position;
+    // current_player->energy -= current_player->rate_decay * position;
     if (current_player->energy < 0.0f) {
         printf("ok\n");
         current_player->energy = 0.0f;
@@ -74,15 +74,21 @@ void simulate_pulling() {
 
 int main(int argc, char *argv[]) {
     printf("Player process\n");
-    printf("argv[1] = %s\n", argv[1]);
+    // printf("argv[1] = %s\n", argv[1]);
+
 
     if (argc < 3) {
         fprintf(stderr, "Usage: player <serialized_data> <write_fd>\n");
         exit(1);
     }
 
-    printf("argv[1] = %s\n", argv[1]);
+    current_player = create_player(0, getpid());
+    // printf("argv[1] = %s\n", argv[1]);
     deserialize_player(current_player, argv[1]);
+
+    printf("AODJSOJD\n");
+    current_player->pid = getpid();
+    my_team = current_player->team;
 
     print_player(current_player);
 
@@ -91,10 +97,10 @@ int main(int argc, char *argv[]) {
     // Close the read end (not used)
     // Not needed explicitly as it's not opened in player
 
-    // Set up signal handler
-    signal(SIGALRM, send_energy);
-    signal(SIGUSR1, handle_get_ready);
-    signal(SIGUSR2, handle_start);
+    // // Set up signal handler
+    // signal(SIGALRM, send_energy);
+    // signal(SIGUSR1, handle_get_ready);
+    // signal(SIGUSR2, handle_start);
 
     alarm(1); // Trigger first after 1 second
 
@@ -107,7 +113,6 @@ int main(int argc, char *argv[]) {
     // // Parse config and team
     // deserialize_player(current_player, argv[1]);
     // my_team = current_player->team;
-    //
     // int write_fd = 0;
     // fflush(stdout);
 
@@ -128,5 +133,13 @@ int main(int argc, char *argv[]) {
     //         usleep(100000);  // Small delay to control simulation speed (or use alarm?)
     //     }
     // }
+
+}
+
+
+Player *create_player(Team team, pid_t pid) {
+    Player *player = (Player *) malloc(sizeof(Player));
+    player->team = team;
+    player->pid = pid;
 
 }
