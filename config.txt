@@ -2,7 +2,7 @@
 
 ## Game settings
 
-MAX_SCORE=70           # Maximum score to end the game
+MAX_SCORE=400          # Maximum score to end the game
 MAX_TIME=100            # Maximum time for the game (sec)
 MIN_ENERGY=30           # Minimum energy for a player
 MAX_ENERGY=500          # Maximum energy for a player
