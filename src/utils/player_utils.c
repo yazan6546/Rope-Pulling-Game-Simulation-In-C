@@ -22,7 +22,7 @@ void print_player(Player *player) {
            "recovery_time: %f\n"
            "team: %d\n"
            "number: %d\n"
-           "falling_chance: %f\n",
+           "falling_chance: %f\n\n",
            player->rate_decay,
            player->energy,
            player->recovery_time,

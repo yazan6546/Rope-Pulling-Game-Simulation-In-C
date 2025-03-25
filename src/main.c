@@ -2,6 +2,8 @@
 #include "config.h"
 #include "random.h"
 #include <signal.h>
+#include <wchar.h>
+
 #include "referee_orders.h"
 #include "player_utils.h"
 #include "file.h"
@@ -31,6 +33,14 @@ int main(int argc, char *argv[]) {
 
     fork_players(players_teamA, config.NUM_PLAYERS/2, TEAM_A, bin_path, pipe_fds_team_A);
     fork_players(players_teamB, config.NUM_PLAYERS/2, TEAM_B, bin_path, pipe_fds_team_B);
+
+    for (int i = 0; i<config.NUM_PLAYERS/2;i++) {
+        print_player(&players_teamA[i]);
+        printf("\n\n");
+        print_player(&players_teamB[i]);
+    }
+
+
 
     sleep(2); // Wait for players to get ready
 
