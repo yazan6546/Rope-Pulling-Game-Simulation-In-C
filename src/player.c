@@ -15,15 +15,16 @@ Player *current_player;
 
 void send_energy(int signum) {
     // Decrease energy based on rate_decay * position
-    const int position = current_player->number + 1;
-    current_player->energy -= current_player->rate_decay * position;
+    current_player->energy -= current_player->rate_decay;
     if (current_player->energy < 0.0f) {
         printf("ok\n");
         current_player->energy = 0.0f;
     }
 
-    // Send energy to parent
-    write(write_fd, &current_player->energy, sizeof(float));
+    // Send effort to parent
+
+    float effort = current_player->energy * ((float) current_player->position);
+    write(write_fd, &effort, sizeof(float));
 
     // Schedule next alarm
     alarm(1);

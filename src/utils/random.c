@@ -19,6 +19,6 @@ void generate_random_player(Player *player, Config *configs, Team team, int numb
     player->team = team;
     player->falling_chance = random_float(configs->MIN_FALLING_CHANCE, configs->MAX_FALLING_CHANCE);
     player->number = number;
-    player->position = number;
-    player->new_position = number;
+    player->position = number+1;
+    player->new_position = number+1;
 }
