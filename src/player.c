@@ -83,13 +83,9 @@ int main(int argc, char *argv[]) {
     }
 
     current_player = create_player(getpid());
-    // printf("argv[1] = %s\n", argv[1]);
     deserialize_player(current_player, argv[1]);
 
     my_team = current_player->team;
-
-    print_player(current_player);
-
     write_fd = atoi(argv[2]);
 
     // Close the read end (not used)

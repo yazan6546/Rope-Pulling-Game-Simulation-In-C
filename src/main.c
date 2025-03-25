@@ -36,23 +36,28 @@ int main(int argc, char *argv[]) {
 
     printf("Energy : %f\n", players_teamA[0].energy);
 
-    //
-    // // Send get ready signal to all players
-    // for (int i = 0; i < config.NUM_PLAYERS/2; i++) {
-    //     kill(players_teamA[i].pid, SIGUSR1);
-    //     kill(players_teamB[i].pid, SIGUSR1);
-    // }
-    //
+    sleep(2); // Wait for players to get ready
+
+    printf("\n\n");
+
+
+    // Send get ready signal to all players
+    for (int i = 0; i < config.NUM_PLAYERS/2; i++) {
+        kill(players_teamA[i].pid, SIGUSR1);
+        kill(players_teamB[i].pid, SIGUSR1);
+    }
+
     // align(players_teamA, config.NUM_PLAYERS/2);
     // align(players_teamB, config.NUM_PLAYERS/2);
     //
-    // sleep(2); // Wait for players to get ready
+
+    sleep(2); // Wait for players to get ready
     //
-    // // Send start signal to all players
-    // for (int i = 0; i < config.NUM_PLAYERS/2; i++) {
-    //     kill(players_teamA[i].pid, SIGUSR2);
-    //     kill(players_teamB[i].pid, SIGUSR2);
-    // }
+    // Send start signal to all players
+    for (int i = 0; i < config.NUM_PLAYERS/2; i++) {
+        kill(players_teamA[i].pid, SIGUSR2);
+        kill(players_teamB[i].pid, SIGUSR2);
+    }
 
 
 
