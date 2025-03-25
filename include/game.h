@@ -22,6 +22,7 @@ typedef struct Game {
 void init_game(Game *game);
 Team simulate_round(int pipe_fds_team_A[][2], int pipe_fds_team_B[][2], Config *config, Game *game);
 int check_game_conditions(Game *game, Config *config, Team team_win);
+void go_to_next_round(Game *game);
 
 
 #endif //GAME_H

@@ -64,3 +64,8 @@ int check_game_conditions(Game *game, Config *config, Team team_win) {
     return 1;
 }
 
+void go_to_next_round(Game *game) {
+    game->round_num++;
+    game->totals_A = 0;
+    game->totals_B = 0;
+}

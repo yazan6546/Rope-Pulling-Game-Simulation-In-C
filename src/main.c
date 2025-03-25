@@ -80,14 +80,14 @@ int main(int argc, char *argv[]) {
                 game.team_wins_B++;
                 break;
             }
-            game.round_num++;
             sleep(1);
         }
 
         game.game_running = check_game_conditions(&game , &config, team_win);
         game.last_winner = team_win;
-
+        go_to_next_round(&game);
     }
+
     free(bin_path);
     return 0;
 }
