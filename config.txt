@@ -2,10 +2,10 @@
 
 ## Game settings
 
-MAX_SCORE=100           # Maximum score to end the game
+MAX_SCORE=70           # Maximum score to end the game
 MAX_TIME=100            # Maximum time for the game (sec)
 MIN_ENERGY=30           # Minimum energy for a player
-MAX_ENERGY=100          # Maximum energy for a player
+MAX_ENERGY=500          # Maximum energy for a player
 NUM_ROUNDS=10           # Number of rounds in a game
 MIN_RATE_DECAY=0.1      # Minimum rate of decay for energy
 MAX_RATE_DECAY=0.5      # Maximum rate of decay for energy

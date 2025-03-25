@@ -36,7 +36,6 @@ int load_config(const char *filename, Config *config) {
         float value;
         if (sscanf(line, "%40[^=]=%f", key, &value) == 2) {
 
-            printf("key = %s\n", key);
             // Set corresponding config fields based on the key
             if (strcmp(key, "MIN_ENERGY") == 0) config->MIN_ENERGY = value;
             else if (strcmp(key, "MAX_ENERGY") == 0) config->MAX_ENERGY = value;
@@ -108,9 +107,9 @@ void print_config(Config *config) {
            config->MAX_RECOVERY_TIME,
            config->WINNING_THRESHOLD,
            config->NUM_PLAYERS,
-              config->UPDATE_RATE
-                ,config->MIN_FALLING_CHANCE
-                ,config->MAX_FALLING_CHANCE
+           config->UPDATE_RATE,
+           config->MIN_FALLING_CHANCE,
+           config->MAX_FALLING_CHANCE
            );
 }
 
