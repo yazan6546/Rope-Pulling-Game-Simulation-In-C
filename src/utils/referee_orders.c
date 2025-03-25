@@ -16,7 +16,7 @@ void align(Player* team, int num_players) {
     qsort(team, num_players, sizeof(Player), compare_players);
     
     for (int i = 0; i < num_players; i++) {
-        team[i].number = i + 1;
+        team[i].new_position = i;
         printf("Player %d: energy = %.2f\n", team[i].number, team[i].energy);
     }
 }
