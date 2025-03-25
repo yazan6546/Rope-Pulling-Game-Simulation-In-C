@@ -37,63 +37,62 @@ int main(int argc, char *argv[]) {
     printf("Energy : %f\n", players_teamA[0].energy);
 
 
-    // // Send get ready signal to all players
-    // for (int i = 0; i < config.NUM_PLAYERS/2; i++) {
-    //     kill(players_teamA[i].pid, SIGUSR1);
-    //     kill(players_teamB[i].pid, SIGUSR1);
-    // }
-    //
-    // align(players_teamA, config.NUM_PLAYERS/2);
-    // align(players_teamB, config.NUM_PLAYERS/2);
-    //
-    // sleep(2); // Wait for players to get ready
-    //
-    // // Send start signal to all players
-    // for (int i = 0; i < config.NUM_PLAYERS/2; i++) {
-    //     kill(players_teamA[i].pid, SIGUSR2);
-    //     kill(players_teamB[i].pid, SIGUSR2);
-    // }
+    // Send get ready signal to all players
+    for (int i = 0; i < config.NUM_PLAYERS/2; i++) {
+        kill(players_teamA[i].pid, SIGUSR1);
+        kill(players_teamB[i].pid, SIGUSR1);
+    }
 
-    while (1) {}
+    align(players_teamA, config.NUM_PLAYERS/2);
+    align(players_teamB, config.NUM_PLAYERS/2);
 
-    //
-    // while (1) {
-    //     float total_A = 0.0, total_B = 0.0;
-    //
-    //     for (int i = 0; i < config.NUM_PLAYERS/2; i++) {
-    //         float energy;
-    //         ssize_t bytes = read(pipe_fds_team_A[i], &energy, sizeof(float));
-    //
-    //
-    //         if (bytes == sizeof(float) || bytes == 0) {
-    //             printf("Team A - Player %d energy: %.2f\n", i, energy);
-    //             total_A += energy;
-    //         }
-    //     }
-    //
-    //     for (int i = 0; i < config.NUM_PLAYERS/2; i++) {
-    //         float energy;
-    //         ssize_t bytes = read(pipe_fds_team_B[i], &energy, sizeof(float));
-    //         if (bytes == sizeof(float) || bytes == 0) {
-    //             printf("Team B - Player %d energy: %.2f\n", i, energy);
-    //             total_B += energy;
-    //         }
-    //     }
-    //
-    //     float score = total_A - total_B;
-    //     printf("\nTotal Energy A: %.2f | Total Energy B: %.2f | Score: %.2f\n\n", total_A, total_B, score);
-    //
-    //     if (score >= config.MAX_SCORE) {
-    //         printf("🏆 Team A wins!\n");
-    //         break;
-    //     }
-    //     if (score <= -config.MAX_SCORE) {
-    //         printf("🏆 Team B wins!\n");
-    //         break;
-    //     }
-    //
-    //     sleep(1);
-    // }
+    sleep(2); // Wait for players to get ready
+
+    // Send start signal to all players
+    for (int i = 0; i < config.NUM_PLAYERS/2; i++) {
+        kill(players_teamA[i].pid, SIGUSR2);
+        kill(players_teamB[i].pid, SIGUSR2);
+    }
+
+
+
+    while (1) {
+        float total_A = 0.0, total_B = 0.0;
+
+        for (int i = 0; i < config.NUM_PLAYERS/2; i++) {
+            float energy;
+            ssize_t bytes = read(pipe_fds_team_A[i], &energy, sizeof(float));
+
+
+            if (bytes == sizeof(float) || bytes == 0) {
+                printf("Team A - Player %d energy: %.2f\n", i, energy);
+                total_A += energy;
+            }
+        }
+
+        for (int i = 0; i < config.NUM_PLAYERS/2; i++) {
+            float energy;
+            ssize_t bytes = read(pipe_fds_team_B[i], &energy, sizeof(float));
+            if (bytes == sizeof(float) || bytes == 0) {
+                printf("Team B - Player %d energy: %.2f\n", i, energy);
+                total_B += energy;
+            }
+        }
+
+        float score = total_A - total_B;
+        printf("\nTotal Energy A: %.2f | Total Energy B: %.2f | Score: %.2f\n\n", total_A, total_B, score);
+
+        if (score >= config.MAX_SCORE) {
+            printf("🏆 Team A wins!\n");
+            break;
+        }
+        if (score <= -config.MAX_SCORE) {
+            printf("🏆 Team B wins!\n");
+            break;
+        }
+
+        sleep(1);
+    }
 
     free(bin_path);
     return 0;

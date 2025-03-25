@@ -82,12 +82,10 @@ int main(int argc, char *argv[]) {
         exit(1);
     }
 
-    current_player = create_player(0, getpid());
+    current_player = create_player(getpid());
     // printf("argv[1] = %s\n", argv[1]);
     deserialize_player(current_player, argv[1]);
 
-    printf("AODJSOJD\n");
-    current_player->pid = getpid();
     my_team = current_player->team;
 
     print_player(current_player);
@@ -97,17 +95,16 @@ int main(int argc, char *argv[]) {
     // Close the read end (not used)
     // Not needed explicitly as it's not opened in player
 
-    // // Set up signal handler
-    // signal(SIGALRM, send_energy);
-    // signal(SIGUSR1, handle_get_ready);
-    // signal(SIGUSR2, handle_start);
+    // Set up signal handler
+    signal(SIGALRM, send_energy);
+    signal(SIGUSR1, handle_get_ready);
+    signal(SIGUSR2, handle_start);
 
     alarm(1); // Trigger first after 1 second
 
     while (1) {
         pause();  // Wait for signal
     }
-
     // close(write_fd);
     // return 0;
     // // Parse config and team
@@ -137,9 +134,10 @@ int main(int argc, char *argv[]) {
 }
 
 
-Player *create_player(Team team, pid_t pid) {
+Player *create_player(pid_t pid) {
     Player *player = (Player *) malloc(sizeof(Player));
-    player->team = team;
     player->pid = pid;
+
+    return player;
 
 }

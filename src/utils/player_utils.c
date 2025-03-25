@@ -22,12 +22,14 @@ void print_player(Player *player) {
            "energy: %f\n"
            "recovery_time: %f\n"
            "team: %d\n"
-           "number: %d\n",
+           "number: %d\n"
+           "falling_chance: %f\n",
            player->rate_decay,
            player->energy,
            player->recovery_time,
            player->team,
-           player->number);
+           player->number,
+           player->falling_chance);
 
     fflush(stdout);
 }
