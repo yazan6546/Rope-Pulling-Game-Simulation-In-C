@@ -69,27 +69,27 @@ int main(int argc, char *argv[]) {
         float total_A = 0.0f, total_B = 0.0f;
 
         for (int i = 0; i < config.NUM_PLAYERS/2; i++) {
-            float energy;
-            ssize_t bytes = read(pipe_fds_team_A[i], &energy, sizeof(float));
+            float effort;
+            ssize_t bytes = read(pipe_fds_team_A[i], &effort, sizeof(float));
 
 
             if (bytes == sizeof(float) || bytes == 0) {
-                printf("Team A - Player %d energy: %.2f\n", i, energy);
-                total_A += energy;
+                printf("Team A - Player %d effort: %.2f\n", i, effort);
+                total_A += effort;
             }
         }
 
         for (int i = 0; i < config.NUM_PLAYERS/2; i++) {
-            float energy;
-            ssize_t bytes = read(pipe_fds_team_B[i], &energy, sizeof(float));
+            float effort;
+            ssize_t bytes = read(pipe_fds_team_B[i], &effort, sizeof(float));
             if (bytes == sizeof(float) || bytes == 0) {
-                printf("Team B - Player %d energy: %.2f\n", i, energy);
-                total_B += energy;
+                printf("Team B - Player %d effort: %.2f\n", i, effort);
+                total_B += effort;
             }
         }
 
         float score = total_A - total_B;
-        printf("\nTotal Energy A: %.2f | Total Energy B: %.2f | Score: %.2f\n\n", total_A, total_B, score);
+        printf("\nTotal Effort A: %.2f | Total Effort B: %.2f | Score: %.2f\n\n", total_A, total_B, score);
 
         if (score >= config.MAX_SCORE) {
             printf("🏆 Team A wins!\n");
