@@ -43,6 +43,8 @@ int main(int argc, char *argv[]) {
     fork_players(players_teamA, config.NUM_PLAYERS/2, TEAM_A, bin_path, pipe_fds_team_A);
     fork_players(players_teamB, config.NUM_PLAYERS/2, TEAM_B, bin_path, pipe_fds_team_B);
 
+    Team team_win = -1;
+
     while (game.game_running) {
         sleep(2); // Wait for players to get ready
 
@@ -67,9 +69,8 @@ int main(int argc, char *argv[]) {
 
         sleep(3);
 
-
         while (1) {
-            Team team_win = simulate_round(pipe_fds_team_A, pipe_fds_team_B,
+            team_win = simulate_round(pipe_fds_team_A, pipe_fds_team_B,
                                                         &config, &game);
             if (team_win == TEAM_A) {
                 game.team_wins_A++;
@@ -83,7 +84,8 @@ int main(int argc, char *argv[]) {
             sleep(1);
         }
 
-        game.game_running = check_game_conditions(game.round_num , &config);
+        game.game_running = check_game_conditions(&game , &config, team_win);
+        game.last_winner = team_win;
 
     }
     free(bin_path);

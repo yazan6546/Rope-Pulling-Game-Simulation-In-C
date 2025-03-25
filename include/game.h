@@ -16,11 +16,12 @@ typedef struct Game {
     int team_wins_B;
     float totals_A;
     float totals_B;
+    Team last_winner;
 } Game;
 
 void init_game(Game *game);
 Team simulate_round(int pipe_fds_team_A[][2], int pipe_fds_team_B[][2], Config *config, Game *game);
-int check_game_conditions(int round_num, Config *config);
+int check_game_conditions(Game *game, Config *config, Team team_win);
 
 
 #endif //GAME_H

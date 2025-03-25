@@ -12,6 +12,7 @@ void init_game(Game *game) {
     game->team_wins_B = 0;
     game->totals_A = 0;
     game->totals_B = 0;
+    game->last_winner = -1;
 }
 
 
@@ -51,9 +52,15 @@ Team simulate_round(int pipe_fds_team_A[][2], int pipe_fds_team_B[][2], Config *
     return -1;
 }
 
-int check_game_conditions(int round_num, Config *config) {
-    if (round_num > config->NUM_ROUNDS) {
+int check_game_conditions(Game *game, Config *config, Team team_win) {
+    if (game->round_num > config->NUM_ROUNDS) {
         return 0;
     }
+
+    if (team_win == game->last_winner) {
+        return 0;
+    }
+
+    return 1;
 }
 
