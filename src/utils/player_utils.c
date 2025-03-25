@@ -6,13 +6,13 @@
 #include "random.h"
 
 void deserialize_player(Player *player, char *buffer) {
-    sscanf(buffer, "%f %f %f %d %d %f", &player->rate_decay, &player->energy, &player->recovery_time,
-            &player->team, &player->number, &player->falling_chance);
+    sscanf(buffer, "%f %f %f %d %d %f %d %d", &player->rate_decay, &player->energy, &player->recovery_time,
+            &player->team, &player->number, &player->falling_chance, &player->position, &player->new_position);
 }
 
 void serialize_player(Player *player, char *buffer) {
-    sprintf(buffer, "%f %f %f %d %d %f", player->rate_decay, player->energy, player->recovery_time,
-            player->team, player->number, player->falling_chance);
+    sprintf(buffer, "%f %f %f %d %d %f %d %d", player->rate_decay, player->energy, player->recovery_time,
+            player->team, player->number, player->falling_chance, player->position, player->new_position);
 }
 
 void print_player(Player *player) {
@@ -32,7 +32,7 @@ void print_player(Player *player) {
            player->number,
            player->falling_chance,
            player->position,
-           player->number);
+           player->new_position);
 
     fflush(stdout);
 }
