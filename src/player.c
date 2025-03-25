@@ -8,6 +8,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include "random.h"
+#include <sys/types.h>
 
 int write_fd;
 Team my_team;
