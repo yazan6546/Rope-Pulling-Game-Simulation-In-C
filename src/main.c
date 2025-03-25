@@ -15,9 +15,6 @@ void fork_players(Player *players, int num_players, Team team, char *binary_path
 
 int main(int argc, char *argv[]) {
 
-    Player players_teamA[config.NUM_PLAYERS/2];
-    Player players_teamB[config.NUM_PLAYERS/2];
-
     char *config_path = NULL;
     handling_file(argc, argv[0], &config_path);
     char *bin_path = binary_dir(config_path);
@@ -25,11 +22,37 @@ int main(int argc, char *argv[]) {
 
     load_config(config_path, &config);
 
+    Player players_teamA[config.NUM_PLAYERS/2];
+    Player players_teamB[config.NUM_PLAYERS/2];
+
+
     int pipe_fds_team_A[config.NUM_PLAYERS/2];
     int pipe_fds_team_B[config.NUM_PLAYERS/2];
 
     fork_players(players_teamA, config.NUM_PLAYERS/2, TEAM_A, bin_path, pipe_fds_team_A);
     fork_players(players_teamB, config.NUM_PLAYERS/2, TEAM_B, bin_path, pipe_fds_team_B);
+
+    printf("Energy : %f\n", players_teamA[0].energy);
+
+    //
+    // // Send get ready signal to all players
+    // for (int i = 0; i < config.NUM_PLAYERS/2; i++) {
+    //     kill(players_teamA[i].pid, SIGUSR1);
+    //     kill(players_teamB[i].pid, SIGUSR1);
+    // }
+    //
+    // align(players_teamA, config.NUM_PLAYERS/2);
+    // align(players_teamB, config.NUM_PLAYERS/2);
+    //
+    // sleep(2); // Wait for players to get ready
+    //
+    // // Send start signal to all players
+    // for (int i = 0; i < config.NUM_PLAYERS/2; i++) {
+    //     kill(players_teamA[i].pid, SIGUSR2);
+    //     kill(players_teamB[i].pid, SIGUSR2);
+    // }
+    //
+
 
     while (1) {
         float total_A = 0.0, total_B = 0.0;
@@ -37,6 +60,8 @@ int main(int argc, char *argv[]) {
         for (int i = 0; i < config.NUM_PLAYERS/2; i++) {
             float energy;
             ssize_t bytes = read(pipe_fds_team_A[i], &energy, sizeof(float));
+
+
             if (bytes == sizeof(float)) {
                 printf("Team A - Player %d energy: %.2f\n", i, energy);
                 total_A += energy;
@@ -58,29 +83,13 @@ int main(int argc, char *argv[]) {
         if (score >= config.MAX_SCORE) {
             printf("🏆 Team A wins!\n");
             break;
-        } else if (score <= -config.MAX_SCORE) {
+        }
+        if (score <= -config.MAX_SCORE) {
             printf("🏆 Team B wins!\n");
             break;
         }
 
         sleep(1);
-    }
-
-    // Send get ready signal to all players
-    for (int i = 0; i < config.NUM_PLAYERS/2; i++) {
-        kill(players_teamA[i].pid, SIGUSR1);
-        kill(players_teamB[i].pid, SIGUSR1);
-    }
-
-    align(players_teamA, config.NUM_PLAYERS/2);
-    align(players_teamB, config.NUM_PLAYERS/2);
-
-    sleep(2); // Wait for players to get ready
-
-    // Send start signal to all players
-    for (int i = 0; i < config.NUM_PLAYERS/2; i++) {
-        kill(players_teamA[i].pid, SIGUSR2);
-        kill(players_teamB[i].pid, SIGUSR2);
     }
 
     free(bin_path);
@@ -97,7 +106,10 @@ void fork_players(Player *players, int num_players, Team team, char *binary_path
             exit(EXIT_FAILURE);
         }
 
+        generate_random_player(&players[i], &config, team, i);
+
         const pid_t pid = fork();
+
         init_random(getpid());
 
         if (pid == -1) {
@@ -108,7 +120,6 @@ void fork_players(Player *players, int num_players, Team team, char *binary_path
             close(pipefd[0]); // Close read end in child
 
             char buffer[100];
-            generate_random_player(&players[i], &config, team, pid, i);
             serialize_player(&players[i], buffer);
 
             char player_path[PATH_MAX];
@@ -124,6 +135,7 @@ void fork_players(Player *players, int num_players, Team team, char *binary_path
         }
 
         else {
+            players[i].pid = pid;
             close(pipefd[1]); // parent closes write end
             pipe_fds[i] = pipefd[0]; // store read end
         }

@@ -10,5 +10,6 @@
 
 void deserialize_player(Player *player, char *buffer);
 void serialize_player(Player *player, char *buffer);
+void print_player(Player *player);
 
 #endif //PLAYER_UTILS_H

@@ -27,10 +27,8 @@ typedef struct Player {
     float rate_decay;
     float recovery_time;
     float falling_chance;
-    int positon;
     State state;
     pid_t pid;
 } Player;
 
-void print_player(Player *player);
 #endif //PLAYER_H
