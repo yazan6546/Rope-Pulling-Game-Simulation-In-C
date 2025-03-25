@@ -32,10 +32,6 @@ int main(int argc, char *argv[]) {
     fork_players(players_teamA, config.NUM_PLAYERS/2, TEAM_A, bin_path, pipe_fds_team_A);
     fork_players(players_teamB, config.NUM_PLAYERS/2, TEAM_B, bin_path, pipe_fds_team_B);
 
-
-
-    printf("Energy : %f\n", players_teamA[0].energy);
-
     sleep(2); // Wait for players to get ready
 
     printf("\n\n");

@@ -6,7 +6,6 @@
 #include "random.h"
 
 void deserialize_player(Player *player, char *buffer) {
-    printf("buffer : %s\n", buffer);
     sscanf(buffer, "%f %f %f %d %d %f", &player->rate_decay, &player->energy, &player->recovery_time,
             &player->team, &player->number, &player->falling_chance);
 }

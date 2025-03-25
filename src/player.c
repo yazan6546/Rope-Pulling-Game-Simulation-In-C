@@ -73,7 +73,6 @@ void simulate_pulling() {
 }
 
 int main(int argc, char *argv[]) {
-    printf("Player process\n");
     // printf("argv[1] = %s\n", argv[1]);
 
 
