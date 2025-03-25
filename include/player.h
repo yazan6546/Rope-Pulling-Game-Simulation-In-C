@@ -22,12 +22,12 @@ typedef enum State {
 
 typedef struct Player {
     int number;
-    int new_num;
     Team team;
     float energy;
     float rate_decay;
     float recovery_time;
     float falling_chance;
+    int positon;
     State state;
     pid_t pid;
 } Player;
