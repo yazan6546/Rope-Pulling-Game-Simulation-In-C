@@ -124,13 +124,13 @@ void fork_players(Player *players, int num_players, Team team, char *binary_path
 
         const pid_t pid = fork();
 
-        init_random(getpid());
-
         if (pid == -1) {
             perror("fork");
         }
 
         else if (pid == 0) {
+
+            init_random(getpid());
 
             close(pipefd[0]); // Close read end in child
 
