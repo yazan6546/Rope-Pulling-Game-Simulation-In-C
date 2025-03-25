@@ -1,63 +1,165 @@
-//
-// Created by - on 3/25/2025.
-//
-
 #include "common.h"
+#include "config.h"
+#include "random.h"
+#include <signal.h>
+#include <wchar.h>
 
-pid_t start_graphics_process();
-pid_t start_referee_process();
+#include "referee_orders.h"
+#include "player_utils.h"
+#include "file.h"
+#include "player.h"
+
+
+#define PATH_MAX 4096
+Config config;
+
+void fork_players(Player *players, int num_players, Team team, char *binary_path, int pipe_fds[]);
+void generate_and_align(Player *players, int num_players, Team team);
 
 int main(int argc, char *argv[]) {
 
-    pid_t pid = start_graphics_process();
-    start_referee_process();
-    wait(NULL);
+    char *config_path = NULL;
+    printf("argv : %s\n", argv[0]);
+    handling_file(argc, argv[0], &config_path);
+    printf("%s\n\n", config_path);
+    char *bin_path = binary_dir(config_path);
 
-    int status;
-    waitpid(pid, &status, 0);
+
+    load_config(config_path, &config);
+
+    Player players_teamA[config.NUM_PLAYERS/2];
+    Player players_teamB[config.NUM_PLAYERS/2];
 
 
-    if (WIFEXITED(status)) {
-        printf("Child process exited with code: %d\n", WEXITSTATUS(status));
-    } else if (WIFSIGNALED(status)) {
-        printf("Child process terminated by signal: %d\n", WTERMSIG(status));
+    int pipe_fds_team_A[config.NUM_PLAYERS/2];
+    int pipe_fds_team_B[config.NUM_PLAYERS/2];
+
+
+    generate_and_align(players_teamA, config.NUM_PLAYERS/2, TEAM_A);
+    generate_and_align(players_teamB, config.NUM_PLAYERS/2, TEAM_B);
+
+    fork_players(players_teamA, config.NUM_PLAYERS/2, TEAM_A, bin_path, pipe_fds_team_A);
+    fork_players(players_teamB, config.NUM_PLAYERS/2, TEAM_B, bin_path, pipe_fds_team_B);
+
+
+    sleep(2); // Wait for players to get ready
+
+    printf("\n\n");
+
+    // Send get ready signal to all players
+    for (int i = 0; i < config.NUM_PLAYERS/2; i++) {
+        kill(players_teamA[i].pid, SIGUSR1);
+        kill(players_teamB[i].pid, SIGUSR1);
     }
 
+    printf("\n\n");
+
+    sleep(3); // Wait for players to get ready
+    //
+    // Send start signal to all players
+    for (int i = 0; i < config.NUM_PLAYERS/2; i++) {
+        kill(players_teamA[i].pid, SIGUSR2);
+        kill(players_teamB[i].pid, SIGUSR2);
+    }
+    printf("\n\n");
+
+    sleep(3);
+
+
+
+    while (1) {
+        float total_A = 0.0f, total_B = 0.0f;
+
+        for (int i = 0; i < config.NUM_PLAYERS/2; i++) {
+            float energy;
+            ssize_t bytes = read(pipe_fds_team_A[i], &energy, sizeof(float));
+
+
+            if (bytes == sizeof(float) || bytes == 0) {
+                printf("Team A - Player %d energy: %.2f\n", i, energy);
+                total_A += energy;
+            }
+        }
+
+        for (int i = 0; i < config.NUM_PLAYERS/2; i++) {
+            float energy;
+            ssize_t bytes = read(pipe_fds_team_B[i], &energy, sizeof(float));
+            if (bytes == sizeof(float) || bytes == 0) {
+                printf("Team B - Player %d energy: %.2f\n", i, energy);
+                total_B += energy;
+            }
+        }
+
+        float score = total_A - total_B;
+        printf("\nTotal Energy A: %.2f | Total Energy B: %.2f | Score: %.2f\n\n", total_A, total_B, score);
+
+        if (score >= config.MAX_SCORE) {
+            printf("🏆 Team A wins!\n");
+            break;
+        }
+        if (score <= -config.MAX_SCORE) {
+            printf("🏆 Team B wins!\n");
+            break;
+        }
+
+        sleep(1);
+    }
+
+    free(bin_path);
+    return 0;
 }
 
-pid_t start_graphics_process() {
-    pid_t pid = fork();
-    if (pid == -1) {
-        perror("fork");
-        exit(EXIT_FAILURE);
-    }
+void fork_players(Player *players, int num_players, Team team, char *binary_path, int pipe_fds[]) {
 
-    if (pid == 0) {
-        // Child process
-        if (execlp("./rope_game_graphics", "rope_pulling_game_main", NULL)) {
-            perror("execl graphics");
+    for (int i = 0; i < num_players; i++) {
+
+        int pipefd[2];
+        if (pipe(pipefd) == -1) {
+            perror("pipe");
             exit(EXIT_FAILURE);
         }
 
-    }
+        const pid_t pid = fork();
 
-    return pid;
-}
+        if (pid == -1) {
+            perror("fork");
+        }
 
-pid_t start_referee_process() {
-    pid_t pid = fork();
-    if (pid == -1) {
-        perror("fork");
-        exit(EXIT_FAILURE);
-    }
+        else if (pid == 0) {
 
-    if (pid == 0) {
-        // Child process
-        if (execl("./referee", "./referee", NULL)) {
-            perror("execl referee");
-            exit(EXIT_FAILURE);
+            close(pipefd[0]); // Close read end in child
+
+            char buffer[100];
+            serialize_player(&players[i], buffer);
+
+            char player_path[PATH_MAX];
+            snprintf(player_path, PATH_MAX, "%s/player", binary_path);
+
+            char write_fd_str[10];
+            sprintf(write_fd_str, "%d", pipefd[1]);
+
+
+            if (execl(player_path, "player", buffer, write_fd_str, NULL)) {
+                perror("execl");
+                exit(1);
+            }
+        }
+
+        else {
+            players[i].pid = pid;
+            close(pipefd[1]); // parent closes write end
+            pipe_fds[i] = pipefd[0]; // store read end
         }
     }
-
-    return pid;
 }
+
+void generate_and_align(Player *players, int num_players, Team team) {
+
+    for (int i = 0; i<num_players; i++) {
+        generate_random_player(&players[i], &config, team, i);
+    }
+
+    align(players, num_players);
+}
+
+
