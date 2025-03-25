@@ -36,10 +36,15 @@ int main(int argc, char *argv[]) {
     generate_and_align(players_teamA, config.NUM_PLAYERS/2, TEAM_A);
     generate_and_align(players_teamB, config.NUM_PLAYERS/2, TEAM_B);
 
+    for (int i = 0; i<config.NUM_PLAYERS/2;i++) {
+
+        printf("Printing all players....\n");
+        print_player(&players_teamA[i]);
+        printf("\n\n");
+    }
+
     fork_players(players_teamA, config.NUM_PLAYERS/2, TEAM_A, bin_path, pipe_fds_team_A);
     fork_players(players_teamB, config.NUM_PLAYERS/2, TEAM_B, bin_path, pipe_fds_team_B);
-
-
 
 
     sleep(2); // Wait for players to get ready
@@ -155,12 +160,8 @@ void generate_and_align(Player *players, int num_players, Team team) {
         generate_random_player(&players[i], &config, team, i);
     }
 
-    for (int i = 0; i<config.NUM_PLAYERS/2;i++) {
-        print_player(&players[i]);
-        printf("\n\n");
-    }
-
     align(players, num_players);
+
 
 }
 

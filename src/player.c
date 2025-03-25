@@ -31,6 +31,8 @@ void send_energy(int signum) {
 
 void handle_get_ready(int signum) {
     printf("Player %d (Team %d) getting ready\n", current_player->number, my_team);
+    printf("Player %d (Team %d) Repositioned from %d to %d\n", current_player->number, my_team, current_player->position, current_player->new_position);
+    current_player->position = current_player->new_position;
     current_player->state = READY;
     fflush(stdout);
 }
