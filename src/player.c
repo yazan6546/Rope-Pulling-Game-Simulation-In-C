@@ -9,7 +9,7 @@
 #include <unistd.h>
 #include "random.h"
 
-int write_fd;
+int pipe_fds[2];
 Team my_team;
 Player *current_player;
 
@@ -17,14 +17,13 @@ void send_energy(int signum) {
     // Decrease energy based on rate_decay * position
     current_player->energy -= current_player->rate_decay;
     if (current_player->energy < 0.0f) {
-        printf("ok\n");
         current_player->energy = 0.0f;
     }
 
     // Send effort to parent
 
     float effort = current_player->energy * ((float) current_player->position);
-    write(write_fd, &effort, sizeof(float));
+    write(pipe_fds[1], &effort, sizeof(float));
 
     // Schedule next alarm
     alarm(1);
@@ -45,6 +44,12 @@ void handle_start(int signum) {
            my_team == TEAM_A ? "right" : "left");
     current_player->state = PULLING;
     fflush(stdout);
+}
+
+void reset_round(int signum) {
+
+
+
 }
 
 void simulate_pulling() {
@@ -88,7 +93,9 @@ int main(int argc, char *argv[]) {
     deserialize_player(current_player, argv[1]);
 
     my_team = current_player->team;
-    write_fd = atoi(argv[2]);
+    pipe_fds[1] = atoi(argv[2]);
+    pipe_fds[0] = atoi(argv[3]);
+
 
     // Close the read end (not used)
     // Not needed explicitly as it's not opened in player
@@ -97,12 +104,15 @@ int main(int argc, char *argv[]) {
     signal(SIGALRM, send_energy);
     signal(SIGUSR1, handle_get_ready);
     signal(SIGUSR2, handle_start);
+    signal(SIGHUP, reset_round);
 
     alarm(1); // Trigger first after 1 second
 
     while (1) {
         pause();  // Wait for signal
     }
+
+
     // close(write_fd);
     // return 0;
     // // Parse config and team

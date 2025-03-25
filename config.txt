@@ -2,7 +2,7 @@
 
 ## Game settings
 
-MAX_SCORE=400          # Maximum score to end the game
+MAX_SCORE=400           # Maximum score to end the game
 MAX_TIME=100            # Maximum time for the game (sec)
 MIN_ENERGY=30           # Minimum energy for a player
 MAX_ENERGY=500          # Maximum energy for a player
@@ -14,5 +14,5 @@ MAX_RECOVERY_TIME=20    # Maximum recovery time for a player
 WINNING_THRESHOLD=4     # Score threshold to win a round
 NUM_PLAYERS=8           # Number of players in the game
 UPDATE_RATE=1           # Update rate for the game (sec)
-MIN_FALLING_CHANCE=0.1
-MAX_FALLING_CHANCE=0.7
+MIN_FALLING_CHANCE=0.1  # Minimum chance of falling
+MAX_FALLING_CHANCE=0.7  # Maximum chance of falling
