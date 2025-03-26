@@ -29,6 +29,7 @@ void handle_alarm(int signum) {
 
     elapsed_time++;
     energy_update = 1;
+    alarm(1);  // Schedule next energy update
 }
 
 void process_player_state() {
@@ -67,13 +68,8 @@ void process_player_state() {
         }
 
         // send energy updates every 1 sec
-        // if (energy_update){
         float effort = current_player->energy * ((float) current_player->position);
         write(write_fd, &effort, sizeof(float));
-        // } else {
-        //     alarm(1);  // Schedule next energy update
-        // }
-        alarm(1);  // Schedule next energy update
         fflush(stdout);
     }
     

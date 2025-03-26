@@ -8,6 +8,7 @@
 #include "player_utils.h"
 #include "file.h"
 #include "player.h"
+#include <stdarg.h>
 
 
 #define PATH_MAX 4096
@@ -16,6 +17,8 @@ Config config;
 void fork_players(Player *players, int num_players, Team team, char *binary_path, int pipe_fds[]);
 void generate_and_align(Player *players, int num_players, Team team);
 void handle_alarm(int signum);
+
+volatile int elapsed_time = 0;
 
 int main(int argc, char *argv[]) {
 
@@ -71,13 +74,16 @@ int main(int argc, char *argv[]) {
     while (1) {
         float total_A = 0.0f, total_B = 0.0f;
 
+        alarm(1);
+        pause();
+
         for (int i = 0; i < config.NUM_PLAYERS/2; i++) {
             float effort;
             ssize_t bytes = read(pipe_fds_team_A[i], &effort, sizeof(float));
 
 
             if (bytes == sizeof(float) || bytes == 0) {
-                printf("Team A - Player %d effort: %.2f\n", i, effort);
+                print_with_time("Team A - Player %d effort: %.2f\n", i, effort);
                 total_A += effort;
             }
         }
@@ -86,25 +92,24 @@ int main(int argc, char *argv[]) {
             float effort;
             ssize_t bytes = read(pipe_fds_team_B[i], &effort, sizeof(float));
             if (bytes == sizeof(float) || bytes == 0) {
-                printf("Team B - Player %d effort: %.2f\n", i, effort);
+                print_with_time("Team B - Player %d effort: %.2f\n", i, effort);
                 total_B += effort;
             }
         }
 
         float score = total_A - total_B;
-        printf("\nTotal Effort A: %.2f | Total Effort B: %.2f | Score: %.2f\n\n", total_A, total_B, score);
+        print_with_time("\nTotal Effort A: %.2f | Total Effort B: %.2f | Score: %.2f\n\n", total_A, total_B, score);
 
         if (score >= config.MAX_SCORE) {
-            printf("🏆 Team A wins!\n");
+            print_with_time("🏆 Team A wins!\n");
             break;
         }
         if (score <= -config.MAX_SCORE) {
-            printf("🏆 Team B wins!\n");
+            print_with_time("🏆 Team B wins!\n");
             break;
         }
 
-        alarm(1);
-        pause();
+        
     }
 
     free(bin_path);
@@ -168,7 +173,15 @@ void generate_and_align(Player *players, int num_players, Team team) {
 }
 
 void handle_alarm(int signum) {
+    elapsed_time++;
     alarm(1);
 }
 
+void print_with_time(const char *format, ...) {
+    va_list args;
+    va_start(args, format);
+    printf("@ %ds: ", elapsed_time);
+    vprintf(format, args);
+    va_end(args);
+}
 
