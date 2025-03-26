@@ -136,6 +136,7 @@ void fork_players(Player *players, int num_players, Team team, char *binary_path
             char write_fd_str[10];
             sprintf(write_fd_str, "%d", pipefd[1]);
 
+            // printf("%s\n", player_path);
 
             if (execl(player_path, "player", buffer, write_fd_str, NULL)) {
                 perror("execl");

@@ -13,22 +13,64 @@
 int write_fd;
 Team my_team;
 Player *current_player;
+unsigned int previous_energy = 0;
+unsigned int remaining_recovery_time = 0;
 
-void send_energy(int signum) {
-    // Decrease energy based on rate_decay * position
-    current_player->energy -= current_player->rate_decay;
-    if (current_player->energy < 0.0f) {
-        printf("ok\n");
-        current_player->energy = 0.0f;
+volatile sig_atomic_t energy_update = 0;
+volatile sig_atomic_t recovery_complete = 0;
+
+void handle_alarm(int signum) {
+    if (current_player->state == RECOVERING) {
+        remaining_recovery_time--;
+        // recovery_complete = 1;
+    } 
+
+    energy_update = 1;
+}
+
+void process_player_state() {
+    if (current_player->state == PULLING) {
+
+        current_player->energy -= current_player->rate_decay;
+        
+        // check for random falls
+        if (random_float(0, 1) < current_player->falling_chance) {
+            previous_energy = current_player->energy;
+            current_player->energy = 0;
+            printf("Player %d (Team %d) has fallen!\n", current_player->number, my_team);
+            current_player->state = RECOVERING;
+            remaining_recovery_time = current_player->recovery_time;  // Set recovery timer
+            fflush(stdout);
+        } else if (current_player->energy <= 0) {
+            current_player->energy = 0;
+            printf("Player %d (Team %d) is exhausted!\n", 
+            current_player->number, my_team);
+            current_player->state = RECOVERING;
+            remaining_recovery_time = current_player->recovery_time;  // Set recovery timer
+            fflush(stdout);
+        }
+
+        energy_update = 0; // this way, we ensure that energy is only updated once the alarm handler is called
+    }
+    
+    else if (current_player->state == RECOVERING && remaining_recovery_time == 0) {
+        current_player->energy = previous_energy;
+        current_player->state = PULLING;
+        printf("Player %d (Team %d) rejoining with energy %.2f\n",
+               current_player->number, my_team, current_player->energy);
+        fflush(stdout);
+        // alarm(1);  // Restart energy updates
     }
 
-    // Send effort to parent
-
-    float effort = current_player->energy * ((float) current_player->position);
-    write(write_fd, &effort, sizeof(float));
-
-    // Schedule next alarm
-    alarm(1);
+    // send energy updates every 1 sec
+    // if (energy_update){
+        float effort = current_player->energy * ((float) current_player->position);
+        write(write_fd, &effort, sizeof(float));
+    // } else {
+    //     alarm(1);  // Schedule next energy update
+    // }
+    alarm(1);  // Schedule next energy update
+    
 }
 
 void handle_get_ready(int signum) {
@@ -46,34 +88,6 @@ void handle_start(int signum) {
            my_team == TEAM_A ? "right" : "left");
     current_player->state = PULLING;
     fflush(stdout);
-}
-
-void simulate_pulling() {
-    if (current_player->state == PULLING) {
-        // Decrease energy based on rate_decay
-        current_player->energy -= current_player->rate_decay;
-
-        // Check if player falls (random chance)
-        if (random_float(0, 1) < current_player->falling_chance) {
-            printf("Player %d (Team %d) has fallen!\n", current_player->number, my_team);
-            current_player->state = RECOVERING;
-            fflush(stdout);
-        } else if (current_player->energy <= 0) { // Check if energy is depleted
-            current_player->energy = 0;
-            current_player->state = RECOVERING;
-            printf("Player %d (Team %d) is exhausted!\n", current_player->number, my_team);
-            fflush(stdout);
-        }
-    }
-    else if (current_player->state == RECOVERING) {
-        printf("Player %d (Team %d) recovering\n", current_player->number, my_team);
-        fflush(stdout);
-        sleep((unsigned int) current_player->recovery_time);
-        current_player->state = PULLING;
-        printf("Player %d (Team %d) rejoining with energy %.2f\n",
-               current_player->number, my_team, current_player->energy);
-        fflush(stdout);
-    }
 }
 
 int main(int argc, char *argv[]) {
@@ -94,44 +108,20 @@ int main(int argc, char *argv[]) {
     // Close the read end (not used)
     // Not needed explicitly as it's not opened in player
 
-    // Set up signal handler
-    signal(SIGALRM, send_energy);
+    // Set up signal handlers
+    signal(SIGALRM, handle_alarm);
     signal(SIGUSR1, handle_get_ready);
     signal(SIGUSR2, handle_start);
 
-    alarm(1); // Trigger first after 1 second
+    alarm(1); // Trigger first energy update after 1 second
 
-    while (1) {
-        pause();  // Wait for signal
+    while(1) {
+        pause();
+        process_player_state();
     }
-    // close(write_fd);
-    // return 0;
-    // // Parse config and team
-    // deserialize_player(current_player, argv[1]);
-    // my_team = current_player->team;
-    // int write_fd = 0;
-    // fflush(stdout);
-
-
-    // // Wait for signals
-    // while(1) {
-    //     if (current_player->state == PULLING || current_player->state == RECOVERING) {
-    //         simulate_pulling();
-    //         // send data to referee
-    //
-    //         if (argc >= 3) {
-    //             write_fd = atoi(argv[2]);
-    //             write(write_fd, &current_player->energy, sizeof(float));
-    //             close(write_fd);
-    //         }
-    //
-    //
-    //         usleep(100000);  // Small delay to control simulation speed (or use alarm?)
-    //     }
-    // }
-
+    
+    return 0;
 }
-
 
 Player *create_player(pid_t pid) {
     Player *player = (Player *) malloc(sizeof(Player));
