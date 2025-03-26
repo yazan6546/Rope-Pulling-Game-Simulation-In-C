@@ -69,7 +69,7 @@ int main(int argc, char *argv[]) {
 
         sleep(3);
 
-        while (1) {
+        while (game.game_running) {
             team_win = simulate_round(pipe_fds_team_A, pipe_fds_team_B,
                                                         &config, &game);
             if (team_win == TEAM_A) {
@@ -81,9 +81,10 @@ int main(int argc, char *argv[]) {
                 break;
             }
             sleep(1);
+            game.elapsed_time++;
+            game.game_running = check_game_conditions(&game , &config, team_win);
         }
 
-        game.game_running = check_game_conditions(&game , &config, team_win);
         game.last_winner = team_win;
         go_to_next_round(&game);
     }
