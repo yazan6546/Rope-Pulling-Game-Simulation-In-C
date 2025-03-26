@@ -43,7 +43,7 @@ int main(int argc, char *argv[]) {
     fork_players(players_teamA, config.NUM_PLAYERS/2, TEAM_A, bin_path, pipe_fds_team_A);
     fork_players(players_teamB, config.NUM_PLAYERS/2, TEAM_B, bin_path, pipe_fds_team_B);
 
-    Team team_win = -1;
+    Team team_win = NONE;
 
     while (game.game_running) {
         sleep(2); // Wait for players to get ready
@@ -74,6 +74,10 @@ int main(int argc, char *argv[]) {
             team_win = simulate_round(pipe_fds_team_A, pipe_fds_team_B,
                                                         &config, &game);
 
+            if (team_win != NONE) {
+                game.round_running = 0;
+            }
+
             sleep(1);
 
             game.elapsed_time++;
@@ -85,7 +89,7 @@ int main(int argc, char *argv[]) {
         go_to_next_round(&game);
         game.game_running = check_game_conditions(&game , &config, team_win);
         game.last_winner = team_win;
-        team_win = -1;
+        team_win = NONE;
     }
 
     printf("Team A wins: %d\n", game.team_wins_A);
@@ -93,7 +97,7 @@ int main(int argc, char *argv[]) {
 
     printf("Cleaning up...\n");
 
-    free(bin_path);
+    // free(bin_path);
     return 0;
 
 }
