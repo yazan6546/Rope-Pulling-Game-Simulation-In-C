@@ -11,6 +11,10 @@ void init_game(Game *game) {
     game->team_wins_A = 0;
     game->team_wins_B = 0;
     game->last_winner = -1;
+    game->elapsed_time = 0;
+    game->round_running = 1;
+    game->round_score = 0;
+    game->total_score = 0;
 }
 
 
@@ -41,11 +45,11 @@ Team simulate_round(int pipe_fds_team_A[][2], int pipe_fds_team_B[][2], Config *
     float score = totals_A - totals_B;
     printf("\nTotal Effort A: %.2f | Total Effort B: %.2f | Score: %.2f\n\n", totals_A, totals_B, score);
 
-    if (score >= config->MAX_SCORE) {
+    if (score >= config->WINNING_THRESHOLD) {
         printf("🏆 Team A wins!\n");
         return TEAM_A;
     }
-    if (score <= -config->MAX_SCORE) {
+    if (score <= -config->WINNING_THRESHOLD) {
         printf("🏆 Team B wins!\n");
         return TEAM_B;
     }
@@ -64,19 +68,19 @@ int check_game_conditions(Game *game, Config *config, Team team_win) {
     if (game->elapsed_time > config->MAX_TIME) {
         return 0;
     }
-
     return 1;
 }
 
 int check_round_conditions(Game *game, Config *config) {
-    if (game->elapsed_time > config->MAX_TIME) {
+    if (game->elapsed_time > config->MAX_ROUND_TIME) {
         return 0;
     }
     return 1;
-
 }
 
 void go_to_next_round(Game *game) {
     game->round_num++;
     game->elapsed_time = 0;
+    game->round_score = 0;
+    game->round_running = 1;
 }

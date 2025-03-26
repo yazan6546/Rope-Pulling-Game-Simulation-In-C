@@ -14,6 +14,7 @@ typedef struct {
     float MAX_ENERGY;
     float MAX_SCORE;
     float MAX_TIME;
+    int MAX_ROUND_TIME;
     float NUM_ROUNDS;
     float MIN_RECOVERY_TIME;
     float MAX_RECOVERY_TIME;
@@ -22,6 +23,7 @@ typedef struct {
     float UPDATE_RATE;
     float MIN_FALLING_CHANCE;
     float MAX_FALLING_CHANCE;
+
 } Config;
 
 int load_config(const char *filename, Config *config);

@@ -14,6 +14,7 @@ int load_config(const char *filename, Config *config) {
     config->MAX_ENERGY = -1;
     config->MAX_SCORE = -1;
     config->MAX_TIME = -1;
+    config->MAX_ROUND_TIME = -1;
     config->NUM_ROUNDS = -1;
     config->MIN_RATE_DECAY = -1;
     config->MAX_RATE_DECAY = -1;
@@ -51,6 +52,7 @@ int load_config(const char *filename, Config *config) {
             else if (strcmp(key, "UPDATE_RATE") == 0) config->UPDATE_RATE = value;
             else if (strcmp(key, "MIN_FALLING_CHANCE") == 0) config->MIN_FALLING_CHANCE = value;
             else if (strcmp(key, "MAX_FALLING_CHANCE") == 0) config->MAX_FALLING_CHANCE = value;
+            else if (strcmp(key, "MAX_ROUND_TIME") == 0) config->MAX_ROUND_TIME = value;
         }
     }
 
@@ -76,7 +78,8 @@ fflush(stdout);
 
     // Check that all necessary configuration values have been set
     if (config->MIN_ENERGY == -1 || config->MAX_ENERGY == -1 || config->MAX_SCORE == -1 || config->MAX_TIME == -1 || config->NUM_ROUNDS == -1 || config->MIN_RATE_DECAY == -1 || config->MAX_RATE_DECAY == -1
-        || config->MIN_RECOVERY_TIME == -1 || config->MAX_RECOVERY_TIME == -1 || config->WINNING_THRESHOLD == -1 || config->NUM_PLAYERS == -1 || config->UPDATE_RATE == -1 || config->MIN_FALLING_CHANCE == -1 || config->MAX_FALLING_CHANCE == -1) {
+        || config->MIN_RECOVERY_TIME == -1 || config->MAX_RECOVERY_TIME == -1 || config->WINNING_THRESHOLD == -1 || config->NUM_PLAYERS == -1 || config->UPDATE_RATE == -1 || config->MIN_FALLING_CHANCE == -1 || config->MAX_FALLING_CHANCE == -1
+        || config->MAX_ROUND_TIME == -1) {
         return -1; // Return error if any required value is missing
     }
 
@@ -95,7 +98,8 @@ void print_config(Config *config) {
            "NUM_PLAYERS: %d\n"
            "UPDATE_RATE: %f\n"
            "MIN_FALLING_CHANCE: %f\n"
-           "MAX_FALLING_CHANCE: %f\n",
+           "MAX_FALLING_CHANCE: %f\n"
+           "MAX_ROUND_TIME: %d\n",
            config->MIN_ENERGY,
            config->MAX_ENERGY,
            config->MAX_SCORE,
@@ -109,7 +113,8 @@ void print_config(Config *config) {
            config->NUM_PLAYERS,
            config->UPDATE_RATE,
            config->MIN_FALLING_CHANCE,
-           config->MAX_FALLING_CHANCE
+           config->MAX_FALLING_CHANCE,
+           config->MAX_ROUND_TIME
            );
 }
 
