@@ -15,6 +15,7 @@ Config config;
 
 void fork_players(Player *players, int num_players, Team team, char *binary_path, int pipe_fds[]);
 void generate_and_align(Player *players, int num_players, Team team);
+void handle_alarm(int signum);
 
 int main(int argc, char *argv[]) {
 
@@ -31,6 +32,8 @@ int main(int argc, char *argv[]) {
 
     int pipe_fds_team_A[config.NUM_PLAYERS/2];
     int pipe_fds_team_B[config.NUM_PLAYERS/2];
+
+    signal(SIGALRM, handle_alarm);
 
 
     generate_and_align(players_teamA, config.NUM_PLAYERS/2, TEAM_A);
@@ -100,7 +103,8 @@ int main(int argc, char *argv[]) {
             break;
         }
 
-        sleep(1);
+        alarm(1);
+        pause();
     }
 
     free(bin_path);
@@ -161,6 +165,10 @@ void generate_and_align(Player *players, int num_players, Team team) {
     align(players, num_players);
 
 
+}
+
+void handle_alarm(int signum) {
+    alarm(1);
 }
 
 
