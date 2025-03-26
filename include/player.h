@@ -20,9 +20,9 @@ typedef enum State {
     RECOVERING
 } State;
 
-typedef struct Attributes {
-    float energy;
+typedef struct __attribute__((packed)) {
     float rate_decay;
+    float energy;
     float recovery_time;
     float falling_chance;
 } Attributes;

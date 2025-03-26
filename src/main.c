@@ -8,6 +8,7 @@
 #include "file.h"
 #include "player.h"
 #include "game.h"
+#include "referee.h"
 
 #define READ 0
 #define WRITE 1
@@ -46,28 +47,7 @@ int main(int argc, char *argv[]) {
     Team team_win = -1;
 
     while (game.game_running) {
-        sleep(2); // Wait for players to get ready
-
-        printf("\n\n");
-
-        // Send get ready signal to all players
-        for (int i = 0; i < config.NUM_PLAYERS/2; i++) {
-            kill(players_teamA[i].pid, SIGUSR1);
-            kill(players_teamB[i].pid, SIGUSR1);
-        }
-
-        printf("\n\n");
-
-        sleep(3); // Wait for players to get ready
-        //
-        // Send start signal to all players
-        for (int i = 0; i < config.NUM_PLAYERS/2; i++) {
-            kill(players_teamA[i].pid, SIGUSR2);
-            kill(players_teamB[i].pid, SIGUSR2);
-        }
-        printf("\n\n");
-
-        sleep(3);
+        
 
         while (game.game_running && game.round_running) {
 
@@ -89,6 +69,13 @@ int main(int argc, char *argv[]) {
                 randomize_attributes(&attributes, &config);
                 write(pipe_fds_team_B[i][WRITE], &attributes, sizeof(Attributes));
             }
+
+            // align players
+            align(players_teamA, config.NUM_PLAYERS/2);
+            align(players_teamB, config.NUM_PLAYERS/2);
+
+            // send signals
+            send_signals(players_teamA, players_teamB, &config);
 
 
             team_win = simulate_round(pipe_fds_team_A, pipe_fds_team_B,
@@ -177,4 +164,27 @@ void generate_and_align(Player *players, int num_players, Team team) {
     align(players, num_players);
 }
 
+void send_signals(Player *players_teamA, Player *players_teamB, Config *config) {
+        sleep(2); // Wait for players to get ready
 
+        printf("\n\n");
+
+        // Send get ready signal to all players
+        for (int i = 0; i < config->NUM_PLAYERS/2; i++) {
+            kill(players_teamA[i].pid, SIGUSR1);
+            kill(players_teamB[i].pid, SIGUSR1);
+        }
+
+        printf("\n\n");
+
+        sleep(3); // Wait for players to get ready
+        //
+        // Send start signal to all players
+        for (int i = 0; i < config->NUM_PLAYERS/2; i++) {
+            kill(players_teamA[i].pid, SIGUSR2);
+            kill(players_teamB[i].pid, SIGUSR2);
+        }
+        printf("\n\n");
+
+        sleep(3);
+}

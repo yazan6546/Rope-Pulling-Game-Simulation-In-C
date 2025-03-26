@@ -13,7 +13,7 @@
 int pipe_fds[2];
 Team my_team;
 Player *current_player;
-unsigned int previous_energy = 0;
+float previous_energy = 0;
 
 volatile sig_atomic_t energy_update = 0;
 volatile sig_atomic_t recovery_complete = 0;
@@ -43,6 +43,7 @@ void process_player_state() {
             remaining_recovery_time = current_player->attributes.recovery_time;  // Set recovery timer
             fflush(stdout);
         } else if (current_player->attributes.energy <= 0) {
+            previous_energy = current_player->attributes.energy;
             current_player->attributes.energy = 0;
             printf("Player %d (Team %d) is exhausted!\n", 
             current_player->number, my_team);
@@ -65,8 +66,8 @@ void process_player_state() {
 
     // send energy updates every 1 sec
     // if (energy_update){
-        float effort = current_player->attributes.energy * ((float) current_player->position);
-        write(pipe_fds[1], &effort, sizeof(float));
+    float effort = current_player->attributes.energy * ((float) current_player->position);
+    write(pipe_fds[1], &effort, sizeof(float));
     // } else {
     //     alarm(1);  // Schedule next energy update
     // }
@@ -131,7 +132,10 @@ int main(int argc, char *argv[]) {
             Attributes attributes;
             read(pipe_fds[0], &attributes, sizeof(Attributes));
             current_player->attributes = attributes;
+            current_player->state = IDLE;
             is_round_reset = 0;
+            alarm(1);  // Schedule next energy update
+            pause();
         }
         // continue simulation
         process_player_state();
