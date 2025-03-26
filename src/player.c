@@ -10,7 +10,7 @@
 #include "random.h"
 #include <sys/types.h>
 
-int write_fd;
+int pipe_fds[2];
 Team my_team;
 Player *current_player;
 unsigned int previous_energy = 0;
@@ -65,7 +65,7 @@ void process_player_state() {
     // send energy updates every 1 sec
     // if (energy_update){
         float effort = current_player->energy * ((float) current_player->position);
-        write(write_fd, &effort, sizeof(float));
+        write(pipe_fds[1], &effort, sizeof(float));
     // } else {
     //     alarm(1);  // Schedule next energy update
     // }
@@ -90,6 +90,12 @@ void handle_start(int signum) {
     fflush(stdout);
 }
 
+void reset_round(int signum) {
+
+
+
+}
+
 int main(int argc, char *argv[]) {
     // printf("argv[1] = %s\n", argv[1]);
 
@@ -103,7 +109,9 @@ int main(int argc, char *argv[]) {
     deserialize_player(current_player, argv[1]);
 
     my_team = current_player->team;
-    write_fd = atoi(argv[2]);
+    pipe_fds[1] = atoi(argv[2]);
+    pipe_fds[0] = atoi(argv[3]);
+
 
     // Close the read end (not used)
     // Not needed explicitly as it's not opened in player
@@ -112,6 +120,7 @@ int main(int argc, char *argv[]) {
     signal(SIGALRM, handle_alarm);
     signal(SIGUSR1, handle_get_ready);
     signal(SIGUSR2, handle_start);
+    signal(SIGHUP, reset_round);
 
     alarm(1); // Trigger first energy update after 1 second
 
