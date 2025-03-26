@@ -47,12 +47,28 @@ Team simulate_round(int pipe_fds_team_A[][2], int pipe_fds_team_B[][2], Config *
 
     if (game->round_score >= config->WINNING_THRESHOLD) {
         printf("🏆 Team A wins!\n");
+        game->team_wins_A++;
         return TEAM_A;
     }
     if (game->round_score <= -config->WINNING_THRESHOLD) {
         printf("🏆 Team B wins!\n");
+        game->team_wins_B++;
         return TEAM_B;
     }
+
+    game->round_running = check_round_conditions(game, config);
+
+    if (!game->round_running && game.total_score > 0) {
+        printf("🏆 Team A wins!\n");
+        game->team_wins_A++;
+        return TEAM_A;
+    }
+    if (!game->round_running && game.total_score < 0) {
+        printf("🏆 Team B wins!\n");
+        game->team_wins_B++;
+        return TEAM_B;
+    }
+
     return -1;
 }
 
