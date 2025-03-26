@@ -42,14 +42,14 @@ Team simulate_round(int pipe_fds_team_A[][2], int pipe_fds_team_B[][2], Config *
         }
     }
 
-    float score = totals_A - totals_B;
-    printf("\nTotal Effort A: %.2f | Total Effort B: %.2f | Score: %.2f\n\n", totals_A, totals_B, score);
+    game->round_score = totals_A - totals_B;
+    printf("\nTotal Effort A: %.2f | Total Effort B: %.2f | Score: %.2f\n\n", totals_A, totals_B, game->round_score);
 
-    if (score >= config->WINNING_THRESHOLD) {
+    if (game->round_score >= config->WINNING_THRESHOLD) {
         printf("🏆 Team A wins!\n");
         return TEAM_A;
     }
-    if (score <= -config->WINNING_THRESHOLD) {
+    if (game->round_score <= -config->WINNING_THRESHOLD) {
         printf("🏆 Team B wins!\n");
         return TEAM_B;
     }

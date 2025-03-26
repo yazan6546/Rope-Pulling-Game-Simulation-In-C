@@ -17,8 +17,8 @@ typedef struct Game {
     int team_wins_B;
     Team last_winner;
     int elapsed_time;
-    int round_score;
-    int total_score;
+    float round_score;
+    float total_score;
 } Game;
 
 void init_game(Game *game);

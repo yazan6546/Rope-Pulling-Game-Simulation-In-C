@@ -81,19 +81,39 @@ int main(int argc, char *argv[]) {
                 break;
             }
             sleep(1);
-            game.elapsed_time++;
-            game.game_running = check_game_conditions(&game , &config, team_win);
+
             game.round_running = check_round_conditions(&game, &config);
 
+            if (!game.round_running && game.total_score > 0) {
+                printf("🏆 Team A wins!\n");
+                game.team_wins_A++;
+                team_win = TEAM_A;
             }
+            else if (!game.round_running && game.total_score < 0) {
+                printf("🏆 Team B wins!\n");
+                game.team_wins_B++;
+                team_win = TEAM_B;
+            }
+
+            game.elapsed_time++;
+            game.game_running = check_game_conditions(&game , &config, team_win);
         }
 
+        game.total_score += game.round_score;
         game.last_winner = team_win;
+        game.round_running = check_round_conditions(&game, &config);
         go_to_next_round(&game);
     }
 
+    printf("Game over! Final score: %.2f\n", game.total_score);
+    printf("Team A wins: %d\n", game.team_wins_A);
+    printf("Team B wins: %d\n\n", game.team_wins_B);
+
+    printf("Cleaning up...\n");
+
     free(bin_path);
     return 0;
+
 }
 
 void fork_players(Player *players, int num_players, Team team,
