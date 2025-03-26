@@ -74,14 +74,17 @@ int main(int argc, char *argv[]) {
             team_win = simulate_round(pipe_fds_team_A, pipe_fds_team_B,
                                                         &config, &game);
 
-            if (team_win != NONE) {
-                game.round_running = 0;
-            }
+
 
             sleep(1);
 
             game.elapsed_time++;
             game.round_time++;
+
+            if (team_win != NONE) {
+                game.round_running = 0;
+            }
+
         }
 
         game.total_score += game.round_score;
