@@ -14,10 +14,11 @@ int pipe_fds[2];
 Team my_team;
 Player *current_player;
 unsigned int previous_energy = 0;
-unsigned int remaining_recovery_time = 0;
 
 volatile sig_atomic_t energy_update = 0;
 volatile sig_atomic_t recovery_complete = 0;
+volatile sig_atomic_t is_round_reset = 0;
+volatile sig_atomic_t remaining_recovery_time = 0;
 
 void handle_alarm(int signum) {
     if (current_player->state == RECOVERING) {
@@ -31,22 +32,22 @@ void handle_alarm(int signum) {
 void process_player_state() {
     if (current_player->state == PULLING) {
 
-        current_player->energy -= current_player->rate_decay;
+        current_player->attributes.energy -= current_player->attributes.rate_decay;
         
         // check for random falls
-        if (random_float(0, 1) < current_player->falling_chance) {
-            previous_energy = current_player->energy;
-            current_player->energy = 0;
+        if (random_float(0, 1) < current_player->attributes.falling_chance) {
+            previous_energy = current_player->attributes.energy;
+            current_player->attributes.energy = 0;
             printf("Player %d (Team %d) has fallen!\n", current_player->number, my_team);
             current_player->state = RECOVERING;
-            remaining_recovery_time = current_player->recovery_time;  // Set recovery timer
+            remaining_recovery_time = current_player->attributes.recovery_time;  // Set recovery timer
             fflush(stdout);
-        } else if (current_player->energy <= 0) {
-            current_player->energy = 0;
+        } else if (current_player->attributes.energy <= 0) {
+            current_player->attributes.energy = 0;
             printf("Player %d (Team %d) is exhausted!\n", 
             current_player->number, my_team);
             current_player->state = RECOVERING;
-            remaining_recovery_time = current_player->recovery_time;  // Set recovery timer
+            remaining_recovery_time = current_player->attributes.recovery_time;  // Set recovery timer
             fflush(stdout);
         }
 
@@ -54,17 +55,17 @@ void process_player_state() {
     }
     
     else if (current_player->state == RECOVERING && remaining_recovery_time == 0) {
-        current_player->energy = previous_energy;
+        current_player->attributes.energy = previous_energy;
         current_player->state = PULLING;
         printf("Player %d (Team %d) rejoining with energy %.2f\n",
-               current_player->number, my_team, current_player->energy);
+               current_player->number, my_team, current_player->attributes.energy);
         fflush(stdout);
         // alarm(1);  // Restart energy updates
     }
 
     // send energy updates every 1 sec
     // if (energy_update){
-        float effort = current_player->energy * ((float) current_player->position);
+        float effort = current_player->attributes.energy * ((float) current_player->position);
         write(pipe_fds[1], &effort, sizeof(float));
     // } else {
     //     alarm(1);  // Schedule next energy update
@@ -91,9 +92,7 @@ void handle_start(int signum) {
 }
 
 void reset_round(int signum) {
-
-
-
+    is_round_reset = 1;
 }
 
 int main(int argc, char *argv[]) {
@@ -125,7 +124,16 @@ int main(int argc, char *argv[]) {
     alarm(1); // Trigger first energy update after 1 second
 
     while(1) {
+        // wait for a signal
         pause();
+        // reset round
+        if(is_round_reset) {
+            Attributes attributes;
+            read(pipe_fds[0], &attributes, sizeof(Attributes));
+            current_player->attributes = attributes;
+            is_round_reset = 0;
+        }
+        // continue simulation
         process_player_state();
     }
     
@@ -139,3 +147,4 @@ Player *create_player(pid_t pid) {
     return player;
 
 }
+

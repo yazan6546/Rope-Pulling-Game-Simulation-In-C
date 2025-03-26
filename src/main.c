@@ -11,7 +11,7 @@
 
 #define READ 0
 #define WRITE 1
-#define PATH_MAX 4096
+
 Config config;
 
 void fork_players(Player *players, int num_players, Team team, char *binary_path, int pipe_fds[][2]);
@@ -71,6 +71,26 @@ int main(int argc, char *argv[]) {
 
         while (game.game_running && game.round_running) {
 
+            // send a reset signal to all players
+            for (int i = 0; i < config.NUM_PLAYERS/2; i++) {
+                kill(players_teamA[i].pid, SIGHUP);
+                kill(players_teamB[i].pid, SIGHUP);
+            }
+
+            // generate a random attributes object and send it through pipes to all players
+            for (int i = 0; i < config.NUM_PLAYERS/2; i++) {
+                Attributes attributes;
+                randomize_attributes(&attributes, &config);
+                write(pipe_fds_team_A[i][WRITE], &attributes, sizeof(Attributes));
+            }
+
+            for (int i = 0; i < config.NUM_PLAYERS/2; i++) {
+                Attributes attributes;
+                randomize_attributes(&attributes, &config);
+                write(pipe_fds_team_B[i][WRITE], &attributes, sizeof(Attributes));
+            }
+
+
             team_win = simulate_round(pipe_fds_team_A, pipe_fds_team_B,
                                                         &config, &game);
 
@@ -86,6 +106,18 @@ int main(int argc, char *argv[]) {
         game.game_running = check_game_conditions(&game , &config, team_win);
         game.last_winner = team_win;
         team_win = -1;
+    }
+
+    // Terminate the player processes
+    for (int i = 0; i < config.NUM_PLAYERS / 2; i++) {
+        kill(players_teamA[i].pid, SIGTERM);
+        kill(players_teamB[i].pid, SIGTERM);
+    }
+
+    // Wait for all child processes to terminate
+    for (int i = 0; i < config.NUM_PLAYERS / 2; i++) {
+        waitpid(players_teamA[i].pid, NULL, 0);
+        waitpid(players_teamB[i].pid, NULL, 0);
     }
 
     printf("Team A wins: %d\n", game.team_wins_A);

@@ -20,18 +20,23 @@ typedef enum State {
     RECOVERING
 } State;
 
+typedef struct Attributes {
+    float energy;
+    float rate_decay;
+    float recovery_time;
+    float falling_chance;
+} Attributes;
+
 typedef struct Player {
     int number;
     int position;
     int new_position;
     Team team;
-    float energy;
-    float rate_decay;
-    float recovery_time;
-    float falling_chance;
+    Attributes attributes;
     State state;
     pid_t pid;
 } Player;
+
 
 
 Player *create_player(pid_t pid);
