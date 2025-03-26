@@ -6,8 +6,8 @@
 static int compare_players(const void* a, const void* b) {
     Player* p1 = (Player*)a;
     Player* p2 = (Player*)b;
-    if (p1->energy > p2->energy) return 1;
-    if (p1->energy < p2->energy) return -1;
+    if (p1->attributes.energy > p2->attributes.energy) return 1;
+    if (p1->attributes.energy < p2->attributes.energy) return -1;
     return 0;
 }
 
@@ -17,6 +17,6 @@ void align(Player* team, int num_players) {
     
     for (int i = 0; i < num_players; i++) {
         team[i].new_position = i+1;
-        printf("Player %d: energy = %.2f\n", team[i].number, team[i].energy);
+        printf("Player %d: energy = %.2f\n", team[i].number, team[i].attributes.energy);
     }
 }
