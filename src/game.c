@@ -69,6 +69,18 @@ Team simulate_round(int pipe_fds_team_A[][2], int pipe_fds_team_B[][2], Config *
         return TEAM_B;
     }
 
+    if (game->elapsed_time > config->MAX_TIME && game->round_score > 0) {
+        printf("🏆 Team A wins!\n");
+        game->team_wins_A++;
+        return TEAM_A;
+    }
+
+    if (game->elapsed_time > config->MAX_TIME && game->round_score < 0) {
+        printf("🏆 Team B wins!\n");
+        game->team_wins_B++;
+        return TEAM_B;
+    }
+
     return NONE;
 }
 

@@ -69,7 +69,7 @@ int main(int argc, char *argv[]) {
 
         sleep(3);
 
-        while (game.game_running && game.round_running) {
+        while (game.round_running) {
 
             team_win = simulate_round(pipe_fds_team_A, pipe_fds_team_B,
                                                         &config, &game);
@@ -82,7 +82,6 @@ int main(int argc, char *argv[]) {
 
             game.elapsed_time++;
             game.round_time++;
-            game.game_running = check_game_conditions(&game , &config, team_win);
         }
 
         game.total_score += game.round_score;
