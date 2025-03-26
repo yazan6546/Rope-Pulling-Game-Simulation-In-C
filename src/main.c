@@ -77,16 +77,17 @@ int main(int argc, char *argv[]) {
             sleep(1);
 
             game.elapsed_time++;
+            game.round_time++;
             game.game_running = check_game_conditions(&game , &config, team_win);
         }
 
         game.total_score += game.round_score;
-        game.last_winner = team_win;
-        game.round_running = check_round_conditions(&game, &config);
         go_to_next_round(&game);
+        game.game_running = check_game_conditions(&game , &config, team_win);
+        game.last_winner = team_win;
+        team_win = -1;
     }
 
-    printf("Game over! Final score: %.2f\n", game.total_score);
     printf("Team A wins: %d\n", game.team_wins_A);
     printf("Team B wins: %d\n\n", game.team_wins_B);
 

@@ -58,12 +58,12 @@ Team simulate_round(int pipe_fds_team_A[][2], int pipe_fds_team_B[][2], Config *
 
     game->round_running = check_round_conditions(game, config);
 
-    if (!game->round_running && game.total_score > 0) {
+    if (!game->round_running && game->total_score > 0) {
         printf("🏆 Team A wins!\n");
         game->team_wins_A++;
         return TEAM_A;
     }
-    if (!game->round_running && game.total_score < 0) {
+    if (!game->round_running && game->total_score < 0) {
         printf("🏆 Team B wins!\n");
         game->team_wins_B++;
         return TEAM_B;
@@ -84,6 +84,8 @@ int check_game_conditions(Game *game, Config *config, Team team_win) {
     if (game->elapsed_time > config->MAX_TIME) {
         return 0;
     }
+
+    if (game->total_score > config->MAX_TIME)
     return 1;
 }
 
@@ -99,4 +101,5 @@ void go_to_next_round(Game *game) {
     game->elapsed_time = 0;
     game->round_score = 0;
     game->round_running = 1;
+    game->round_time = 0;
 }
