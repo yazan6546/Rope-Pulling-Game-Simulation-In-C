@@ -50,8 +50,8 @@ set_target_properties(rope_pulling_game_main
 
 add_custom_target(
     run
-    COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/bin/Rope_Pulling_Game_Simulation_In_C
-    DEPENDS Rope_Pulling_Game_Simulation_In_C
+    COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/bin/rope_pulling_game_main
+    DEPENDS rope_pulling_game_main
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
