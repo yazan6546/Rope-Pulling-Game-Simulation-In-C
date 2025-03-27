@@ -10,11 +10,11 @@ pid_t start_referee_process();
 int main(int argc, char *argv[]) {
 
     pid_t pid = start_graphics_process();
-    start_referee_process();
+    pid_t pid2 = start_referee_process();
     wait(NULL);
 
     int status;
-    waitpid(pid, &status, 0);
+    waitpid(pid2, &status, 0);
 
 
     if (WIFEXITED(status)) {
