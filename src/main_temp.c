@@ -11,16 +11,22 @@ int main(int argc, char *argv[]) {
 
     pid_t pid = start_graphics_process();
     pid_t pid2 = start_referee_process();
-    wait(NULL);
 
-    int status;
-    waitpid(pid2, &status, 0);
+    int status_refree, status_graphics;
+    waitpid(pid2, &status_refree, 0);
 
+    if (WIFEXITED(status_refree)) {
+        printf("Referee Child process exited with code: %d\n", WEXITSTATUS(status_refree));
+    } else if (WIFSIGNALED(status_refree)) {
+        printf("Referee Child process terminated by signal: %d\n", WTERMSIG(status_refree));
+    }
 
-    if (WIFEXITED(status)) {
-        printf("Child process exited with code: %d\n", WEXITSTATUS(status));
-    } else if (WIFSIGNALED(status)) {
-        printf("Child process terminated by signal: %d\n", WTERMSIG(status));
+    waitpid(pid, &status_graphics, 0);
+
+    if (WIFEXITED(status_graphics)) {
+        printf("Graphics Child process exited with code: %d\n", WEXITSTATUS(status_graphics));
+    } else if (WIFSIGNALED(status_graphics)) {
+        printf("Graphics Child process terminated by signal: %d\n", WTERMSIG(status_graphics));
     }
 
 }
