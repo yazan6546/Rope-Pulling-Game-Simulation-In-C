@@ -3,9 +3,11 @@ project(Rope_Pulling_Game_Simulation_In_C C)
 
 set(CMAKE_C_STANDARD 11)
 
+find_package(OpenGL REQUIRED)
+find_package(GLUT REQUIRED)
+
 add_executable(referee src/main.c src/utils/config.c
 src/utils/random.c src/utils/player_utils.c src/utils/file.c src/utils/referee_orders.c)
-
 
 add_executable(player src/player.c src/utils/player_utils.c src/utils/random.c)
 
@@ -13,6 +15,17 @@ add_executable(rope_game_graphics src/graphics/main_graphics.c)
 
 add_executable(rope_pulling_game_main src/main_temp.c)
 
+target_link_libraries(rope_game_graphics
+    PRIVATE
+    ${OPENGL_LIBRARIES}
+    ${GLUT_LIBRARIES}
+)
+
+target_include_directories(rope_game_graphics
+    PRIVATE
+    ${OPENGL_INCLUDE_DIRS}
+    ${GLUT_INCLUDE_DIRS}
+)
 
 set_target_properties(referee
     PROPERTIES

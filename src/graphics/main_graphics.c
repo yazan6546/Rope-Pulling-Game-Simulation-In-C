@@ -1,8 +1,16 @@
-//
-// Created by - on 3/25/2025.
-//
 #include <stdio.h>
+#include <GL/glut.h>
 
-int main() {
-    printf("graphics process started...\n");
+void display(void);
+
+int main(int argc, char **argv) {
+    glutInit(&argc, argv);
+    glutCreateWindow("Hello, OpenGL");
+    glutDisplayFunc(display);
+    glutMainLoop();
+}
+
+void display(void) {
+    glClear(GL_COLOR_BUFFER_BIT);
+    glFlush();
 }

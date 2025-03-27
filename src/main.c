@@ -19,9 +19,7 @@ void generate_and_align(Player *players, int num_players, Team team);
 int main(int argc, char *argv[]) {
 
     char *config_path = NULL;
-    printf("argv : %s\n", argv[0]);
     handling_file(argc, argv[0], &config_path);
-    printf("%s\n\n", config_path);
     char *bin_path = binary_dir(config_path);
 
 
@@ -138,6 +136,7 @@ void fork_players(Player *players, int num_players, Team team, char *binary_path
             char write_fd_str[10];
             sprintf(write_fd_str, "%d", pipefd[1]);
 
+            // printf("%s\n", player_path);
 
             if (execl(player_path, "player", buffer, write_fd_str, NULL)) {
                 perror("execl");
