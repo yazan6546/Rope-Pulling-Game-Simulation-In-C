@@ -27,7 +27,10 @@ int main(int argc, char *argv[]) {
     char *bin_path = binary_dir(config_path);
 
 
-    load_config(config_path, &config);
+    if (load_config(config_path, &config) == -1) {
+        free(bin_path);
+        return 1;
+    }
 
     Player players_teamA[config.NUM_PLAYERS/2];
     Player players_teamB[config.NUM_PLAYERS/2];
@@ -168,8 +171,6 @@ void generate_and_align(Player *players, int num_players, Team team) {
     }
 
     align(players, num_players);
-
-
 }
 
 void handle_alarm(int signum) {
