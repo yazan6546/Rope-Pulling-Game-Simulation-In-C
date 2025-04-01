@@ -8,22 +8,20 @@
 #include "file.h"
 #include "player.h"
 #include "game.h"
+#include <stdarg.h>
 
 #define READ 0
 #define WRITE 1
 #define PATH_MAX 4096
 Config config;
+Game *game;
 
 void fork_players(Player *players, int num_players, Team team, char *binary_path, int pipe_fds[][2]);
 void generate_and_align(Player *players, int num_players, Team team);
-void handle_alarm(int signum);
-
-volatile int elapsed_time = 0;
 
 int main(int argc, char *argv[]) {
 
-    Game game;
-    init_game(&game);
+    game = (Game*) atoi(argv[1]);
 
     char *config_path = NULL;
     handling_file(argc, argv[0], &config_path);
@@ -51,8 +49,7 @@ int main(int argc, char *argv[]) {
 
     Team team_win = NONE;
 
-    while (game.game_running) {
-        sleep(2); // Wait for players to get ready
+    while (game->game_running) {
 
         printf("\n\n");
 
@@ -62,9 +59,10 @@ int main(int argc, char *argv[]) {
             kill(players_teamB[i].pid, SIGUSR1);
         }
 
+        sleep(2);
+
         printf("\n\n");
 
-        sleep(3); // Wait for players to get ready
         //
         // Send start signal to all players
         for (int i = 0; i < config.NUM_PLAYERS/2; i++) {
@@ -73,35 +71,29 @@ int main(int argc, char *argv[]) {
         }
         printf("\n\n");
 
-        sleep(3);
 
-        while (game.round_running) {
+        while (game->round_running) {
 
             team_win = simulate_round(pipe_fds_team_A, pipe_fds_team_B,
                                                         &config, &game);
 
-
-
-            sleep(1);
-
-            game.elapsed_time++;
-            game.round_time++;
-
             if (team_win != NONE) {
-                game.round_running = 0;
+                game->round_running = 0;
             }
+
+            pause();
 
         }
 
-        game.total_score += game.round_score;
-        go_to_next_round(&game);
-        game.game_running = check_game_conditions(&game , &config, team_win);
-        game.last_winner = team_win;
+        game->total_score += game->round_score;
+        go_to_next_round(game);
+        game->game_running = check_game_conditions(game , &config, team_win);
+        game->last_winner = team_win;
         team_win = NONE;
     }
 
-    printf("Team A wins: %d\n", game.team_wins_A);
-    printf("Team B wins: %d\n\n", game.team_wins_B);
+    printf("Team A wins: %d\n", game->team_wins_A);
+    printf("Team B wins: %d\n\n", game->team_wins_B);
 
     printf("Cleaning up...\n");
 
@@ -137,7 +129,7 @@ void fork_players(Player *players, int num_players, Team team,
             sprintf(write_fd_str, "%d", pipe_fds[i][WRITE]);
             sprintf(read_fd_str, "%d", pipe_fds[i][READ]);
 
-            if (execl(player_path, "player", buffer, write_fd_str, read_fd_str, NULL)) {
+            if (execl(player_path, "player", buffer, write_fd_str, read_fd_str, &game->elapsed_time, NULL)) {
                 perror("execl");
                 exit(1);
             }
@@ -149,7 +141,6 @@ void fork_players(Player *players, int num_players, Team team,
 }
 
 void generate_and_align(Player *players, int num_players, Team team) {
-
     for (int i = 0; i<num_players; i++) {
         generate_random_player(&players[i], &config, team, i);
     }
@@ -157,15 +148,10 @@ void generate_and_align(Player *players, int num_players, Team team) {
     align(players, num_players);
 }
 
-void handle_alarm(int signum) {
-    elapsed_time++;
-    alarm(1);
-}
-
 void print_with_time(const char *format, ...) {
     va_list args;
     va_start(args, format);
-    printf("@ %ds: ", elapsed_time);
+    printf("@ %ds: ", game->elapsed_time);
     vprintf(format, args);
     va_end(args);
 }

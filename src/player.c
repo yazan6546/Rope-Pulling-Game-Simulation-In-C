@@ -8,7 +8,6 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include "random.h"
-#include <sys/types.h>
 #include <stdarg.h>
 
 int pipe_fds[2];
@@ -17,9 +16,11 @@ Player *current_player;
 unsigned int previous_energy = 0;
 unsigned int remaining_recovery_time = 0;
 
+void print_with_time(const char *format, ...);
+
 volatile sig_atomic_t energy_update = 0;
 volatile sig_atomic_t recovery_complete = 0;
-volatile sig_atomic_t elapsed_time = 0;
+int elapsed_time = 0;
 
 void handle_alarm(int signum) {
     if (current_player->state == RECOVERING) {
@@ -27,7 +28,6 @@ void handle_alarm(int signum) {
         // recovery_complete = 1;
     }
 
-    elapsed_time++;
     energy_update = 1;
     alarm(1);  // Schedule next energy update
 }
@@ -69,7 +69,7 @@ void process_player_state() {
 
         // send energy updates every 1 sec
         float effort = current_player->energy * ((float) current_player->position);
-        write(write_fd, &effort, sizeof(float));
+        write(pipe_fds[1], &effort, sizeof(float));
         fflush(stdout);
     }
 
@@ -98,10 +98,12 @@ int main(int argc, char *argv[]) {
     // printf("argv[1] = %s\n", argv[1]);
 
 
-    if (argc < 3) {
+    if (argc < 4) {
         fprintf(stderr, "Usage: player <serialized_data> <write_fd>\n");
         exit(1);
     }
+
+    elapsed_time = * (int *)atoi(argv[4]);
 
     current_player = create_player(getpid());
     deserialize_player(current_player, argv[1]);

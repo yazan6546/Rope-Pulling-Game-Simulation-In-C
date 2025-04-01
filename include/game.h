@@ -12,14 +12,15 @@
 typedef struct Game {
     int round_num;
     int game_running;
-    int round_running;
     int team_wins_A;
     int team_wins_B;
     Team last_winner;
     int elapsed_time;
-    int round_time;
+    int round_running;
     float round_score;
     float total_score;
+    int round_time;
+    int reset_round_time_flag; // New field for time management
 } Game;
 
 void init_game(Game *game);

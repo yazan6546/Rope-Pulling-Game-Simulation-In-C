@@ -15,6 +15,7 @@ void init_game(Game *game) {
     game->round_running = 1;
     game->round_score = 0;
     game->total_score = 0;
+    game->reset_round_time_flag = 0;
 }
 
 
@@ -118,5 +119,5 @@ void go_to_next_round(Game *game) {
     game->round_num++;
     game->round_score = 0;
     game->round_running = 1;
-    game->round_time = 0;
+    game->reset_round_time_flag = 0;
 }
