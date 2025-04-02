@@ -17,7 +17,7 @@
 Config config;
 Game *game;
 
-void fork_players(Player *players, int num_players, Team team, char *binary_path, int read_fds[]);
+void fork_players(Player *players, int num_players, Team team, char *binary_path, int read_fds[], int fd);
 void generate_and_align(Player *players, int num_players, Team team);
 void handle_alarm(int signum);
 void cleanup_processes(Player *players_teamA, Player *players_teamB, int NUM_PLAYERS);
@@ -60,8 +60,8 @@ int main(int argc, char *argv[]) {
     generate_and_align(players_teamA, config.NUM_PLAYERS/2, TEAM_A);
     generate_and_align(players_teamB, config.NUM_PLAYERS/2, TEAM_B);
 
-    fork_players(players_teamA, config.NUM_PLAYERS/2, TEAM_A, bin_path, read_fds_team_A);
-    fork_players(players_teamB, config.NUM_PLAYERS/2, TEAM_B, bin_path, read_fds_team_B);
+    fork_players(players_teamA, config.NUM_PLAYERS/2, TEAM_A, bin_path, read_fds_team_A, fd);
+    fork_players(players_teamB, config.NUM_PLAYERS/2, TEAM_B, bin_path, read_fds_team_B, fd);
 
 
     // Set up signal handlers
@@ -131,7 +131,7 @@ int main(int argc, char *argv[]) {
 }
 
 void fork_players(Player *players, int num_players, Team team,
-                char *binary_path, int read_fds[]) {
+                char *binary_path, int read_fds[], int fd) {
 
     for (int i = 0; i < num_players; i++) {
 
@@ -157,10 +157,11 @@ void fork_players(Player *players, int num_players, Team team,
             char player_path[PATH_MAX];
             snprintf(player_path, PATH_MAX, "%s/player", binary_path);
 
-            char write_fd_str[10];
+            char write_fd_str[10], fd_str[10];
             snprintf(write_fd_str, sizeof(write_fd_str), "%d", pipe_fds_temp[1]);
+            snprintf(fd_str, sizeof(fd_str), "%d", fd);
 
-            if (execl("./player", "player", buffer, write_fd_str, game->elapsed_time, NULL)) {
+            if (execl("./player", "player", buffer, write_fd_str, fd_str, NULL)) {
                 perror("execl");
                 exit(1);
             }
@@ -186,5 +187,26 @@ void print_with_time(const char *format, ...) {
     vprintf(format, args);
     va_end(args);
     fflush(stdout);
+}
+
+// Cleanup function to kill all child processes
+void cleanup_processes(Player *players_teamA, Player *players_teamB, int NUM_PLAYERS) {
+    printf("Killing all child processes...\n");
+
+    // Kill players from Team A
+    for (int i = 0; i < NUM_PLAYERS; i++) {
+        if (players_teamA[i].pid > 0) {
+            kill(players_teamA[i].pid, SIGKILL);
+        }
+    }
+
+    // Kill players from Team B
+    for (int i = 0; i < NUM_PLAYERS; i++) {
+        if (players_teamB[i].pid > 0) {
+            kill(players_teamB[i].pid, SIGKILL);
+        }
+    }
+
+    printf("All child processes terminated.\n");
 }
 
