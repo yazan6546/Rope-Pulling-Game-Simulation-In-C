@@ -37,9 +37,12 @@ void process_player_state() {
         if (current_player->state == PULLING) {
 
             current_player->energy -= current_player->rate_decay;
+            float random_num = random_float(0, 1);
+
+            printf("random num : %f\n", random_num);
 
             // check for random falls
-            if (random_float(0, 1) < current_player->falling_chance) {
+            if (random_num < current_player->falling_chance) {
                 previous_energy = current_player->energy;
                 current_player->energy = 0;
                 print_with_time("Player %d (Team %d) has fallen!\n", current_player->number, my_team);
@@ -102,6 +105,8 @@ int main(int argc, char *argv[]) {
         fprintf(stderr, "Usage: player <serialized_data> <write_fd>\n");
         exit(1);
     }
+
+    init_random(getpid());
 
     current_player = create_player(getpid());
     deserialize_player(current_player, argv[1]);
