@@ -21,6 +21,10 @@ void fork_players(Player *players, int num_players, Team team, char *binary_path
 void generate_and_align(Player *players, int num_players, Team team);
 void print_with_time(const char *format, ...);
 
+void handle_sigusr1(int sig) {
+    // Empty handler just to prevent termination
+}
+
 int main(int argc, char *argv[]) {
 
     printf(argv[1]);
@@ -43,7 +47,6 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-
     Player players_teamA[config.NUM_PLAYERS/2];
     Player players_teamB[config.NUM_PLAYERS/2];
 
@@ -58,6 +61,8 @@ int main(int argc, char *argv[]) {
     fork_players(players_teamA, config.NUM_PLAYERS/2, TEAM_A, bin_path, pipe_fds_team_A);
     fork_players(players_teamB, config.NUM_PLAYERS/2, TEAM_B, bin_path, pipe_fds_team_B);
 
+    // Set up signal handlers
+    signal(SIGUSR1, handle_sigusr1);
     Team team_win = NONE;
 
     while (game->game_running) {
@@ -69,6 +74,9 @@ int main(int argc, char *argv[]) {
             kill(players_teamA[i].pid, SIGUSR1);
             kill(players_teamB[i].pid, SIGUSR1);
         }
+
+        printf("signal SIGUSR1 sent to all players\n");
+        fflush(stdout);
 
         sleep(2);
 
@@ -91,8 +99,10 @@ int main(int argc, char *argv[]) {
             if (team_win != NONE) {
                 game->round_running = 0;
             }
-
-            pause();
+            printf("ok\n");
+            fflush(stdout);
+            printf("aaa\n");
+            fflush(stdout);
 
         }
 
