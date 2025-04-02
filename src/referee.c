@@ -19,10 +19,11 @@ void handle_alarm(int signum);
 void cleanup_processes(Player *players_teamA, Player *players_teamB, int NUM_PLAYERS);
 
 volatile int elapsed_time = 0;
+Game game;
 
 int main(int argc, char *argv[]) {
 
-    Game game;
+    
     init_game(&game);
 
     char *config_path = NULL;
@@ -49,6 +50,8 @@ int main(int argc, char *argv[]) {
     fork_players(players_teamA, config.NUM_PLAYERS/2, TEAM_A, bin_path, read_fds_team_A);
     fork_players(players_teamB, config.NUM_PLAYERS/2, TEAM_B, bin_path, read_fds_team_B);
 
+    signal(SIGALRM, handle_alarm);
+
 
     Team team_win = NONE;
 
@@ -74,19 +77,19 @@ int main(int argc, char *argv[]) {
         }
         printf("\n\n");
 
+        alarm(1);
 
         while (game.round_running) {
 
+            
+
             team_win = simulate_round(read_fds_team_A, read_fds_team_B,
                                                         &config, &game);
-
-            sleep(1);
-
-            game.elapsed_time++;
-            game.round_time++;
+            
 
             if (team_win != NONE) {
                 game.round_running = 0;
+                alarm(0); // Cancel the alarm
             }
 
         }
@@ -94,6 +97,16 @@ int main(int argc, char *argv[]) {
         game.total_score += game.round_score;
         go_to_next_round(&game);
         game.game_running = check_game_conditions(&game , &config, team_win);
+
+        if (game.game_running) {
+            // send reset signals to all players
+            for (int i = 0; i < config.NUM_PLAYERS/2; i++) {
+                kill(players_teamA[i].pid, SIGHUP);
+                kill(players_teamB[i].pid, SIGHUP);
+            }
+
+        }
+
         game.last_winner = team_win;
         team_win = NONE;
     }
@@ -160,7 +173,8 @@ void generate_and_align(Player *players, int num_players, Team team) {
 }
 
 void handle_alarm(int signum) {
-    elapsed_time++;
+    game.elapsed_time++;
+    game.round_time++;
     alarm(1);
 }
 

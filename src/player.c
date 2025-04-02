@@ -76,7 +76,7 @@ void process_player_state() {
     // } else {
     //     alarm(1);  // Schedule next energy update
     // }
-    alarm(1);  // Schedule next energy update
+    
     
     }
 }
@@ -102,6 +102,7 @@ void handle_start(int signum) {
 
 void reset_round(int signum) {
     is_round_reset = 1;
+    
 }
 
 int main(int argc, char *argv[]) {
@@ -129,6 +130,7 @@ int main(int argc, char *argv[]) {
     signal(SIGALRM, handle_alarm);
     signal(SIGUSR1, handle_get_ready);
     signal(SIGUSR2, handle_start);
+    signal(SIGHUP, reset_round);
 
     while(1) {
         // wait for a signal
@@ -139,8 +141,13 @@ int main(int argc, char *argv[]) {
             // read(pipe_fds[0], &attributes, sizeof(Attributes));
             // current_player->attributes = attributes;
             current_player->state = IDLE;
+            elapsed_time = 0;
             is_round_reset = 0;
-            alarm(1);  // Schedule next energy update
+
+            print_with_time("Player %d (Team %d) resetting round\n", current_player->number, my_team);
+
+            alarm(0);  // cancel time updates from the previous round
+            
             pause();
         }
         // continue simulation

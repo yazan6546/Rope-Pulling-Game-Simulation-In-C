@@ -133,7 +133,7 @@ void go_to_next_round(Game *game) {
 void print_with_time(const Game *game, const char *format, ...) {
     va_list args;
     va_start(args, format);
-    printf("@ %ds: ", game->elapsed_time);
+    printf("@ g:%ds r:%ds: ", game->elapsed_time, game->round_time);
     vprintf(format, args);
     va_end(args);
     fflush(stdout);
