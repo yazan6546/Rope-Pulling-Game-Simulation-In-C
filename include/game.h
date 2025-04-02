@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include "player.h"
 #include "config.h"
+#include <stdarg.h>
 
 typedef struct Game {
     int round_num;
@@ -27,6 +28,6 @@ Team simulate_round(int pipe_fds_team_A[][2], int pipe_fds_team_B[][2], Config *
 int check_game_conditions(Game *game, Config *config, Team team_win);
 void go_to_next_round(Game *game);
 int check_round_conditions(Game *game, Config *config);
-
+void print_with_time(Game *game, const char *format, ...);
 
 #endif //GAME_H

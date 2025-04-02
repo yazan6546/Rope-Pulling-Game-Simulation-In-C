@@ -28,7 +28,7 @@ Team simulate_round(int pipe_fds_team_A[][2], int pipe_fds_team_B[][2], Config *
 
 
         if (bytes == sizeof(float) || bytes == 0) {
-            printf("Team A - Player %d effort: %.2f\n", i, effort);
+            print_with_time("Team A - Player %d effort: %.2f\n", i, effort);
             totals_A += effort;
         }
     }
@@ -37,46 +37,46 @@ Team simulate_round(int pipe_fds_team_A[][2], int pipe_fds_team_B[][2], Config *
         float effort;
         ssize_t bytes = read(pipe_fds_team_B[i][0], &effort, sizeof(float));
         if (bytes == sizeof(float) || bytes == 0) {
-            printf("Team B - Player %d effort: %.2f\n", i, effort);
+            print_with_time("Team B - Player %d effort: %.2f\n", i, effort);
             totals_B += effort;
         }
     }
 
     game->round_score = totals_A - totals_B;
-    printf("\nTotal Effort A: %.2f | Total Effort B: %.2f | Score: %.2f\n\n", totals_A, totals_B, game->round_score);
+    print_with_time(game, "\nTotal Effort A: %.2f | Total Effort B: %.2f | Score: %.2f\n\n", totals_A, totals_B, game->round_score);
 
 
     if (game->round_score >= config->WINNING_THRESHOLD) {
-        printf("🏆 Team A wins!\n");
+        print_with_time(game, "🏆 Team A wins!\n");
         game->team_wins_A++;
         return TEAM_A;
     }
     if (game->round_score <= -config->WINNING_THRESHOLD) {
-        printf("🏆 Team B wins!\n");
+        print_with_time(game, "🏆 Team B wins!\n");
         game->team_wins_B++;
         return TEAM_B;
     }
 
 
     if (game->round_time > config->MAX_ROUND_TIME && game->round_score > 0) {
-        printf("🏆 Team A wins!\n");
+        print_with_time(game, "🏆 Team A wins!\n");
         game->team_wins_A++;
         return TEAM_A;
     }
     if (game->round_time > config->MAX_ROUND_TIME && game->round_score < 0) {
-        printf("🏆 Team B wins!\n");
+        print_with_time(game, "🏆 Team B wins!\n");
         game->team_wins_B++;
         return TEAM_B;
     }
 
     if (game->elapsed_time > config->MAX_TIME && game->round_score > 0) {
-        printf("🏆 Team A wins!\n");
+        print_with_time(game, "🏆 Team A wins!\n");
         game->team_wins_A++;
         return TEAM_A;
     }
 
     if (game->elapsed_time > config->MAX_TIME && game->round_score < 0) {
-        printf("🏆 Team B wins!\n");
+        print_with_time(game, "🏆 Team B wins!\n");
         game->team_wins_B++;
         return TEAM_B;
     }
@@ -119,4 +119,13 @@ void go_to_next_round(Game *game) {
     game->round_score = 0;
     game->round_running = 1;
     game->round_time = 0;
+}
+
+
+void print_with_time(Game *game, const char *format, ...) {
+    va_list args;
+    va_start(args, format);
+    printf("@ %ds: ", game->elapsed_time);
+    vprintf(format, args);
+    va_end(args);
 }

@@ -11,7 +11,7 @@
 #include <sys/types.h>
 #include <stdarg.h>
 
-int pipe_fds[2];
+int write_fd;
 Team my_team;
 Player *current_player;
 unsigned int previous_energy = 0;
@@ -107,8 +107,7 @@ int main(int argc, char *argv[]) {
     deserialize_player(current_player, argv[1]);
 
     my_team = current_player->team;
-    pipe_fds[1] = atoi(argv[2]);
-    pipe_fds[0] = atoi(argv[3]);
+    write_fd = atoi(argv[2]);
 
 
     // Close the read end (not used)
