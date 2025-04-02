@@ -31,7 +31,7 @@ int main(int argc, char *argv[]) {
     // In parent
     int fd = shm_open("/game_shared_mem", O_CREAT | O_RDWR, 0666);
     ftruncate(fd, sizeof(Game));
-    Game *shared_game = mmap(NULL, sizeof(Game), PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+    shared_game = mmap(NULL, sizeof(Game), PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
 
     if (shared_game == MAP_FAILED) {
         perror("mmap failed");
@@ -47,9 +47,6 @@ int main(int argc, char *argv[]) {
     // Initialize game state
     init_game(shared_game);
 
-    // // Setup signal handler for time management
-    // signal(SIGALRM, handle_alarm);
-    // alarm(1);  // Start the timer
 
     // Convert shared memory address to string for child processes
     char shared_addr[32];
@@ -57,6 +54,10 @@ int main(int argc, char *argv[]) {
 
     pid_t pid_graphics = start_graphics_process(fd_str);
     pid_t pid_referee = start_referee_process(fd_str);
+
+    // // Setup signal handler for time management
+    signal(SIGALRM, handle_alarm);
+    alarm(1);  // Start the timer
 
     int status_referee, status_graphics;
     waitpid(pid_referee, &status_referee, 0);
@@ -74,6 +75,8 @@ int main(int argc, char *argv[]) {
     } else if (WIFSIGNALED(status_graphics)) {
         printf("Graphics Child process terminated by signal: %d\n", WTERMSIG(status_graphics));
     }
+
+
 
     // Clean up shared memory
     if (munmap(shared_game, sizeof(Game)) == -1) {

@@ -19,6 +19,7 @@ Game *game;
 
 void fork_players(Player *players, int num_players, Team team, char *binary_path, int pipe_fds[][2]);
 void generate_and_align(Player *players, int num_players, Team team);
+void print_with_time(const char *format, ...);
 
 int main(int argc, char *argv[]) {
 
@@ -42,7 +43,6 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    printf("iajdijasd\n");
 
     Player players_teamA[config.NUM_PLAYERS/2];
     Player players_teamB[config.NUM_PLAYERS/2];
@@ -165,5 +165,6 @@ void print_with_time(const char *format, ...) {
     printf("@ %ds: ", game->elapsed_time);
     vprintf(format, args);
     va_end(args);
+    fflush(stdout);
 }
 

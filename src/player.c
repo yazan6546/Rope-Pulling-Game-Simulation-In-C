@@ -143,4 +143,5 @@ void print_with_time(const char *format, ...) {
     printf("@ %ds: ", elapsed_time);
     vprintf(format, args);
     va_end(args);
+    fflush(stdout);
 }
