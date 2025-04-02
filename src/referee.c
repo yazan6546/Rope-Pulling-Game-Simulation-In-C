@@ -16,6 +16,7 @@ Config config;
 void fork_players(Player *players, int num_players, Team team, char *binary_path, int read_fds[]);
 void generate_and_align(Player *players, int num_players, Team team);
 void handle_alarm(int signum);
+void cleanup_processes(Player *players_teamA, Player *players_teamB, int NUM_PLAYERS);
 
 volatile int elapsed_time = 0;
 
@@ -47,6 +48,7 @@ int main(int argc, char *argv[]) {
 
     fork_players(players_teamA, config.NUM_PLAYERS/2, TEAM_A, bin_path, read_fds_team_A);
     fork_players(players_teamB, config.NUM_PLAYERS/2, TEAM_B, bin_path, read_fds_team_B);
+
 
     Team team_win = NONE;
 
@@ -102,6 +104,7 @@ int main(int argc, char *argv[]) {
 
     printf("Cleaning up...\n");
 
+    cleanup_processes(players_teamA, players_teamB, config.NUM_PLAYERS);
     // free(bin_path);
     return 0;
 
@@ -161,6 +164,31 @@ void handle_alarm(int signum) {
     elapsed_time++;
     alarm(1);
 }
+
+
+// Cleanup function to kill all child processes
+void cleanup_processes(Player *players_teamA, Player *players_teamB, int NUM_PLAYERS) {
+    printf("Killing all child processes...\n");
+
+    // Kill players from Team A
+    for (int i = 0; i < NUM_PLAYERS; i++) {
+        if (players_teamA[i].pid > 0) {
+            kill(players_teamA[i].pid, SIGKILL);
+        }
+    }
+
+    // Kill players from Team B
+    for (int i = 0; i < NUM_PLAYERS; i++) {
+        if (players_teamB[i].pid > 0) {
+            kill(players_teamB[i].pid, SIGKILL);
+        }
+    }
+
+    printf("All child processes terminated.\n");
+}
+
+
+
 
 
 
