@@ -119,7 +119,7 @@ void go_to_next_round(Game *game) {
     game->round_num++;
     game->round_score = 0;
     game->round_running = 1;
-    game->reset_round_time_flag = 0;
+    game->reset_round_time_flag = 1; // Reset round time
 }
 
 

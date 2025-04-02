@@ -101,9 +101,6 @@ int main(int argc, char *argv[]) {
 
             sleep(1);
 
-            game.elapsed_time++;
-            game.round_time++;
-
             if (team_win != NONE) {
                 game->round_running = 0;
             }
@@ -119,6 +116,7 @@ int main(int argc, char *argv[]) {
         game->game_running = check_game_conditions(game , &config, team_win);
         game->last_winner = team_win;
         team_win = NONE;
+        sleep(1);
     }
 
     printf("Team A wins: %d\n", game->team_wins_A);
@@ -159,10 +157,10 @@ void fork_players(Player *players, int num_players, Team team,
             char player_path[PATH_MAX];
             snprintf(player_path, PATH_MAX, "%s/player", binary_path);
 
-            char write_fd_str[10], read_fd_str[10];
+            char write_fd_str[10];
             snprintf(write_fd_str, sizeof(write_fd_str), "%d", pipe_fds_temp[1]);
 
-            if (execl("./player", "player", buffer, write_fd_str, read_fd_str, &game->elapsed_time, NULL)) {
+            if (execl("./player", "player", buffer, write_fd_str, game->elapsed_time, NULL)) {
                 perror("execl");
                 exit(1);
             }

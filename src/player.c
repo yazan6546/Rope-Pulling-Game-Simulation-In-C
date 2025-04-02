@@ -106,7 +106,7 @@ int main(int argc, char *argv[]) {
         exit(1);
     }
 
-    elapsed_time = * (int *)atoi(argv[4]);
+    elapsed_time = atoi(argv[3]);
 
     init_random(getpid());
 
