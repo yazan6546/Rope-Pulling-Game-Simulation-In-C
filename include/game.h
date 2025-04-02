@@ -25,7 +25,8 @@ typedef struct Game {
 } Game;
 
 void init_game(Game *game);
-Team simulate_round(int pipe_fds_team_A[], int pipe_fds_team_B[], Config *config, Game *game);
+Team simulate_round(int pipe_fds_team_A[], int pipe_fds_team_B[], Config *config, Game *game,
+    Player *players_teamA, Player *players_teamB);
 int check_game_conditions(Game *game, Config *config, Team team_win);
 void go_to_next_round(Game *game);
 int check_round_conditions(Game *game, Config *config);

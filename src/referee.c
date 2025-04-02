@@ -101,7 +101,7 @@ int main(int argc, char *argv[]) {
         while (game->round_running) {
 
             team_win = simulate_round(read_fds_team_A, read_fds_team_B,
-                                                        &config, game);
+                                        &config, game, players_teamA, players_teamB);
 
             sleep(1);
 
@@ -116,7 +116,6 @@ int main(int argc, char *argv[]) {
         game->game_running = check_game_conditions(game , &config, team_win);
         game->last_winner = team_win;
         team_win = NONE;
-        sleep(1);
     }
 
     printf("Team A wins: %d\n", game->team_wins_A);

@@ -19,70 +19,85 @@ void init_game(Game *game) {
 }
 
 
-Team  simulate_round(int pipe_fds_team_A[], int pipe_fds_team_B[], Config *config, Game *game) {
-
+Team simulate_round(int pipe_fds_team_A[], int pipe_fds_team_B[], Config *config, Game *game,
+    Player *players_teamA, Player *players_teamB) {
     float totals_A = 0, totals_B = 0;
+    char output_buffer[4096] = "";  // Large buffer for all output
+    char temp_buffer[256];          // Temporary buffer for formatting
 
+    strcat(output_buffer, "\n");
+
+    // Process Team A efforts
     for (int i = 0; i < config->NUM_PLAYERS/2; i++) {
         float effort;
         ssize_t bytes = read(pipe_fds_team_A[i], &effort, sizeof(float));
 
-
         if (bytes == sizeof(float) || bytes == 0) {
-            print_with_time1(game, "Team A - Player %d effort: %.2f\n", i, effort);
+            snprintf(temp_buffer, sizeof(temp_buffer),
+                     "Team A - Player %d effort: %.2f\n", players_teamA[i].number, effort);
+            strcat(output_buffer, temp_buffer);
             totals_A += effort;
         }
     }
 
+    // Process Team B efforts
     for (int i = 0; i < config->NUM_PLAYERS/2; i++) {
         float effort;
         ssize_t bytes = read(pipe_fds_team_B[i], &effort, sizeof(float));
+
         if (bytes == sizeof(float) || bytes == 0) {
-            print_with_time1(game, "Team B - Player %d effort: %.2f\n", i, effort);
+            snprintf(temp_buffer, sizeof(temp_buffer),
+                     "Team B - Player %d effort: %.2f\n", players_teamB[i].number, effort);
+            strcat(output_buffer, temp_buffer);
             totals_B += effort;
         }
     }
 
+    // Calculate round score and add totals
     game->round_score = totals_A - totals_B;
-    print_with_time1(game, "\nTotal Effort A: %.2f | Total Effort B: %.2f | Score: %.2f\n\n", totals_A, totals_B, game->round_score);
+    snprintf(temp_buffer, sizeof(temp_buffer),
+             "\nTotal Effort A: %.2f | Total Effort B: %.2f | Score: %.2f\n\n",
+             totals_A, totals_B, game->round_score);
+    strcat(output_buffer, temp_buffer);
 
+    // Determine winner
+    Team winner = NONE;
 
     if (game->round_score >= config->WINNING_THRESHOLD) {
-        print_with_time1(game, "🏆 Team A wins!\n");
+        strcat(output_buffer, "🏆 Team A wins!\n");
         game->team_wins_A++;
-        return TEAM_A;
-    }
-    if (game->round_score <= -config->WINNING_THRESHOLD) {
-        print_with_time1(game, "🏆 Team B wins!\n");
+        winner = TEAM_A;
+    } else if (game->round_score <= -config->WINNING_THRESHOLD) {
+        strcat(output_buffer, "🏆 Team B wins!\n");
         game->team_wins_B++;
-        return TEAM_B;
+        winner = TEAM_B;
+    } else if (game->round_time > config->MAX_ROUND_TIME) {
+        if (game->round_score > 0) {
+            strcat(output_buffer, "🏆 Team A wins!\n");
+            game->team_wins_A++;
+            winner = TEAM_A;
+        } else if (game->round_score < 0) {
+            strcat(output_buffer, "🏆 Team B wins!\n");
+            game->team_wins_B++;
+            winner = TEAM_B;
+        }
+    } else if (game->elapsed_time > config->MAX_TIME) {
+        if (game->round_score > 0) {
+            strcat(output_buffer, "🏆 Team A wins!\n");
+            game->team_wins_A++;
+            winner = TEAM_A;
+        } else if (game->round_score < 0) {
+            strcat(output_buffer, "🏆 Team B wins!\n");
+            game->team_wins_B++;
+            winner = TEAM_B;
+        }
     }
 
+    // Print everything at once with timestamp
+    print_with_time1(game, "%s", output_buffer);
+    fflush(stdout);
 
-    if (game->round_time > config->MAX_ROUND_TIME && game->round_score > 0) {
-        print_with_time1(game, "🏆 Team A wins!\n");
-        game->team_wins_A++;
-        return TEAM_A;
-    }
-    if (game->round_time > config->MAX_ROUND_TIME && game->round_score < 0) {
-        print_with_time1(game, "🏆 Team B wins!\n");
-        game->team_wins_B++;
-        return TEAM_B;
-    }
-
-    if (game->elapsed_time > config->MAX_TIME && game->round_score > 0) {
-        print_with_time1(game, "🏆 Team A wins!\n");
-        game->team_wins_A++;
-        return TEAM_A;
-    }
-
-    if (game->elapsed_time > config->MAX_TIME && game->round_score < 0) {
-        print_with_time1(game, "🏆 Team B wins!\n");
-        game->team_wins_B++;
-        return TEAM_B;
-    }
-
-    return NONE;
+    return winner;
 }
 
 int check_game_conditions(Game *game, Config *config, Team team_win) {
