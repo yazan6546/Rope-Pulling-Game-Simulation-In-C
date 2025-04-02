@@ -10,7 +10,7 @@
 #include "random.h"
 #include <stdarg.h>
 
-int pipe_fds[2];
+int write_fd;
 Team my_team;
 Player *current_player;
 unsigned int previous_energy = 0;
@@ -37,9 +37,12 @@ void process_player_state() {
         if (current_player->state == PULLING) {
 
             current_player->energy -= current_player->rate_decay;
+            float random_num = random_float(0, 1);
+
+            printf("random num : %f\n", random_num);
 
             // check for random falls
-            if (random_float(0, 1) < current_player->falling_chance) {
+            if (random_num < current_player->falling_chance) {
                 previous_energy = current_player->energy;
                 current_player->energy = 0;
                 print_with_time("Player %d (Team %d) has fallen!\n", current_player->number, my_team);
@@ -69,7 +72,7 @@ void process_player_state() {
 
         // send energy updates every 1 sec
         float effort = current_player->energy * ((float) current_player->position);
-        write(pipe_fds[1], &effort, sizeof(float));
+        write(write_fd, &effort, sizeof(float));
         fflush(stdout);
     }
 
@@ -98,19 +101,20 @@ int main(int argc, char *argv[]) {
     // printf("argv[1] = %s\n", argv[1]);
 
 
-    if (argc < 4) {
+    if (argc < 3) {
         fprintf(stderr, "Usage: player <serialized_data> <write_fd>\n");
         exit(1);
     }
 
     elapsed_time = * (int *)atoi(argv[4]);
 
+    init_random(getpid());
+
     current_player = create_player(getpid());
     deserialize_player(current_player, argv[1]);
 
     my_team = current_player->team;
-    pipe_fds[1] = atoi(argv[2]);
-    pipe_fds[0] = atoi(argv[3]);
+    write_fd = atoi(argv[2]);
 
 
     // Close the read end (not used)

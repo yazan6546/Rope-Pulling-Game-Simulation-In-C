@@ -9,16 +9,18 @@
 #include "player.h"
 #include "game.h"
 #include <stdarg.h>
+#include <stdarg.h>
 #include <sys/mman.h>
 
-#define READ 0
-#define WRITE 1
+
 #define PATH_MAX 4096
 Config config;
 Game *game;
 
-void fork_players(Player *players, int num_players, Team team, char *binary_path, int pipe_fds[][2]);
+void fork_players(Player *players, int num_players, Team team, char *binary_path, int read_fds[]);
 void generate_and_align(Player *players, int num_players, Team team);
+void handle_alarm(int signum);
+void cleanup_processes(Player *players_teamA, Player *players_teamB, int NUM_PLAYERS);
 void print_with_time(const char *format, ...);
 
 void handle_sigusr1(int sig) {
@@ -51,15 +53,16 @@ int main(int argc, char *argv[]) {
     Player players_teamB[config.NUM_PLAYERS/2];
 
 
-    int pipe_fds_team_A[config.NUM_PLAYERS/2][2];
-    int pipe_fds_team_B[config.NUM_PLAYERS/2][2];
+    int read_fds_team_A[config.NUM_PLAYERS/2];
+    int read_fds_team_B[config.NUM_PLAYERS/2];
 
 
     generate_and_align(players_teamA, config.NUM_PLAYERS/2, TEAM_A);
     generate_and_align(players_teamB, config.NUM_PLAYERS/2, TEAM_B);
 
-    fork_players(players_teamA, config.NUM_PLAYERS/2, TEAM_A, bin_path, pipe_fds_team_A);
-    fork_players(players_teamB, config.NUM_PLAYERS/2, TEAM_B, bin_path, pipe_fds_team_B);
+    fork_players(players_teamA, config.NUM_PLAYERS/2, TEAM_A, bin_path, read_fds_team_A);
+    fork_players(players_teamB, config.NUM_PLAYERS/2, TEAM_B, bin_path, read_fds_team_B);
+
 
     // Set up signal handlers
     signal(SIGUSR1, handle_sigusr1);
@@ -93,8 +96,13 @@ int main(int argc, char *argv[]) {
 
         while (game->round_running) {
 
-            team_win = simulate_round(pipe_fds_team_A, pipe_fds_team_B,
+            team_win = simulate_round(read_fds_team_A, read_fds_team_B,
                                                         &config, game);
+
+            sleep(1);
+
+            game.elapsed_time++;
+            game.round_time++;
 
             if (team_win != NONE) {
                 game->round_running = 0;
@@ -118,19 +126,24 @@ int main(int argc, char *argv[]) {
 
     printf("Cleaning up...\n");
 
+    cleanup_processes(players_teamA, players_teamB, config.NUM_PLAYERS);
     // free(bin_path);
     return 0;
 
 }
 
 void fork_players(Player *players, int num_players, Team team,
-                char *binary_path, int pipe_fds[][2]) {
+                char *binary_path, int read_fds[]) {
 
     for (int i = 0; i < num_players; i++) {
-        if (pipe(pipe_fds[i]) == -1) {
+
+        int pipe_fds_temp[2];
+        if (pipe(pipe_fds_temp) == -1) {
             perror("pipe");
             exit(EXIT_FAILURE);
         }
+
+        read_fds[i] = pipe_fds_temp[0];
 
         const pid_t pid = fork();
 
@@ -147,8 +160,7 @@ void fork_players(Player *players, int num_players, Team team,
             snprintf(player_path, PATH_MAX, "%s/player", binary_path);
 
             char write_fd_str[10], read_fd_str[10];
-            sprintf(write_fd_str, "%d", pipe_fds[i][WRITE]);
-            sprintf(read_fd_str, "%d", pipe_fds[i][READ]);
+            snprintf(write_fd_str, sizeof(write_fd_str), "%d", pipe_fds_temp[1]);
 
             if (execl("./player", "player", buffer, write_fd_str, read_fd_str, &game->elapsed_time, NULL)) {
                 perror("execl");
@@ -156,7 +168,7 @@ void fork_players(Player *players, int num_players, Team team,
             }
         } else { // Parent process
             players[i].pid = pid;
-
+            close(pipe_fds_temp[1]); // Close the write end of the pipe in the parent
         }
     }
 }

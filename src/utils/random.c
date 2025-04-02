@@ -5,7 +5,7 @@
 #include "random.h"
 
 void init_random(pid_t pid) {
-    srand( (unsigned int) time(NULL));
+    srand( (unsigned int) pid + time(NULL) );
 }
 
 float random_float(float min, float max) {
