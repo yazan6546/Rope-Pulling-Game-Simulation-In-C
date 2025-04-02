@@ -10,7 +10,8 @@
 
 typedef enum Team {
     TEAM_A,
-    TEAM_B
+    TEAM_B,
+    NONE
 } Team;
 
 typedef enum State {

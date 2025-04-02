@@ -25,7 +25,7 @@ void handle_alarm(int signum) {
     if (current_player->state == RECOVERING) {
         remaining_recovery_time--;
         // recovery_complete = 1;
-    } 
+    }
 
     elapsed_time++;
     energy_update = 1;
@@ -37,9 +37,12 @@ void process_player_state() {
         if (current_player->state == PULLING) {
 
             current_player->energy -= current_player->rate_decay;
-            
+            float random_num = random_float(0, 1);
+
+            printf("random num : %f\n", random_num);
+
             // check for random falls
-            if (random_float(0, 1) < current_player->falling_chance) {
+            if (random_num < current_player->falling_chance) {
                 previous_energy = current_player->energy;
                 current_player->energy = 0;
                 print_with_time("Player %d (Team %d) has fallen!\n", current_player->number, my_team);
@@ -48,7 +51,7 @@ void process_player_state() {
                 fflush(stdout);
             } else if (current_player->energy <= 0) {
                 current_player->energy = 0;
-                print_with_time("Player %d (Team %d) is exhausted!\n", 
+                print_with_time("Player %d (Team %d) is exhausted!\n",
                 current_player->number, my_team);
                 current_player->state = RECOVERING;
                 remaining_recovery_time = current_player->recovery_time;  // Set recovery timer
@@ -57,7 +60,7 @@ void process_player_state() {
 
             energy_update = 0; // this way, we ensure that energy is only updated once the alarm handler is called
         }
-        
+
         else if (current_player->state == RECOVERING && remaining_recovery_time == 0) {
             current_player->energy = previous_energy;
             current_player->state = PULLING;
@@ -72,7 +75,7 @@ void process_player_state() {
         write(write_fd, &effort, sizeof(float));
         fflush(stdout);
     }
-    
+
 }
 
 void handle_get_ready(int signum) {
@@ -103,11 +106,14 @@ int main(int argc, char *argv[]) {
         exit(1);
     }
 
+    init_random(getpid());
+
     current_player = create_player(getpid());
     deserialize_player(current_player, argv[1]);
 
     my_team = current_player->team;
     write_fd = atoi(argv[2]);
+
 
     // Close the read end (not used)
     // Not needed explicitly as it's not opened in player
@@ -121,7 +127,7 @@ int main(int argc, char *argv[]) {
         pause();
         process_player_state();
     }
-    
+
     return 0;
 }
 

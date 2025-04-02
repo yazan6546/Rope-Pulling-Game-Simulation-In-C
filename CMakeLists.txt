@@ -7,7 +7,7 @@ find_package(OpenGL REQUIRED)
 find_package(GLUT REQUIRED)
 
 add_executable(referee src/referee.c src/utils/config.c
-src/utils/random.c src/utils/player_utils.c src/utils/file.c src/utils/referee_orders.c)
+src/utils/random.c src/utils/player_utils.c src/utils/file.c src/utils/referee_orders.c src/game.c)
 
 add_executable(player src/player.c src/utils/player_utils.c src/utils/random.c)
 
