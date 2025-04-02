@@ -24,10 +24,10 @@ typedef struct Game {
 } Game;
 
 void init_game(Game *game);
-Team simulate_round(int pipe_fds_team_A[][2], int pipe_fds_team_B[][2], Config *config, Game *game);
+Team simulate_round(int pipe_fds_team_A[], int pipe_fds_team_B[], Config *config, Game *game);
 int check_game_conditions(Game *game, Config *config, Team team_win);
 void go_to_next_round(Game *game);
 int check_round_conditions(Game *game, Config *config);
-void print_with_time(Game *game, const char *format, ...);
+void print_with_time(const Game *game, const char *format, ...);
 
 #endif //GAME_H

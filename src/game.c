@@ -18,26 +18,26 @@ void init_game(Game *game) {
 }
 
 
-Team simulate_round(int pipe_fds_team_A[][2], int pipe_fds_team_B[][2], Config *config, Game *game) {
+Team simulate_round(int pipe_fds_team_A[], int pipe_fds_team_B[], Config *config, Game *game) {
 
     float totals_A = 0, totals_B = 0;
 
     for (int i = 0; i < config->NUM_PLAYERS/2; i++) {
         float effort;
-        ssize_t bytes = read(pipe_fds_team_A[i][0], &effort, sizeof(float));
+        ssize_t bytes = read(pipe_fds_team_A[i], &effort, sizeof(float));
 
 
         if (bytes == sizeof(float) || bytes == 0) {
-            print_with_time("Team A - Player %d effort: %.2f\n", i, effort);
+            print_with_time(game, "Team A - Player %d effort: %.2f\n", i, effort);
             totals_A += effort;
         }
     }
 
     for (int i = 0; i < config->NUM_PLAYERS/2; i++) {
         float effort;
-        ssize_t bytes = read(pipe_fds_team_B[i][0], &effort, sizeof(float));
+        ssize_t bytes = read(pipe_fds_team_B[i], &effort, sizeof(float));
         if (bytes == sizeof(float) || bytes == 0) {
-            print_with_time("Team B - Player %d effort: %.2f\n", i, effort);
+            print_with_time(game, "Team B - Player %d effort: %.2f\n", i, effort);
             totals_B += effort;
         }
     }
@@ -122,10 +122,11 @@ void go_to_next_round(Game *game) {
 }
 
 
-void print_with_time(Game *game, const char *format, ...) {
+void print_with_time(const Game *game, const char *format, ...) {
     va_list args;
     va_start(args, format);
     printf("@ %ds: ", game->elapsed_time);
     vprintf(format, args);
     va_end(args);
+    fflush(stdout);
 }
