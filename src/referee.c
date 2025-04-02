@@ -74,7 +74,6 @@ int main(int argc, char *argv[]) {
         }
         printf("\n\n");
 
-        sleep(3);
 
         while (game.round_running) {
 
