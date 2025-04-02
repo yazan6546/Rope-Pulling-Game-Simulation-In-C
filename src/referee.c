@@ -19,7 +19,6 @@ Game *game;
 
 void fork_players(Player *players, int num_players, Team team, char *binary_path, int read_fds[], int fd);
 void generate_and_align(Player *players, int num_players, Team team);
-void handle_alarm(int signum);
 void cleanup_processes(Player *players_teamA, Player *players_teamB, int NUM_PLAYERS);
 void print_with_time(const char *format, ...);
 
@@ -39,6 +38,7 @@ int main(int argc, char *argv[]) {
         perror("mmap failed");
         exit(EXIT_FAILURE);
     }
+
     char *config_path = NULL;
     handling_file(argc, argv[0], &config_path);
     char *bin_path = binary_dir(config_path);
@@ -104,10 +104,6 @@ int main(int argc, char *argv[]) {
             if (team_win != NONE) {
                 game->round_running = 0;
             }
-            printf("ok\n");
-            fflush(stdout);
-            printf("aaa\n");
-            fflush(stdout);
 
         }
 

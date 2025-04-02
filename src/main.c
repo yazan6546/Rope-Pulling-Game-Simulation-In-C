@@ -7,8 +7,14 @@
 
 // Global pointer to shared game state
 Game *shared_game;
+int shm_fd; // Store fd globally for cleanup
+
+pid_t pid_graphics;
+pid_t pid_referee;
 
 void handle_alarm(int signum);
+void handle_sigint(int signum); // Renamed from handle_sigkill to match actual signal
+void cleanup_resources(void);   // New function for atexit
 pid_t start_graphics_process(char *fd_str);
 pid_t start_referee_process(char *fd_str);
 
@@ -26,37 +32,73 @@ void handle_alarm(int signum) {
     alarm(1);
 }
 
-int main(int argc, char *argv[]) {
-    // Create shared game state using mmap
-    // In parent
-    int fd = shm_open("/game_shared_mem", O_CREAT | O_RDWR, 0666);
-    ftruncate(fd, sizeof(Game));
-    shared_game = mmap(NULL, sizeof(Game), PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+void handle_sigint(int signum) {
+    exit(0); // Let atexit handle cleanup
+}
 
+// Function for cleaning up resources, registered with atexit()
+void cleanup_resources(void) {
+    printf("Cleaning up resources...\n");
+    fflush(stdout);
+
+    if (shared_game != NULL && shared_game != MAP_FAILED) {
+        if (munmap(shared_game, sizeof(Game)) == -1) {
+            perror("munmap failed");
+        }
+    }
+
+    shm_unlink("/game_shared_mem");
+
+    if (shm_fd > 0) {
+        close(shm_fd);
+    }
+
+    kill(pid_graphics, SIGKILL);
+    kill(pid_referee, SIGKILL);
+
+    printf("Cleanup complete\n");
+    fflush(stdout);
+}
+
+int main(int argc, char *argv[]) {
+    // Register cleanup function with atexit
+    atexit(cleanup_resources);
+
+    // shared_game = malloc(sizeof(Game)); // Remove this line - using mmap instead
+
+    // Create shared game state using mmap
+    shm_fd = shm_open("/game_shared_mem", O_CREAT | O_RDWR, 0666);
+    if (shm_fd == -1) {
+        perror("shm_open failed");
+        exit(EXIT_FAILURE);
+    }
+
+    if (ftruncate(shm_fd, sizeof(Game)) == -1) {
+        perror("ftruncate failed");
+        exit(EXIT_FAILURE);
+    }
+
+    shared_game = mmap(NULL, sizeof(Game), PROT_READ | PROT_WRITE, MAP_SHARED, shm_fd, 0);
     if (shared_game == MAP_FAILED) {
         perror("mmap failed");
         exit(EXIT_FAILURE);
     }
 
-    fcntl(fd, F_SETFD, fcntl(fd, F_GETFD) & ~FD_CLOEXEC);
+    fcntl(shm_fd, F_SETFD, fcntl(shm_fd, F_GETFD) & ~FD_CLOEXEC);
 
     // Pass fd as string
     char fd_str[16];
-    sprintf(fd_str, "%d", fd);
+    sprintf(fd_str, "%d", shm_fd);
 
     // Initialize game state
     init_game(shared_game);
+    //
+    pid_graphics = start_graphics_process(fd_str);
+    pid_referee = start_referee_process(fd_str);
 
-
-    // Convert shared memory address to string for child processes
-    char shared_addr[32];
-    sprintf(shared_addr, "%p", (void*)shared_game);
-
-    pid_t pid_graphics = start_graphics_process(fd_str);
-    pid_t pid_referee = start_referee_process(fd_str);
-
-    // // Setup signal handler for time management
+    // Setup signal handler for time management
     signal(SIGALRM, handle_alarm);
+    signal(SIGINT, handle_sigint); // Renamed to match actual signal
     alarm(1);  // Start the timer
 
     int status_referee, status_graphics;
@@ -74,19 +116,11 @@ int main(int argc, char *argv[]) {
         printf("Graphics Child process exited with code: %d\n", WEXITSTATUS(status_graphics));
     } else if (WIFSIGNALED(status_graphics)) {
         printf("Graphics Child process terminated by signal: %d\n", WTERMSIG(status_graphics));
+
+        return 0; // cleanup_resources will be called automatically via atexit
     }
-
-
-
-    // Clean up shared memory
-    if (munmap(shared_game, sizeof(Game)) == -1) {
-        perror("munmap failed");
-        exit(EXIT_FAILURE);
-    }
-
-
-    return 0;
 }
+
 
 pid_t start_graphics_process(char *fd_str) {
     pid_t pid = fork();

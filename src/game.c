@@ -19,7 +19,7 @@ void init_game(Game *game) {
 }
 
 
-Team simulate_round(int pipe_fds_team_A[], int pipe_fds_team_B[], Config *config, Game *game) {
+Team  simulate_round(int pipe_fds_team_A[], int pipe_fds_team_B[], Config *config, Game *game) {
 
     float totals_A = 0, totals_B = 0;
 
