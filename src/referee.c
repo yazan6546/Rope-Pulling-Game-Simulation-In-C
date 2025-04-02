@@ -9,6 +9,7 @@
 #include "player.h"
 #include "game.h"
 #include <stdarg.h>
+#include <sys/mman.h>
 
 #define READ 0
 #define WRITE 1
@@ -21,17 +22,27 @@ void generate_and_align(Player *players, int num_players, Team team);
 
 int main(int argc, char *argv[]) {
 
-    game = (Game*) atoi(argv[1]);
+    printf(argv[1]);
+    printf("\n");
 
+    // In child
+    int fd = atoi(argv[1]);
+    game = mmap(NULL, sizeof(Game), PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+    if (game == MAP_FAILED) {
+        perror("mmap failed");
+        exit(EXIT_FAILURE);
+    }
     char *config_path = NULL;
     handling_file(argc, argv[0], &config_path);
     char *bin_path = binary_dir(config_path);
 
 
-    if (load_config(config_path, &config) == -1) {
+    if (load_config("../config.txt", &config) == -1) {
         free(bin_path);
         return 1;
     }
+
+    printf("iajdijasd\n");
 
     Player players_teamA[config.NUM_PLAYERS/2];
     Player players_teamB[config.NUM_PLAYERS/2];
@@ -75,7 +86,7 @@ int main(int argc, char *argv[]) {
         while (game->round_running) {
 
             team_win = simulate_round(pipe_fds_team_A, pipe_fds_team_B,
-                                                        &config, &game);
+                                                        &config, game);
 
             if (team_win != NONE) {
                 game->round_running = 0;
@@ -129,7 +140,7 @@ void fork_players(Player *players, int num_players, Team team,
             sprintf(write_fd_str, "%d", pipe_fds[i][WRITE]);
             sprintf(read_fd_str, "%d", pipe_fds[i][READ]);
 
-            if (execl(player_path, "player", buffer, write_fd_str, read_fd_str, &game->elapsed_time, NULL)) {
+            if (execl("./player", "player", buffer, write_fd_str, read_fd_str, &game->elapsed_time, NULL)) {
                 perror("execl");
                 exit(1);
             }
