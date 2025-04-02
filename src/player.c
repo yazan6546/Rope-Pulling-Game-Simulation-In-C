@@ -39,12 +39,10 @@ void process_player_state() {
         if (current_player->state == PULLING) {
 
             current_player->energy -= current_player->rate_decay;
-            float random_num = random_float(0, 1);
 
-            printf("random num : %f\n", random_num);
 
             // check for random falls
-            if (random_num < current_player->falling_chance) {
+            if (random_float(0, 1) < current_player->falling_chance) {
                 previous_energy = current_player->energy;
                 current_player->energy = 0;
                 print_with_time1(game, "Player %d (Team %d) has fallen!\n", current_player->number, my_team);
@@ -109,10 +107,9 @@ int main(int argc, char *argv[]) {
     }
 
     int fd = atoi(argv[3]);
+
     // Open the file descriptor for reading
     game = mmap(NULL, sizeof(Game), PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
-
-    printf("hahah");
     fflush(stdout);
 
     init_random(getpid());
@@ -123,14 +120,11 @@ int main(int argc, char *argv[]) {
     my_team = current_player->team;
     write_fd = atoi(argv[2]);
 
-
-    // Close the read end (not used)
-    // Not needed explicitly as it's not opened in player
-
     // Set up signal handlers
     signal(SIGALRM, handle_alarm);
     signal(SIGUSR1, handle_get_ready);
     signal(SIGUSR2, handle_start);
+
 
     while(1) {
         pause();

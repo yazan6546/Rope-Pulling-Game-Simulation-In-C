@@ -22,9 +22,9 @@ void generate_and_align(Player *players, int num_players, Team team);
 void cleanup_processes(Player *players_teamA, Player *players_teamB, int NUM_PLAYERS);
 void print_with_time(const char *format, ...);
 
-void handle_sigusr1(int sig) {
-    // Empty handler just to prevent termination
-}
+// void handle_sigusr1(int sig) {
+//     // Empty handler just to prevent termination
+// }
 
 int main(int argc, char *argv[]) {
 
@@ -63,9 +63,11 @@ int main(int argc, char *argv[]) {
     fork_players(players_teamA, config.NUM_PLAYERS/2, TEAM_A, bin_path, read_fds_team_A, fd);
     fork_players(players_teamB, config.NUM_PLAYERS/2, TEAM_B, bin_path, read_fds_team_B, fd);
 
+    sleep(2);
 
+    printf("after fork\n");
     // Set up signal handlers
-    signal(SIGUSR1, handle_sigusr1);
+    // signal(SIGUSR1, handle_sigusr1);
     Team team_win = NONE;
 
     while (game->game_running) {
@@ -92,6 +94,8 @@ int main(int argc, char *argv[]) {
             kill(players_teamB[i].pid, SIGUSR2);
         }
         printf("\n\n");
+
+        sleep(2);
 
 
         while (game->round_running) {
@@ -143,6 +147,7 @@ void fork_players(Player *players, int num_players, Team team,
 
         if (pid == -1) {
             perror("fork");
+            fflush(stderr);
             exit(EXIT_FAILURE);
         }
         if (pid == 0) { // Child process
@@ -159,6 +164,9 @@ void fork_players(Player *players, int num_players, Team team,
 
             if (execl("./player", "player", buffer, write_fd_str, fd_str, NULL)) {
                 perror("execl");
+                printf("Child process %d failed to exec and will terminate\n", getpid());
+                // Sleep briefly to allow output to be written
+                usleep(100000);  // 100ms delay
                 exit(1);
             }
         } else { // Parent process
