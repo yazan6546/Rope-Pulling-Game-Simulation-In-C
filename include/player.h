@@ -24,6 +24,7 @@ typedef enum State {
 typedef struct __attribute__((packed)) {
     float rate_decay;
     float energy;
+    float inital_energy;
     float recovery_time;
     float falling_chance;
 } Attributes;

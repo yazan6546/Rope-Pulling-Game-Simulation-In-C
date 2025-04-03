@@ -102,7 +102,7 @@ void handle_start(int signum) {
 
 void reset_round(int signum) {
     is_round_reset = 1;
-    
+    energy_update = 0;
 }
 
 int main(int argc, char *argv[]) {
@@ -118,6 +118,8 @@ int main(int argc, char *argv[]) {
 
     current_player = create_player(getpid());
     deserialize_player(current_player, argv[1]);
+
+    current_player->attributes.inital_energy = current_player->attributes.energy;
 
     my_team = current_player->team;
     write_fd = atoi(argv[2]);
@@ -139,7 +141,7 @@ int main(int argc, char *argv[]) {
         if(is_round_reset) {
             // Attributes attributes;
             // read(pipe_fds[0], &attributes, sizeof(Attributes));
-            // current_player->attributes = attributes;
+            current_player->attributes.energy = current_player->attributes.inital_energy;
             current_player->state = IDLE;
             elapsed_time = 0;
             is_round_reset = 0;
@@ -147,7 +149,6 @@ int main(int argc, char *argv[]) {
             print_with_time("Player %d (Team %d) resetting round\n", current_player->number, my_team);
 
             alarm(0);  // cancel time updates from the previous round
-            
             pause();
         }
         // continue simulation
@@ -159,6 +160,11 @@ int main(int argc, char *argv[]) {
 
 Player *create_player(pid_t pid) {
     Player *player = (Player *) malloc(sizeof(Player));
+    if (player == NULL) {
+        perror("Failed to allocate memory for player");
+        exit(EXIT_FAILURE);
+    }
+
     player->pid = pid;
 
     return player;
