@@ -121,13 +121,13 @@ int main(int argc, char *argv[]) {
     // printf("argv[1] = %s\n", argv[1]);
 
 
-    // Updated argument check to require a pipe_fd
-    if (argc < 4) {
-        fprintf(stderr, "Usage: player <serialized_data> <write_fd> <pipe_fd>\n");
+    // Updated argument check: <serialized_data> <energy_write_fd> <pos_pipe_fd> <fd>
+    if (argc < 5) {
+        fprintf(stderr, "Usage: player <serialized_data> <energy_write_fd> <pos_pipe_fd> <fd>\n");
         exit(1);
     }
 
-    int fd = atoi(argv[3]);
+    int fd = atoi(argv[4]);  // 4th argument for mmap
 
     // Open the file descriptor for reading
     game = mmap(NULL, sizeof(Game), PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
@@ -143,7 +143,7 @@ int main(int argc, char *argv[]) {
 
     my_team = current_player->team;
     write_fd = atoi(argv[2]);
-    int pipe_fd = atoi(argv[3]);  // Save the pipe file descriptor
+    int pos_pipe_fd = atoi(argv[3]);  // Dedicated new position pipe
 
     // Set up signal handlers
     signal(SIGALRM, handle_alarm);
@@ -157,9 +157,9 @@ int main(int argc, char *argv[]) {
         pause();
         // reset round
         if(is_round_reset) {
-            // Read new position from the pipe
+            // Read new position from the dedicated position pipe
             int new_position;
-            if (read(pipe_fd, &new_position, sizeof(int)) > 0) {
+            if (read(pos_pipe_fd, &new_position, sizeof(int)) > 0) {
                 current_player->new_position = new_position;
                 print_with_time1(game, "Player %d (Team %d) received new position: %d\n",
                                   current_player->number, my_team, new_position);
