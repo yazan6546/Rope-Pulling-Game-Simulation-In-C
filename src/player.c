@@ -40,7 +40,7 @@ void process_player_state() {
     if(energy_update) {
         if (current_player->state == PULLING) {
 
-        current_player->attributes.energy -= current_player->attributes.rate_decay;
+        current_player->attributes.energy -= current_player->attributes.rate_decay * (float) current_player->position;
 
         // check for random falls
         if (random_float(0, 1) < current_player->attributes.falling_chance) {

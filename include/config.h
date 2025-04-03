@@ -23,6 +23,8 @@ typedef struct {
     float UPDATE_RATE;
     float MIN_FALLING_CHANCE;
     float MAX_FALLING_CHANCE;
+    float MIN_ENDURANCE;
+    float MAX_ENDURANCE;
 
 } Config;
 
