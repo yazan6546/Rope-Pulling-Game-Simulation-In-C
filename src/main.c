@@ -19,14 +19,13 @@ pid_t start_graphics_process(char *fd_str);
 pid_t start_referee_process(char *fd_str);
 
 void handle_alarm(int signum) {
-    shared_game->elapsed_time++;
 
     // Check if referee requested a reset
     if (shared_game->reset_round_time_flag) {
         shared_game->round_time = 0;
-        shared_game->reset_round_time_flag = 0; // Reset the flag
     } else {
         shared_game->round_time++;
+        shared_game->elapsed_time++;
     }
 
     alarm(1);

@@ -15,12 +15,12 @@ void init_game(Game *game) {
     game->round_running = 1;
     game->round_score = 0;
     game->total_score = 0;
-    game->reset_round_time_flag = 0;
+    game->reset_round_time_flag = 1; // Initialize the flag
 }
 
 
-Team simulate_round(int pipe_fds_team_A[], int pipe_fds_team_B[], Config *config, Game *game,
-    Player *players_teamA, Player *players_teamB) {
+Team simulate_round(int pipe_fds_team_A[], int pipe_fds_team_B[], const Config *config, Game *game,
+    const Player *players_teamA, const Player *players_teamB) {
     float totals_A = 0, totals_B = 0;
     char output_buffer[4096] = "";  // Large buffer for all output
     char temp_buffer[256];          // Temporary buffer for formatting
@@ -65,13 +65,33 @@ Team simulate_round(int pipe_fds_team_A[], int pipe_fds_team_B[], Config *config
 
     if (game->round_score >= config->WINNING_THRESHOLD) {
         strcat(output_buffer, "🏆 Team A wins!\n");
+        strcat(output_buffer, "Round score exceeded threshold!\n");
         game->team_wins_A++;
         winner = TEAM_A;
-    } else if (game->round_score <= -config->WINNING_THRESHOLD) {
+    }
+    else if (game->round_score <= -config->WINNING_THRESHOLD) {
         strcat(output_buffer, "🏆 Team B wins!\n");
+        strcat(output_buffer, "Round score exceeded threshold!\n");
         game->team_wins_B++;
         winner = TEAM_B;
-    } else if (game->round_time > config->MAX_ROUND_TIME) {
+    }
+    else if (game->round_time > config->MAX_ROUND_TIME) {
+        if (game->round_score > 0) {
+            game->team_wins_A++;
+            winner = TEAM_A;
+        }
+        else if (game->round_score < 0) {
+            strcat(output_buffer, "🏆 Team B wins!\n");
+            game->team_wins_B++;
+            winner = TEAM_B;
+        }
+        else {
+            strcat(output_buffer, "It's a draw!\n");
+        }
+
+        strcat(output_buffer, "Round Time is up!\n");
+    }
+    else if (game->elapsed_time > config->MAX_TIME) {
         if (game->round_score > 0) {
             strcat(output_buffer, "🏆 Team A wins!\n");
             game->team_wins_A++;
@@ -81,16 +101,11 @@ Team simulate_round(int pipe_fds_team_A[], int pipe_fds_team_B[], Config *config
             game->team_wins_B++;
             winner = TEAM_B;
         }
-    } else if (game->elapsed_time > config->MAX_TIME) {
-        if (game->round_score > 0) {
-            strcat(output_buffer, "🏆 Team A wins!\n");
-            game->team_wins_A++;
-            winner = TEAM_A;
-        } else if (game->round_score < 0) {
-            strcat(output_buffer, "🏆 Team B wins!\n");
-            game->team_wins_B++;
-            winner = TEAM_B;
+        else {
+            strcat(output_buffer, "It's a draw!\n");
         }
+
+        strcat(output_buffer, "Game time is up!\n");
     }
 
     // Print everything at once with timestamp
@@ -100,34 +115,39 @@ Team simulate_round(int pipe_fds_team_A[], int pipe_fds_team_B[], Config *config
     return winner;
 }
 
-int check_game_conditions(Game *game, Config *config, Team team_win) {
+int check_game_conditions(const Game *game, const Config *config, Team team_win) {
     if (game->round_num > config->NUM_ROUNDS) {  
         printf("NUM ROUNDS\n");
+        fflush(stdout);
         return 0;
     }
 
     if (team_win == game->last_winner && team_win != -1) {
         printf("CONSECUTIVE WINS\n");
+        fflush(stdout);
         return 0;
     }
 
     if (game->elapsed_time > config->MAX_TIME) {
         printf("MAX TIME\n");
+        fflush(stdout);
         return 0;
     }
 
     if (game->total_score > config->MAX_SCORE) {
         printf("MAX SCORE\n");
+        fflush(stdout);
         return 0;
     }
 
     if (game->total_score > config->MAX_SCORE) {
+        fflush(stdout);
         return 0;
     }
     return 1;
 }
 
-int check_round_conditions(Game *game, Config *config) {
+int check_round_conditions(const Game *game, const Config *config) {
     if (game->round_time > config->MAX_ROUND_TIME) {
         return 0;
     }

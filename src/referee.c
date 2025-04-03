@@ -9,7 +9,6 @@
 #include "player.h"
 #include "game.h"
 #include <stdarg.h>
-#include <stdarg.h>
 #include <sys/mman.h>
 
 
@@ -19,7 +18,7 @@ Game *game;
 
 void fork_players(Player *players, int num_players, Team team, char *binary_path, int read_fds[], int fd);
 void generate_and_align(Player *players, int num_players, Team team);
-void cleanup_processes(Player *players_teamA, Player *players_teamB, int NUM_PLAYERS);
+void cleanup_processes(const Player *players_teamA, const Player *players_teamB, int NUM_PLAYERS);
 void print_with_time(const char *format, ...);
 
 volatile int elapsed_time = 0;
@@ -62,8 +61,6 @@ int main(int argc, char *argv[]) {
     fork_players(players_teamA, config.NUM_PLAYERS/2, TEAM_A, bin_path, read_fds_team_A, fd);
     fork_players(players_teamB, config.NUM_PLAYERS/2, TEAM_B, bin_path, read_fds_team_B, fd);
 
-    signal(SIGALRM, handle_alarm);
-
     sleep(2);
 
     printf("after fork\n");
@@ -84,6 +81,7 @@ int main(int argc, char *argv[]) {
         printf("signal SIGUSR1 sent to all players\n");
         fflush(stdout);
 
+        // Wait for players to get ready
         sleep(2);
 
         printf("\n\n");
@@ -96,9 +94,9 @@ int main(int argc, char *argv[]) {
         }
         printf("\n\n");
 
-        alarm(1);
+        sleep(1);
 
-
+        game->reset_round_time_flag = 0; // Reset the flag for the next round
         while (game->round_running) {
 
             team_win = simulate_round(read_fds_team_A, read_fds_team_B,
@@ -107,7 +105,7 @@ int main(int argc, char *argv[]) {
 
             if (team_win != NONE) {
                 game->round_running = 0;
-                alarm(0); // Cancel the alarm
+                game->reset_round_time_flag = 1;
             }
 
         }
@@ -116,7 +114,7 @@ int main(int argc, char *argv[]) {
         go_to_next_round(game);
         game->game_running = check_game_conditions(game , &config, team_win);
 
-        if (game.game_running) {
+        if (game->game_running) {
             // send reset signals to all players
             for (int i = 0; i < config.NUM_PLAYERS/2; i++) {
                 kill(players_teamA[i].pid, SIGHUP);
@@ -124,6 +122,8 @@ int main(int argc, char *argv[]) {
             }
 
         }
+
+        sleep(2);
 
         game->last_winner = team_win;
         team_win = NONE;
@@ -205,7 +205,7 @@ void print_with_time(const char *format, ...) {
 
 
 // Cleanup function to kill all child processes
-void cleanup_processes(Player *players_teamA, Player *players_teamB, int NUM_PLAYERS) {
+void cleanup_processes(const Player *players_teamA, const Player *players_teamB, int NUM_PLAYERS) {
     printf("Killing all child processes...\n");
 
     // Kill players from Team A
