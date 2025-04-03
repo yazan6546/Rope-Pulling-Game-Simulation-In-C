@@ -6,6 +6,10 @@
 
 
 void init_game(Game *game) {
+    game->round_time = 0;
+    game->elapsed_time = 0;
+    game->total_effort_A;
+    game->total_effort_B = 0;
     game->round_num = 0;
     game->game_running = 1;
     game->team_wins_A = 0;
@@ -21,7 +25,7 @@ void init_game(Game *game) {
 
 Team simulate_round(int pipe_fds_team_A[], int pipe_fds_team_B[], const Config *config, Game *game,
     const Player *players_teamA, const Player *players_teamB) {
-    float totals_A = 0, totals_B = 0;
+    game->total_effort_A = 0, game->total_effort_B = 0;
     char output_buffer[4096] = "";  // Large buffer for all output
     char temp_buffer[256];          // Temporary buffer for formatting
 
@@ -36,7 +40,7 @@ Team simulate_round(int pipe_fds_team_A[], int pipe_fds_team_B[], const Config *
             snprintf(temp_buffer, sizeof(temp_buffer),
                      "Team A - Player %d effort: %.2f\n", players_teamA[i].number, effort);
             strcat(output_buffer, temp_buffer);
-            totals_A += effort;
+            game->total_effort_A += effort;
         }
     }
 
@@ -49,15 +53,15 @@ Team simulate_round(int pipe_fds_team_A[], int pipe_fds_team_B[], const Config *
             snprintf(temp_buffer, sizeof(temp_buffer),
                      "Team B - Player %d effort: %.2f\n", players_teamB[i].number, effort);
             strcat(output_buffer, temp_buffer);
-            totals_B += effort;
+            game->total_effort_B += effort;
         }
     }
 
     // Calculate round score and add totals
-    game->round_score = totals_A - totals_B;
+    game->round_score = game->total_effort_A - game->total_effort_B;
     snprintf(temp_buffer, sizeof(temp_buffer),
              "\nTotal Effort A: %.2f | Total Effort B: %.2f | Score: %.2f\n\n",
-             totals_A, totals_B, game->round_score);
+             game->total_effort_A, game->total_effort_B, game->round_score);
     strcat(output_buffer, temp_buffer);
 
     // Determine winner

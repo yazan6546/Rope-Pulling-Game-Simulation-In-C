@@ -1,6 +1,10 @@
 #include <stdio.h>
 #include <GL/glut.h>
 #include <math.h>
+#include <sys/mman.h>
+
+#include "game.h"
+#include "config.h"
 
 #define PLAYERS_PER_TEAM 4
 
@@ -10,6 +14,56 @@ float rope_center = 0.0;
 
 float energy_team1 = 10.0;
 float energy_team2 = 9.0;
+Game *game;
+
+
+// Function to render text in OpenGL
+void renderText(float x, float y, const char* text, float r, float g, float b) {
+    glColor3f(r, g, b);
+    glRasterPos2f(x, y);
+
+    for (const char* c = text; *c != '\0'; c++) {
+        glutBitmapCharacter(GLUT_BITMAP_9_BY_15, *c);
+    }
+}
+
+// Function to draw the scoreboard
+void drawScoreboard() {
+    char buffer[100];
+
+    // Draw scoreboard background
+    glColor3f(0.2, 0.2, 0.2);
+    glBegin(GL_QUADS);
+    glVertex2f(-0.98, 0.98);
+    glVertex2f(0.98, 0.98);
+    glVertex2f(0.98, 0.75);
+    glVertex2f(-0.98, 0.75);
+    glEnd();
+
+    // Team A (Red) wins and score
+    sprintf(buffer, "Team A Wins: %d", game->team_wins_A);
+    renderText(-0.95, 0.93, buffer, 1.0, 0.0, 0.0);
+
+    // Team B (Blue) wins and score
+    sprintf(buffer, "Team B Wins: %d", game->team_wins_B);
+    renderText(0.3, 0.93, buffer, 0.0, 0.0, 1.0);
+
+    // Round score
+    sprintf(buffer, "Round Score: %f", game->round_score);
+    renderText(-0.95, 0.85, buffer, 1.0, 1.0, 1.0);
+
+    // Total score
+    sprintf(buffer, "Total Score: %f", game->total_score);
+    renderText(0.3, 0.85, buffer, 1.0, 1.0, 1.0);
+
+    // Round number
+    sprintf(buffer, "Round: %d", game->round_num);
+    renderText(-0.95, 0.77, buffer, 1.0, 1.0, 1.0);
+
+    // Time information
+    sprintf(buffer, "Time: %ds / Round Time: %ds", game->elapsed_time, game->round_time);
+    renderText(0.3, 0.77, buffer, 1.0, 1.0, 1.0);
+}
 
 
 void initializePlayers(float team1[], float team2[], int count) {
@@ -144,7 +198,7 @@ void updateGame(int value) {
     }
 
     glutPostRedisplay();
-    glutTimerFunc(50, updateGame, 0);
+    glutTimerFunc(30, updateGame, 0);
 }
 
 //rope between players
@@ -194,11 +248,27 @@ void display() {
         team2_x[PLAYERS_PER_TEAM-1] + grip_offset, -0.1   // Right side of leftmost blue player
     );
 
+    // Draw the scoreboard
+    drawScoreboard();
+
     glFlush();
 }
 
 
 int main(int argc, char** argv) {
+
+    // Check command-line argument
+
+    if (argc < 2) {
+        fprintf(stderr, "Usage: %s <fd>\n", argv[0]);
+        return 1;
+    }
+    int fd = atoi(argv[1]);
+    game = mmap(NULL, sizeof(Game), PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+    if (game == MAP_FAILED) {
+        perror("mmap failed");
+        exit(EXIT_FAILURE);
+    }
     glutInit(&argc, argv);
     glutInitWindowSize(800, 600);
     glutCreateWindow("Tug-of-War with Rectangular Rope");

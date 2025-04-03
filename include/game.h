@@ -20,6 +20,8 @@ typedef struct Game {
     int round_running;
     float round_score;
     float total_score;
+    float total_effort_A;
+    float total_effort_B;
     int round_time;
     int reset_round_time_flag; // New field for time management
 } Game;
