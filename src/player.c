@@ -10,15 +10,19 @@
 #include "random.h"
 #include <sys/types.h>
 #include <stdarg.h>
+#include <sys/mman.h>
+#include "game.h"
 
 int write_fd;
 Team my_team;
 Player *current_player;
 float previous_energy = 0;
 
+
 volatile sig_atomic_t energy_update = 0;
 volatile sig_atomic_t recovery_complete = 0;
-volatile sig_atomic_t elapsed_time = 0;
+int elapsed_time;
+Game *game;
 volatile sig_atomic_t is_round_reset = 0;
 volatile sig_atomic_t remaining_recovery_time = 0;
 
@@ -28,7 +32,6 @@ void handle_alarm(int signum) {
         // recovery_complete = 1;
     }
 
-    elapsed_time++;
     energy_update = 1;
     alarm(1);  // Schedule next energy update
 }
@@ -38,36 +41,36 @@ void process_player_state() {
         if (current_player->state == PULLING) {
 
         current_player->attributes.energy -= current_player->attributes.rate_decay;
-        
+
         // check for random falls
         if (random_float(0, 1) < current_player->attributes.falling_chance) {
             previous_energy = current_player->attributes.energy;
             current_player->attributes.energy = 0;
-            print_with_time("Player %d (Team %d) has fallen!\n", current_player->number, my_team);
+            print_with_time1(game, "Player %d (Team %d) has fallen!\n", current_player->number, my_team);
             current_player->state = RECOVERING;
             remaining_recovery_time = current_player->attributes.recovery_time;  // Set recovery timer
             fflush(stdout);
         } else if (current_player->attributes.energy <= 0) {
             previous_energy = current_player->attributes.energy;
             current_player->attributes.energy = 0;
-            print_with_time("Player %d (Team %d) is exhausted!\n", 
+            print_with_time1(game, "Player %d (Team %d) is exhausted!\n",
             current_player->number, my_team);
             current_player->state = RECOVERING;
             remaining_recovery_time = current_player->attributes.recovery_time;  // Set recovery timer
             fflush(stdout);
         }
 
-        energy_update = 0; // this way, we ensure that energy is only updated once the alarm handler is called
-    }
-    
-    else if (current_player->state == RECOVERING && remaining_recovery_time == 0) {
-        current_player->attributes.energy = previous_energy;
-        current_player->state = PULLING;
-        print_with_time("Player %d (Team %d) rejoining with energy %.2f\n",
-               current_player->number, my_team, current_player->attributes.energy);
-        fflush(stdout);
-        // alarm(1);  // Restart energy updates
-    }
+            energy_update = 0; // this way, we ensure that energy is only updated once the alarm handler is called
+        }
+
+        else if (current_player->state == RECOVERING && remaining_recovery_time == 0) {
+            current_player->attributes.energy = previous_energy;
+            current_player->state = PULLING;
+            print_with_time1(game, "Player %d (Team %d) rejoining with energy %.2f\n",
+                current_player->number, my_team, current_player->attributes.energy);
+            fflush(stdout);
+            // alarm(1);  // Restart energy updates
+        }
 
     // send energy updates every 1 sec
     // if (energy_update){
@@ -76,21 +79,22 @@ void process_player_state() {
     // } else {
     //     alarm(1);  // Schedule next energy update
     // }
-    
-    
+
+
     }
+
 }
 
 void handle_get_ready(int signum) {
-    print_with_time("Player %d (Team %d) getting ready\n", current_player->number, my_team);
-    print_with_time("Player %d (Team %d) Repositioned from %d to %d\n", current_player->number, my_team, current_player->position, current_player->new_position);
+    print_with_time1(game, "Player %d (Team %d) getting ready\n", current_player->number, my_team);
+    print_with_time1(game, "Player %d (Team %d) Repositioned from %d to %d\n", current_player->number, my_team, current_player->position, current_player->new_position);
     current_player->position = current_player->new_position;
     current_player->state = READY;
     fflush(stdout);
 }
 
 void handle_start(int signum) {
-    print_with_time("Player %d (Team %d) starting to pull %s\n",
+    print_with_time1(game, "Player %d (Team %d) starting to pull %s\n",
            current_player->number,
            my_team,
            my_team == TEAM_A ? "right" : "left");
@@ -114,6 +118,12 @@ int main(int argc, char *argv[]) {
         exit(1);
     }
 
+    int fd = atoi(argv[3]);
+
+    // Open the file descriptor for reading
+    game = mmap(NULL, sizeof(Game), PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+    fflush(stdout);
+
     init_random(getpid());
 
     current_player = create_player(getpid());
@@ -124,15 +134,12 @@ int main(int argc, char *argv[]) {
     my_team = current_player->team;
     write_fd = atoi(argv[2]);
 
-
-    // Close the read end (not used)
-    // Not needed explicitly as it's not opened in player
-
     // Set up signal handlers
     signal(SIGALRM, handle_alarm);
     signal(SIGUSR1, handle_get_ready);
     signal(SIGUSR2, handle_start);
     signal(SIGHUP, reset_round);
+
 
     while(1) {
         // wait for a signal
@@ -146,7 +153,7 @@ int main(int argc, char *argv[]) {
             elapsed_time = 0;
             is_round_reset = 0;
 
-            print_with_time("Player %d (Team %d) resetting round\n", current_player->number, my_team);
+            print_with_time1(game, "Player %d (Team %d) resetting round\n", current_player->number, my_team);
 
             alarm(0);  // cancel time updates from the previous round
             pause();
@@ -169,12 +176,4 @@ Player *create_player(pid_t pid) {
 
     return player;
 
-}
-
-void print_with_time(const char *format, ...) {
-    va_list args;
-    va_start(args, format);
-    printf("@ %ds: ", elapsed_time);
-    vprintf(format, args);
-    va_end(args);
 }

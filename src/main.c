@@ -1,37 +1,127 @@
-//
-// Created by - on 3/25/2025.
-//
-
 #include "common.h"
+#include <signal.h>
+#include "game.h"
+#include <fcntl.h>
+#include <sys/mman.h>
+#include <sys/stat.h>
 
-pid_t start_graphics_process();
-pid_t start_referee_process();
+// Global pointer to shared game state
+Game *shared_game;
+int shm_fd; // Store fd globally for cleanup
 
-int main(int argc, char *argv[]) {
+pid_t pid_graphics;
+pid_t pid_referee;
 
-    pid_t pid = start_graphics_process();
-    pid_t pid2 = start_referee_process();
+void handle_alarm(int signum);
+void handle_sigint(int signum); // Renamed from handle_sigkill to match actual signal
+void cleanup_resources(void);   // New function for atexit
+pid_t start_graphics_process(char *fd_str);
+pid_t start_referee_process(char *fd_str);
 
-    int status_refree, status_graphics;
-    waitpid(pid2, &status_refree, 0);
+void handle_alarm(int signum) {
 
-    if (WIFEXITED(status_refree)) {
-        printf("Referee Child process exited with code: %d\n", WEXITSTATUS(status_refree));
-    } else if (WIFSIGNALED(status_refree)) {
-        printf("Referee Child process terminated by signal: %d\n", WTERMSIG(status_refree));
+    // Check if referee requested a reset
+    if (shared_game->reset_round_time_flag) {
+        shared_game->round_time = 0;
+    } else {
+        shared_game->round_time++;
+        shared_game->elapsed_time++;
     }
 
-    waitpid(pid, &status_graphics, 0);
+    alarm(1);
+}
+
+void handle_sigint(int signum) {
+    exit(0); // Let atexit handle cleanup
+}
+
+// Function for cleaning up resources, registered with atexit()
+void cleanup_resources(void) {
+    printf("Cleaning up resources...\n");
+    fflush(stdout);
+
+    if (shared_game != NULL && shared_game != MAP_FAILED) {
+        if (munmap(shared_game, sizeof(Game)) == -1) {
+            perror("munmap failed");
+        }
+    }
+
+    shm_unlink("/game_shared_mem");
+
+    if (shm_fd > 0) {
+        close(shm_fd);
+    }
+
+    kill(pid_graphics, SIGKILL);
+    kill(pid_referee, SIGKILL);
+
+    printf("Cleanup complete\n");
+    fflush(stdout);
+}
+
+int main(int argc, char *argv[]) {
+    // Register cleanup function with atexit
+    atexit(cleanup_resources);
+
+    // shared_game = malloc(sizeof(Game)); // Remove this line - using mmap instead
+
+    // Create shared game state using mmap
+    shm_fd = shm_open("/game_shared_mem", O_CREAT | O_RDWR, 0666);
+    if (shm_fd == -1) {
+        perror("shm_open failed");
+        exit(EXIT_FAILURE);
+    }
+
+    if (ftruncate(shm_fd, sizeof(Game)) == -1) {
+        perror("ftruncate failed");
+        exit(EXIT_FAILURE);
+    }
+
+    shared_game = mmap(NULL, sizeof(Game), PROT_READ | PROT_WRITE, MAP_SHARED, shm_fd, 0);
+    if (shared_game == MAP_FAILED) {
+        perror("mmap failed");
+        exit(EXIT_FAILURE);
+    }
+
+    fcntl(shm_fd, F_SETFD, fcntl(shm_fd, F_GETFD) & ~FD_CLOEXEC);
+
+    // Pass fd as string
+    char fd_str[16];
+    sprintf(fd_str, "%d", shm_fd);
+
+    // Initialize game state
+    init_game(shared_game);
+    //
+    pid_graphics = start_graphics_process(fd_str);
+    pid_referee = start_referee_process(fd_str);
+
+    // Setup signal handler for time management
+    signal(SIGALRM, handle_alarm);
+    signal(SIGINT, handle_sigint); // Renamed to match actual signal
+    alarm(1);  // Start the timer
+
+    int status_referee, status_graphics;
+    waitpid(pid_referee, &status_referee, 0);
+
+    if (WIFEXITED(status_referee)) {
+        printf("Referee Child process exited with code: %d\n", WEXITSTATUS(status_referee));
+    } else if (WIFSIGNALED(status_referee)) {
+        printf("Referee Child process terminated by signal: %d\n", WTERMSIG(status_referee));
+    }
+
+    waitpid(pid_graphics, &status_graphics, 0);
 
     if (WIFEXITED(status_graphics)) {
         printf("Graphics Child process exited with code: %d\n", WEXITSTATUS(status_graphics));
     } else if (WIFSIGNALED(status_graphics)) {
         printf("Graphics Child process terminated by signal: %d\n", WTERMSIG(status_graphics));
-    }
 
+        return 0; // cleanup_resources will be called automatically via atexit
+    }
 }
 
-pid_t start_graphics_process() {
+
+pid_t start_graphics_process(char *fd_str) {
     pid_t pid = fork();
     if (pid == -1) {
         perror("fork");
@@ -40,17 +130,15 @@ pid_t start_graphics_process() {
 
     if (pid == 0) {
         // Child process
-        if (execlp("./rope_game_graphics", "rope_pulling_game_main", NULL)) {
+        if (execlp("./rope_game_graphics", "rope_pulling_game_main", fd_str, NULL)) {
             perror("execl graphics");
             exit(EXIT_FAILURE);
         }
-
     }
-
     return pid;
 }
 
-pid_t start_referee_process() {
+pid_t start_referee_process(char *fd_str) {
     pid_t pid = fork();
     if (pid == -1) {
         perror("fork");
@@ -59,11 +147,10 @@ pid_t start_referee_process() {
 
     if (pid == 0) {
         // Child process
-        if (execl("./referee", "./referee", NULL)) {
+        if (execl("./referee", "./referee", fd_str, NULL)) {
             perror("execl referee");
             exit(EXIT_FAILURE);
         }
     }
-
     return pid;
 }

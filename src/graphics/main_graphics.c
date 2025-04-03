@@ -28,6 +28,7 @@ void display() {
     drawRope(-0.4, 0.0, 0.4, 0.0);
     glFlush();
 }
+
 int main(int argc, char** argv) {
     glutInit(&argc, argv);
     glutInitWindowSize(800, 600);

@@ -9,29 +9,40 @@
 #include "player.h"
 #include "game.h"
 #include <stdarg.h>
+#include <sys/mman.h>
+
 
 #define PATH_MAX 4096
 Config config;
+Game *game;
 
-void fork_players(Player *players, int num_players, Team team, char *binary_path, int read_fds[]);
+void fork_players(Player *players, int num_players, Team team, char *binary_path, int read_fds[], int fd);
 void generate_and_align(Player *players, int num_players, Team team);
-void handle_alarm(int signum);
-void cleanup_processes(Player *players_teamA, Player *players_teamB, int NUM_PLAYERS);
+void cleanup_processes(const Player *players_teamA, const Player *players_teamB, int NUM_PLAYERS);
+void print_with_time(const char *format, ...);
 
 volatile int elapsed_time = 0;
-Game game;
 
 int main(int argc, char *argv[]) {
 
-    
-    init_game(&game);
 
+
+    printf("%s", argv[1]);
+    printf("\n");
+
+    // In child
+    int fd = atoi(argv[1]);
+    game = mmap(NULL, sizeof(Game), PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+    if (game == MAP_FAILED) {
+        perror("mmap failed");
+        exit(EXIT_FAILURE);
+    }
     char *config_path = NULL;
     handling_file(argc, argv[0], &config_path);
     char *bin_path = binary_dir(config_path);
 
 
-    if (load_config(config_path, &config) == -1) {
+    if (load_config("../config.txt", &config) == -1) {
         free(bin_path);
         return 1;
     }
@@ -47,16 +58,17 @@ int main(int argc, char *argv[]) {
     generate_and_align(players_teamA, config.NUM_PLAYERS/2, TEAM_A);
     generate_and_align(players_teamB, config.NUM_PLAYERS/2, TEAM_B);
 
-    fork_players(players_teamA, config.NUM_PLAYERS/2, TEAM_A, bin_path, read_fds_team_A);
-    fork_players(players_teamB, config.NUM_PLAYERS/2, TEAM_B, bin_path, read_fds_team_B);
+    fork_players(players_teamA, config.NUM_PLAYERS/2, TEAM_A, bin_path, read_fds_team_A, fd);
+    fork_players(players_teamB, config.NUM_PLAYERS/2, TEAM_B, bin_path, read_fds_team_B, fd);
 
-    signal(SIGALRM, handle_alarm);
+    sleep(2);
 
-
+    printf("after fork\n");
+    // Set up signal handlers
+    // signal(SIGUSR1, handle_sigusr1);
     Team team_win = NONE;
 
-    while (game.game_running) {
-        sleep(2); // Wait for players to get ready
+    while (game->game_running) {
 
         printf("\n\n");
 
@@ -66,9 +78,14 @@ int main(int argc, char *argv[]) {
             kill(players_teamB[i].pid, SIGUSR1);
         }
 
+        printf("signal SIGUSR1 sent to all players\n");
+        fflush(stdout);
+
+        // Wait for players to get ready
+        sleep(2);
+
         printf("\n\n");
 
-        sleep(3); // Wait for players to get ready
         //
         // Send start signal to all players
         for (int i = 0; i < config.NUM_PLAYERS/2; i++) {
@@ -77,28 +94,27 @@ int main(int argc, char *argv[]) {
         }
         printf("\n\n");
 
-        alarm(1);
+        sleep(1);
 
-        while (game.round_running) {
-
-            
+        game->reset_round_time_flag = 0; // Reset the flag for the next round
+        while (game->round_running) {
 
             team_win = simulate_round(read_fds_team_A, read_fds_team_B,
-                                                        &config, &game);
-            
+                                        &config, game, players_teamA, players_teamB);
+
 
             if (team_win != NONE) {
-                game.round_running = 0;
-                alarm(0); // Cancel the alarm
+                game->round_running = 0;
+                game->reset_round_time_flag = 1;
             }
 
         }
 
-        game.total_score += game.round_score;
-        go_to_next_round(&game);
-        game.game_running = check_game_conditions(&game , &config, team_win);
+        game->total_score += game->round_score;
+        go_to_next_round(game);
+        game->game_running = check_game_conditions(game , &config, team_win);
 
-        if (game.game_running) {
+        if (game->game_running) {
             // send reset signals to all players
             for (int i = 0; i < config.NUM_PLAYERS/2; i++) {
                 kill(players_teamA[i].pid, SIGHUP);
@@ -107,12 +123,14 @@ int main(int argc, char *argv[]) {
 
         }
 
-        game.last_winner = team_win;
+        sleep(2);
+
+        game->last_winner = team_win;
         team_win = NONE;
     }
 
-    printf("Team A wins: %d\n", game.team_wins_A);
-    printf("Team B wins: %d\n\n", game.team_wins_B);
+    printf("Team A wins: %d\n", game->team_wins_A);
+    printf("Team B wins: %d\n\n", game->team_wins_B);
 
     printf("Cleaning up...\n");
 
@@ -123,7 +141,7 @@ int main(int argc, char *argv[]) {
 }
 
 void fork_players(Player *players, int num_players, Team team,
-                char *binary_path, int read_fds[]) {
+                char *binary_path, int read_fds[], int fd) {
 
     for (int i = 0; i < num_players; i++) {
 
@@ -139,6 +157,7 @@ void fork_players(Player *players, int num_players, Team team,
 
         if (pid == -1) {
             perror("fork");
+            fflush(stderr);
             exit(EXIT_FAILURE);
         }
         if (pid == 0) { // Child process
@@ -149,11 +168,15 @@ void fork_players(Player *players, int num_players, Team team,
             char player_path[PATH_MAX];
             snprintf(player_path, PATH_MAX, "%s/player", binary_path);
 
-            char write_fd_str[10], read_fd_str[10];
+            char write_fd_str[10], fd_str[10];
             snprintf(write_fd_str, sizeof(write_fd_str), "%d", pipe_fds_temp[1]);
+            snprintf(fd_str, sizeof(fd_str), "%d", fd);
 
-            if (execl(player_path, "player", buffer, write_fd_str, NULL)) {
+            if (execl("./player", "player", buffer, write_fd_str, fd_str, NULL)) {
                 perror("execl");
+                printf("Child process %d failed to exec and will terminate\n", getpid());
+                // Sleep briefly to allow output to be written
+                usleep(100000);  // 100ms delay
                 exit(1);
             }
         } else { // Parent process
@@ -164,7 +187,6 @@ void fork_players(Player *players, int num_players, Team team,
 }
 
 void generate_and_align(Player *players, int num_players, Team team) {
-
     for (int i = 0; i<num_players; i++) {
         generate_random_player(&players[i], &config, team, i);
     }
@@ -172,15 +194,18 @@ void generate_and_align(Player *players, int num_players, Team team) {
     align(players, num_players);
 }
 
-void handle_alarm(int signum) {
-    game.elapsed_time++;
-    game.round_time++;
-    alarm(1);
+void print_with_time(const char *format, ...) {
+    va_list args;
+    va_start(args, format);
+    printf("@ %ds: ", game->elapsed_time);
+    vprintf(format, args);
+    va_end(args);
+    fflush(stdout);
 }
 
 
 // Cleanup function to kill all child processes
-void cleanup_processes(Player *players_teamA, Player *players_teamB, int NUM_PLAYERS) {
+void cleanup_processes(const Player *players_teamA, const Player *players_teamB, int NUM_PLAYERS) {
     printf("Killing all child processes...\n");
 
     // Kill players from Team A
