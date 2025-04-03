@@ -136,6 +136,7 @@ int main(int argc, char *argv[]) {
 
     current_player = create_player(getpid());
     deserialize_player(current_player, argv[1]);
+    print_player(current_player);
 
     current_player->attributes.inital_energy = current_player->attributes.energy;
 
@@ -164,7 +165,7 @@ int main(int argc, char *argv[]) {
             elapsed_time = 0;
             is_round_reset = 0;
 
-            print_with_time1(game, "Player %d (Team %d) resetting round\n", current_player->number, my_team);
+            print_with_time1(game, "Player %d (Team %d) resetting round with energy : %f\n", current_player->number, my_team, current_player->attributes.energy);
 
             alarm(0);  // cancel time updates from the previous round
             pause();

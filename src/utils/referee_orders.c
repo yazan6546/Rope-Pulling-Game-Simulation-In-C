@@ -17,6 +17,5 @@ void align(Player* team, int num_players) {
     
     for (int i = 0; i < num_players; i++) {
         team[i].new_position = i+1;
-        printf("Player %d: energy = %.2f\n", team[i].number, team[i].attributes.energy);
     }
 }
