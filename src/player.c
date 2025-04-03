@@ -121,8 +121,9 @@ int main(int argc, char *argv[]) {
     // printf("argv[1] = %s\n", argv[1]);
 
 
-    if (argc < 3) {
-        fprintf(stderr, "Usage: player <serialized_data> <write_fd>\n");
+    // Updated argument check to require a pipe_fd
+    if (argc < 4) {
+        fprintf(stderr, "Usage: player <serialized_data> <write_fd> <pipe_fd>\n");
         exit(1);
     }
 
@@ -142,6 +143,7 @@ int main(int argc, char *argv[]) {
 
     my_team = current_player->team;
     write_fd = atoi(argv[2]);
+    int pipe_fd = atoi(argv[3]);  // Save the pipe file descriptor
 
     // Set up signal handlers
     signal(SIGALRM, handle_alarm);
@@ -155,8 +157,13 @@ int main(int argc, char *argv[]) {
         pause();
         // reset round
         if(is_round_reset) {
-            // Attributes attributes;
-            // read(pipe_fds[0], &attributes, sizeof(Attributes));
+            // Read new position from the pipe
+            int new_position;
+            if (read(pipe_fd, &new_position, sizeof(int)) > 0) {
+                current_player->new_position = new_position;
+                print_with_time1(game, "Player %d (Team %d) received new position: %d\n",
+                                  current_player->number, my_team, new_position);
+            }
             current_player->attributes.energy = current_player->attributes.inital_energy *
                                                 current_player->attributes.endurance;
 

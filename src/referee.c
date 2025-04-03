@@ -16,10 +16,11 @@
 Config config;
 Game *game;
 
-void fork_players(Player *players, int num_players, Team team, char *binary_path, int read_fds[], int fd);
+void fork_players(Player *players, int num_players, Team team, char *binary_path, int read_fds[], int pipe_fds[], int fd);
 void generate_and_align(Player *players, int num_players, Team team);
 void cleanup_processes(const Player *players_teamA, const Player *players_teamB, int NUM_PLAYERS);
 void print_with_time(const char *format, ...);
+void send_new_positions(Player *players, int num_players, int pipe_fds[]);
 
 volatile int elapsed_time = 0;
 
@@ -58,13 +59,15 @@ int main(int argc, char *argv[]) {
 
     int read_fds_team_A[config.NUM_PLAYERS/2];
     int read_fds_team_B[config.NUM_PLAYERS/2];
+    int pipe_fds_team_A[config.NUM_PLAYERS/2];
+    int pipe_fds_team_B[config.NUM_PLAYERS/2];
 
 
     generate_and_align(players_teamA, config.NUM_PLAYERS/2, TEAM_A);
     generate_and_align(players_teamB, config.NUM_PLAYERS/2, TEAM_B);
 
-    fork_players(players_teamA, config.NUM_PLAYERS/2, TEAM_A, bin_path, read_fds_team_A, fd);
-    fork_players(players_teamB, config.NUM_PLAYERS/2, TEAM_B, bin_path, read_fds_team_B, fd);
+    fork_players(players_teamA, config.NUM_PLAYERS/2, TEAM_A, bin_path, read_fds_team_A, pipe_fds_team_A, fd);
+    fork_players(players_teamB, config.NUM_PLAYERS/2, TEAM_B, bin_path, read_fds_team_B, pipe_fds_team_B, fd);
 
     sleep(2);
 
@@ -126,6 +129,9 @@ int main(int argc, char *argv[]) {
                 kill(players_teamB[i].pid, SIGHUP);
             }
 
+            // After resetting rounds, send new positions through pipes
+            send_new_positions(players_teamA, config.NUM_PLAYERS/2, pipe_fds_team_A);
+            send_new_positions(players_teamB, config.NUM_PLAYERS/2, pipe_fds_team_B);
         }
 
         sleep(2);
@@ -146,7 +152,7 @@ int main(int argc, char *argv[]) {
 }
 
 void fork_players(Player *players, int num_players, Team team,
-                char *binary_path, int read_fds[], int fd) {
+                char *binary_path, int read_fds[], int pipe_fds[], int fd) {
 
     for (int i = 0; i < num_players; i++) {
 
@@ -157,6 +163,7 @@ void fork_players(Player *players, int num_players, Team team,
         }
 
         read_fds[i] = pipe_fds_temp[0];
+        pipe_fds[i] = pipe_fds_temp[1];  // Save write end for sending new position
 
         const pid_t pid = fork();
 
@@ -173,11 +180,12 @@ void fork_players(Player *players, int num_players, Team team,
             char player_path[PATH_MAX];
             snprintf(player_path, PATH_MAX, "%s/player", binary_path);
 
-            char write_fd_str[10], fd_str[10];
+            char write_fd_str[10], pipe_fd_str[10], fd_str[10];
             snprintf(write_fd_str, sizeof(write_fd_str), "%d", pipe_fds_temp[1]);
+            snprintf(pipe_fd_str, sizeof(pipe_fd_str), "%d", pipe_fds_temp[1]);
             snprintf(fd_str, sizeof(fd_str), "%d", fd);
 
-            if (execl("./player", "player", buffer, write_fd_str, fd_str, NULL)) {
+            if (execl("./player", "player", buffer, write_fd_str, pipe_fd_str, fd_str, NULL)) {
                 perror("execl");
                 printf("Child process %d failed to exec and will terminate\n", getpid());
                 // Sleep briefly to allow output to be written
@@ -228,6 +236,15 @@ void cleanup_processes(const Player *players_teamA, const Player *players_teamB,
     }
 
     printf("All child processes terminated.\n");
+}
+
+void send_new_positions(Player *players, int num_players, int pipe_fds[]) {
+    for (int i = 0; i < num_players; i++) {
+        // Assume players[i].new_position has been updated
+        if (write(pipe_fds[i], &players[i].new_position, sizeof(int)) == -1) {
+            perror("write to pipe");
+        }
+    }
 }
 
 
