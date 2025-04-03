@@ -18,7 +18,8 @@ typedef enum State {
     IDLE,
     READY,
     PULLING,
-    RECOVERING
+    EXHAUSTED,
+    FALLEN,
 } State;
 
 typedef struct __attribute__((packed)) {

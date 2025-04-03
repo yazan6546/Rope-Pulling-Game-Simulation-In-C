@@ -189,10 +189,6 @@ int check_parameter_correctness(const Config *config) {
         return -1; // Return error if invalid endurance
     }
 
-    if (config->UPDATE_RATE <= 0) {
-        fprintf(stderr, "UPDATE_RATE must be greater than 0\n"); // Print error for invalid update rate
-        return -1; // Return error if invalid update rate
-    }
 
     if (config->MIN_ENDURANCE > 1 || config->MAX_ENDURANCE > 1) {
         fprintf(stderr, "MIN_ENDURANCE and MAX_ENDURANCE must be between 0 and 1\n"); // Print error for invalid endurance
