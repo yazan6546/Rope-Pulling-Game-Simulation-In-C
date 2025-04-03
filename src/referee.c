@@ -27,7 +27,7 @@ int main(int argc, char *argv[]) {
 
 
 
-    printf(argv[1]);
+    printf("%s", argv[1]);
     printf("\n");
 
     // In child
