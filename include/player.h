@@ -27,6 +27,7 @@ typedef struct __attribute__((packed)) {
     float inital_energy;
     float recovery_time;
     float falling_chance;
+    float endurance;
 } Attributes;
 
 typedef struct Player {

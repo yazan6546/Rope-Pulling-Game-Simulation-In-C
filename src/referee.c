@@ -44,9 +44,6 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    print_config(&config);
-
-
     // In child
     int fd = atoi(argv[1]);
     game = mmap(NULL, sizeof(Game), PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);

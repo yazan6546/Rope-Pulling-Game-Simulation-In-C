@@ -148,7 +148,8 @@ int main(int argc, char *argv[]) {
         if(is_round_reset) {
             // Attributes attributes;
             // read(pipe_fds[0], &attributes, sizeof(Attributes));
-            current_player->attributes.energy = current_player->attributes.inital_energy;
+            current_player->attributes.energy = current_player->attributes.inital_energy *
+                                                current_player->attributes.endurance;
             current_player->state = IDLE;
             elapsed_time = 0;
             is_round_reset = 0;
