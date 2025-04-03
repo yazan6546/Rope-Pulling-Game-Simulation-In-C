@@ -77,6 +77,8 @@ Team simulate_round(int pipe_fds_team_A[], int pipe_fds_team_B[], const Config *
     }
     else if (game->round_time > config->MAX_ROUND_TIME) {
         if (game->round_score > 0) {
+
+            strcat(output_buffer, "🏆 Team A wins!\n");
             game->team_wins_A++;
             winner = TEAM_A;
         }
@@ -116,7 +118,7 @@ Team simulate_round(int pipe_fds_team_A[], int pipe_fds_team_B[], const Config *
 }
 
 int check_game_conditions(const Game *game, const Config *config, Team team_win) {
-    if (game->round_num > config->NUM_ROUNDS) {  
+    if (game->round_num >= config->NUM_ROUNDS) {
         printf("NUM ROUNDS\n");
         fflush(stdout);
         return 0;

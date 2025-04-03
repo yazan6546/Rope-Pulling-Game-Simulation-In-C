@@ -159,7 +159,6 @@ int main(int argc, char *argv[]) {
             current_player->attributes.energy = current_player->attributes.inital_energy *
                                                 current_player->attributes.endurance;
 
-            printf("after round : %f\n", current_player->attributes.energy);
             fflush(stdout);
             current_player->state = IDLE;
             elapsed_time = 0;
