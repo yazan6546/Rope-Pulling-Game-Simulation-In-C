@@ -123,13 +123,15 @@ void print_config(Config *config) {
            config->MAX_ROUND_TIME,
            config->MIN_ENDURANCE,
            config->MAX_ENDURANCE);
+
+    fflush(stdout);
 }
 
 int check_parameter_correctness(const Config *config) {
 
     if (config->MIN_ENERGY < 0 || config->MAX_ENERGY < 0 || config->MIN_RATE_DECAY < 0 || config->MAX_RATE_DECAY < 0 ||
      config->MIN_RECOVERY_TIME < 0 || config->MAX_RECOVERY_TIME < 0 || config->MIN_FALLING_CHANCE < 0 ||
-     config->MAX_FALLING_CHANCE < 0 || config->MIN_ENDURANCE < 0 || config->MAX_ENDURANCE < 0 || config->NUM_ROUNDS ||
+     config->MAX_FALLING_CHANCE < 0 || config->MIN_ENDURANCE < 0 || config->MAX_ENDURANCE < 0 || config->NUM_ROUNDS < 0 ||
      config->NUM_PLAYERS < 0 || config->UPDATE_RATE < 0 || config->MAX_ROUND_TIME < 0 || config->WINNING_THRESHOLD < 0 ||
      config->MAX_SCORE < 0 || config->MAX_TIME < 0) {
 
