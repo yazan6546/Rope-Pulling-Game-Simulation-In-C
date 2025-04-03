@@ -101,15 +101,23 @@ Team simulate_round(int pipe_fds_team_A[], int pipe_fds_team_B[], Config *config
 }
 
 int check_game_conditions(Game *game, Config *config, Team team_win) {
-    if (game->round_num > config->NUM_ROUNDS) {
+    if (game->round_num > config->NUM_ROUNDS) {  
+        printf("NUM ROUNDS\n");
         return 0;
     }
 
-    if (team_win == game->last_winner) {
+    if (team_win == game->last_winner && team_win != -1) {
+        printf("CONSECUTIVE WINS\n");
         return 0;
     }
 
     if (game->elapsed_time > config->MAX_TIME) {
+        printf("MAX TIME\n");
+        return 0;
+    }
+
+    if (game->total_score > config->MAX_SCORE) {
+        printf("MAX SCORE\n");
         return 0;
     }
 
@@ -141,7 +149,7 @@ void go_to_next_round(Game *game) {
 void print_with_time1(const Game *game, const char *format, ...) {
     va_list args;
     va_start(args, format);
-    printf("@ %ds: ", game->elapsed_time);
+    printf("@ g:%ds r:%ds: ", game->elapsed_time, game->round_time);
     vprintf(format, args);
     va_end(args);
     fflush(stdout);

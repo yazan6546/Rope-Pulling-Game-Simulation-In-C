@@ -22,11 +22,11 @@ void generate_and_align(Player *players, int num_players, Team team);
 void cleanup_processes(Player *players_teamA, Player *players_teamB, int NUM_PLAYERS);
 void print_with_time(const char *format, ...);
 
-// void handle_sigusr1(int sig) {
-//     // Empty handler just to prevent termination
-// }
+volatile int elapsed_time = 0;
 
 int main(int argc, char *argv[]) {
+
+
 
     printf(argv[1]);
     printf("\n");
@@ -38,7 +38,6 @@ int main(int argc, char *argv[]) {
         perror("mmap failed");
         exit(EXIT_FAILURE);
     }
-
     char *config_path = NULL;
     handling_file(argc, argv[0], &config_path);
     char *bin_path = binary_dir(config_path);
@@ -62,6 +61,8 @@ int main(int argc, char *argv[]) {
 
     fork_players(players_teamA, config.NUM_PLAYERS/2, TEAM_A, bin_path, read_fds_team_A, fd);
     fork_players(players_teamB, config.NUM_PLAYERS/2, TEAM_B, bin_path, read_fds_team_B, fd);
+
+    signal(SIGALRM, handle_alarm);
 
     sleep(2);
 
@@ -95,7 +96,7 @@ int main(int argc, char *argv[]) {
         }
         printf("\n\n");
 
-        sleep(2);
+        alarm(1);
 
 
         while (game->round_running) {
@@ -103,10 +104,10 @@ int main(int argc, char *argv[]) {
             team_win = simulate_round(read_fds_team_A, read_fds_team_B,
                                         &config, game, players_teamA, players_teamB);
 
-            sleep(1);
 
             if (team_win != NONE) {
                 game->round_running = 0;
+                alarm(0); // Cancel the alarm
             }
 
         }
@@ -114,6 +115,16 @@ int main(int argc, char *argv[]) {
         game->total_score += game->round_score;
         go_to_next_round(game);
         game->game_running = check_game_conditions(game , &config, team_win);
+
+        if (game.game_running) {
+            // send reset signals to all players
+            for (int i = 0; i < config.NUM_PLAYERS/2; i++) {
+                kill(players_teamA[i].pid, SIGHUP);
+                kill(players_teamB[i].pid, SIGHUP);
+            }
+
+        }
+
         game->last_winner = team_win;
         team_win = NONE;
     }
@@ -192,6 +203,7 @@ void print_with_time(const char *format, ...) {
     fflush(stdout);
 }
 
+
 // Cleanup function to kill all child processes
 void cleanup_processes(Player *players_teamA, Player *players_teamB, int NUM_PLAYERS) {
     printf("Killing all child processes...\n");
@@ -212,4 +224,9 @@ void cleanup_processes(Player *players_teamA, Player *players_teamB, int NUM_PLA
 
     printf("All child processes terminated.\n");
 }
+
+
+
+
+
 

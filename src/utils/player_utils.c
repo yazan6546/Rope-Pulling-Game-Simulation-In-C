@@ -6,13 +6,13 @@
 #include "random.h"
 
 void deserialize_player(Player *player, char *buffer) {
-    sscanf(buffer, "%f %f %f %d %d %f %d %d", &player->rate_decay, &player->energy, &player->recovery_time,
-            &player->team, &player->number, &player->falling_chance, &player->position, &player->new_position);
+    sscanf(buffer, "%f %f %f %d %d %f %d %d", &player->attributes.rate_decay, &player->attributes.energy, &player->attributes.recovery_time,
+            &player->team, &player->number, &player->attributes.falling_chance, &player->position, &player->new_position);
 }
 
 void serialize_player(Player *player, char *buffer) {
-    sprintf(buffer, "%f %f %f %d %d %f %d %d", player->rate_decay, player->energy, player->recovery_time,
-            player->team, player->number, player->falling_chance, player->position, player->new_position);
+    sprintf(buffer, "%f %f %f %d %d %f %d %d", player->attributes.rate_decay, player->attributes.energy, player->attributes.recovery_time,
+            player->team, player->number, player->attributes.falling_chance, player->position, player->new_position);
 }
 
 void print_player(Player *player) {
@@ -25,12 +25,12 @@ void print_player(Player *player) {
            "falling_chance: %f\n"
            "old position: %d\n"
            "new position: %d\n",
-           player->rate_decay,
-           player->energy,
-           player->recovery_time,
+           player->attributes.rate_decay,
+           player->attributes.energy,
+           player->attributes.recovery_time,
            player->team,
            player->number,
-           player->falling_chance,
+           player->attributes.falling_chance,
            player->position,
            player->new_position);
 
