@@ -85,16 +85,9 @@ int load_config(const char *filename, Config *config) {
 fflush(stdout);
 #endif
 
-    // Check that all necessary configuration values have been set
-    if (config->MIN_ENERGY == -1 || config->MAX_ENERGY == -1 || config->MAX_SCORE == -1 || config->MAX_TIME == -1 || config->NUM_ROUNDS == -1 || config->MIN_RATE_DECAY == -1 || config->MAX_RATE_DECAY == -1
-        || config->MIN_RECOVERY_TIME == -1 || config->MAX_RECOVERY_TIME == -1 || config->WINNING_THRESHOLD == -1 || config->NUM_PLAYERS == -1 || config->UPDATE_RATE == -1 || config->MIN_FALLING_CHANCE == -1 || config->MAX_FALLING_CHANCE == -1
-        || config->MAX_ROUND_TIME == -1 || config->MIN_ENDURANCE == -1 || config->MAX_ENDURANCE == -1) {
-        // Check if any required configuration values are missing
-        fprintf(stderr, "Missing required configuration values\n"); // Print error for missing values
-        return -1; // Return error if any required value is missing
-    }
 
-    return 0; // Success
+    // Check if all required parameters are set
+    return check_parameter_correctness(config);
 
 }
 
@@ -130,5 +123,80 @@ void print_config(Config *config) {
            config->MAX_ROUND_TIME,
            config->MIN_ENDURANCE,
            config->MAX_ENDURANCE);
+}
+
+int check_parameter_correctness(const Config *config) {
+
+    if (config->MIN_ENERGY < 0 || config->MAX_ENERGY < 0 || config->MIN_RATE_DECAY < 0 || config->MAX_RATE_DECAY < 0 ||
+     config->MIN_RECOVERY_TIME < 0 || config->MAX_RECOVERY_TIME < 0 || config->MIN_FALLING_CHANCE < 0 ||
+     config->MAX_FALLING_CHANCE < 0 || config->MIN_ENDURANCE < 0 || config->MAX_ENDURANCE < 0 || config->NUM_ROUNDS ||
+     config->NUM_PLAYERS < 0 || config->UPDATE_RATE < 0 || config->MAX_ROUND_TIME < 0 || config->WINNING_THRESHOLD < 0 ||
+     config->MAX_SCORE < 0 || config->MAX_TIME < 0) {
+
+        fprintf(stderr, "Values must be greater than or equal to 0\n"); // Print error for invalid energy
+        return -1; // Return error if invalid energy
+     }
+
+
+    if (config->MIN_ENERGY > config->MAX_ENERGY) {
+        fprintf(stderr, "MIN_ENERGY cannot be greater than MAX_ENERGY\n"); // Print error for invalid range
+        return -1; // Return error if range is invalid
+    }
+
+    if (config->MIN_RATE_DECAY > config->MAX_RATE_DECAY) {
+        fprintf(stderr, "MIN_RATE_DECAY cannot be greater than MAX_RATE_DECAY\n"); // Print error for invalid range
+        return -1; // Return error if range is invalid
+    }
+
+    if (config->MIN_RECOVERY_TIME > config->MAX_RECOVERY_TIME) {
+        fprintf(stderr, "MIN_RECOVERY_TIME cannot be greater than MAX_RECOVERY_TIME\n"); // Print error for invalid range
+        return -1; // Return error if range is invalid
+    }
+
+    if (config->MIN_FALLING_CHANCE > config->MAX_FALLING_CHANCE) {
+        fprintf(stderr, "MIN_FALLING_CHANCE cannot be greater than MAX_FALLING_CHANCE\n"); // Print error for invalid range
+        return -1; // Return error if range is invalid
+    }
+
+    if (config->MIN_ENDURANCE > config->MAX_ENDURANCE) {
+        fprintf(stderr, "MIN_ENDURANCE cannot be greater than MAX_ENDURANCE\n"); // Print error for invalid range
+        return -1; // Return error if range is invalid
+    }
+
+    if (config->NUM_PLAYERS <= 0) {
+        fprintf(stderr, "NUM_PLAYERS must be greater than 0\n"); // Print error for invalid number of players
+        return -1; // Return error if invalid number of players
+    }
+    if (config->NUM_PLAYERS % 2 != 0) {
+        fprintf(stderr, "NUM_PLAYERS must be even\n"); // Print error for invalid number of players
+        return -1; // Return error if invalid number of players
+    }
+
+    if (config->MIN_RECOVERY_TIME > config->MAX_RECOVERY_TIME) {
+        fprintf(stderr, "MIN_RECOVERY_TIME cannot be greater than MAX_RECOVERY_TIME\n"); // Print error for invalid recovery time
+        return -1; // Return error if invalid recovery time
+    }
+
+    if (config->MIN_FALLING_CHANCE > config->MAX_FALLING_CHANCE) {
+        fprintf(stderr, "MIN_FALLING_CHANCE cannot be greater than MAX_FALLING_CHANCE\n"); // Print error for invalid falling chance
+        return -1; // Return error if invalid falling chance
+    }
+
+    if (config->MIN_ENDURANCE > config->MAX_ENDURANCE) {
+        fprintf(stderr, "MIN_ENDURANCE cannot be greater than MAX_ENDURANCE\n"); // Print error for invalid endurance
+        return -1; // Return error if invalid endurance
+    }
+
+    if (config->UPDATE_RATE <= 0) {
+        fprintf(stderr, "UPDATE_RATE must be greater than 0\n"); // Print error for invalid update rate
+        return -1; // Return error if invalid update rate
+    }
+
+    if (config->MIN_ENDURANCE > 1 || config->MAX_ENDURANCE > 1) {
+        fprintf(stderr, "MIN_ENDURANCE and MAX_ENDURANCE must be between 0 and 1\n"); // Print error for invalid endurance
+        return -1; // Return error if invalid endurance
+    }
+
+    return 0; // Return success if all checks pass
 }
 

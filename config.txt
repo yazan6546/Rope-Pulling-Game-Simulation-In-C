@@ -17,4 +17,5 @@ NUM_PLAYERS=8           # Number of players in the game
 UPDATE_RATE=1           # Update rate for the game (sec)
 MIN_FALLING_CHANCE=0.001  # Minimum chance of falling
 MAX_FALLING_CHANCE=0.1  # Maximum chance of falling
-
+MIN_ENDURANCE=0.7         # Minimum endurance for a player
+MAX_ENDURANCE=0.9        # Maximum endurance for a player
