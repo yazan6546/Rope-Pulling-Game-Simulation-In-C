@@ -23,9 +23,12 @@ typedef struct {
     float UPDATE_RATE;
     float MIN_FALLING_CHANCE;
     float MAX_FALLING_CHANCE;
+    float MIN_ENDURANCE;
+    float MAX_ENDURANCE;
 
 } Config;
 
 int load_config(const char *filename, Config *config);
 void print_config(Config *config);
+int check_parameter_correctness(const Config *config);
 #endif // CONFIG_H

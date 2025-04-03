@@ -18,7 +18,8 @@ typedef enum State {
     IDLE,
     READY,
     PULLING,
-    RECOVERING
+    EXHAUSTED,
+    FALLEN,
 } State;
 
 typedef struct __attribute__((packed)) {
@@ -27,6 +28,7 @@ typedef struct __attribute__((packed)) {
     float inital_energy;
     float recovery_time;
     float falling_chance;
+    float endurance;
 } Attributes;
 
 typedef struct Player {

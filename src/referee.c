@@ -27,16 +27,13 @@ int main(int argc, char *argv[]) {
 
 
 
+    if (argc < 2) {
+        fprintf(stderr, "Usage: referee <fd>\n");
+        exit(EXIT_FAILURE);
+    }
     printf("%s", argv[1]);
     printf("\n");
 
-    // In child
-    int fd = atoi(argv[1]);
-    game = mmap(NULL, sizeof(Game), PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
-    if (game == MAP_FAILED) {
-        perror("mmap failed");
-        exit(EXIT_FAILURE);
-    }
     char *config_path = NULL;
     handling_file(argc, argv[0], &config_path);
     char *bin_path = binary_dir(config_path);
@@ -45,6 +42,14 @@ int main(int argc, char *argv[]) {
     if (load_config("../config.txt", &config) == -1) {
         free(bin_path);
         return 1;
+    }
+
+    // In child
+    int fd = atoi(argv[1]);
+    game = mmap(NULL, sizeof(Game), PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+    if (game == MAP_FAILED) {
+        perror("mmap failed");
+        exit(EXIT_FAILURE);
     }
 
     Player players_teamA[config.NUM_PLAYERS/2];

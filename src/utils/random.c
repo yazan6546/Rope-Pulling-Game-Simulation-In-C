@@ -25,4 +25,5 @@ void randomize_attributes(Attributes *attributes, Config *configs) {
     attributes->energy = random_float(configs->MIN_ENERGY, configs->MAX_ENERGY);
     attributes->recovery_time = random_float(configs->MIN_RECOVERY_TIME, configs->MAX_RECOVERY_TIME);
     attributes->falling_chance = random_float(configs->MIN_FALLING_CHANCE, configs->MAX_FALLING_CHANCE);
+    attributes->endurance = random_float(configs->MIN_ENDURANCE, configs->MAX_ENDURANCE);
 }
