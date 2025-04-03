@@ -31,8 +31,8 @@ void renderText(float x, float y, const char* text, float r, float g, float b) {
 void drawScoreboard() {
     char buffer[100];
 
-    // Draw scoreboard background
-    glColor3f(0.2, 0.2, 0.2);
+    // Draw scoreboard background - pure black
+    glColor3f(0.0, 0.0, 0.0);
     glBegin(GL_QUADS);
     glVertex2f(-0.98, 0.98);
     glVertex2f(0.98, 0.98);
@@ -40,31 +40,52 @@ void drawScoreboard() {
     glVertex2f(-0.98, 0.75);
     glEnd();
 
-    // Team A (Red) wins and score
+    // Left side - Team A (Red)
     sprintf(buffer, "Team A Wins: %d", game->team_wins_A);
     renderText(-0.95, 0.93, buffer, 1.0, 0.0, 0.0);
 
-    // Team B (Blue) wins and score
-    sprintf(buffer, "Team B Wins: %d", game->team_wins_B);
-    renderText(0.3, 0.93, buffer, 0.0, 0.0, 1.0);
+    sprintf(buffer, "Round Score A: %.1f", game->total_effort_A);
+    renderText(-0.95, 0.85, buffer, 1.0, 0.0, 0.0);
 
-    // Round score
-    sprintf(buffer, "Round Score: %f", game->round_score);
-    renderText(-0.95, 0.85, buffer, 1.0, 1.0, 1.0);
-
-    // Total score
-    sprintf(buffer, "Total Score: %f", game->total_score);
-    renderText(0.3, 0.85, buffer, 1.0, 1.0, 1.0);
-
-    // Round number
+    // Middle - Round and timing info
     sprintf(buffer, "Round: %d", game->round_num);
-    renderText(-0.95, 0.77, buffer, 1.0, 1.0, 1.0);
+    renderText(-0.15, 0.93, buffer, 1.0, 1.0, 1.0);
 
-    // Time information
-    sprintf(buffer, "Time: %ds / Round Time: %ds", game->elapsed_time, game->round_time);
-    renderText(0.3, 0.77, buffer, 1.0, 1.0, 1.0);
+    sprintf(buffer, "Total Score: %.1f", game->total_score);
+    renderText(-0.15, 0.85, buffer, 1.0, 1.0, 1.0);
+
+    // Time information (stacked)
+    sprintf(buffer, "Elapsed Time: %ds", game->elapsed_time);
+    renderText(-0.15, 0.77, buffer, 1.0, 1.0, 1.0);
+
+    sprintf(buffer, "Round Time: %ds", game->round_time);
+    renderText(-0.15, 0.69, buffer, 1.0, 1.0, 1.0);
+
+    // Right side - Team B (Blue)
+    sprintf(buffer, "Team B Wins: %d", game->team_wins_B);
+    renderText(0.5, 0.93, buffer, 0.0, 0.0, 1.0);
+
+    sprintf(buffer, "Round Score B: %.1f", game->total_effort_B);
+    renderText(0.5, 0.85, buffer, 0.0, 0.0, 1.0);
+
+    // Who's winning indicator with modified text
+    const char* winning_text;
+    float text_r, text_g, text_b;
+
+    if (game->total_effort_A > game->total_effort_B) {
+        winning_text = "Red Team is taking the lead!";
+        text_r = 1.0; text_g = 0.0; text_b = 0.0;
+    } else if (game->total_effort_B > game->total_effort_A) {
+        winning_text = "Blue Team is taking the lead!";
+        text_r = 0.0; text_g = 0.0; text_b = 1.0;
+    } else {
+        winning_text = "Teams are tied - pull harder!";
+        text_r = 1.0; text_g = 1.0; text_b = 1.0;
+    }
+
+    // Draw winning indicator below scoreboard
+    renderText(-0.4, 0.63, winning_text, text_r, text_g, text_b);
 }
-
 
 void initializePlayers(float team1[], float team2[], int count) {
     float spacing = 0.15;
@@ -176,12 +197,15 @@ void drawBackground() {
     drawCloud(-0.1, 0.6, 0.8);
 }
 
-//Making sure players don't go out of the screen
 void updateGame(int value) {
-    float energy_diff = energy_team1 - energy_team2;
-    rope_center += energy_diff * 0.005;
+    // Calculate the rope position based on the score difference between teams
+    float score_diff = game->total_effort_A - game->total_effort_B;
 
-    //Limiting rope movement
+    // Set rope_center directly based on score difference
+    // Negative sign ensures positive diff (team A ahead) moves left, negative (team B ahead) moves right
+    rope_center = -score_diff * 0.01;  // Scale factor can be adjusted for sensitivity
+
+    // Limiting rope movement
     if (rope_center > 0.6) rope_center = 0.6;
     if (rope_center < -0.6) rope_center = -0.6;
 
@@ -200,7 +224,6 @@ void updateGame(int value) {
     glutPostRedisplay();
     glutTimerFunc(30, updateGame, 0);
 }
-
 //rope between players
 void drawRopeSegment(float x1, float y1, float x2, float y2) {
     float thickness = 0.01;
