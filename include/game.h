@@ -10,6 +10,8 @@
 #include "config.h"
 #include <stdarg.h>
 
+#define TEAM_SIZE 4
+
 typedef struct Game {
     int round_num;
     int game_running;
@@ -23,7 +25,10 @@ typedef struct Game {
     float total_effort_A;
     float total_effort_B;
     int round_time;
-    int reset_round_time_flag; // New field for time management
+    int reset_round_time_flag;
+
+    Player players_teamA[TEAM_SIZE];
+    Player players_teamB[TEAM_SIZE];
 } Game;
 
 void init_game(Game *game);

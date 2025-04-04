@@ -205,6 +205,8 @@ int main(int argc, char *argv[]) {
 
             align(players_teamA, config.NUM_PLAYERS/2, read_fds_team_A, pos_pipe_fds_team_A);
             align(players_teamB, config.NUM_PLAYERS/2, read_fds_team_B, pos_pipe_fds_team_B);
+            memcpy(game->players_teamA, players_teamA, sizeof(Player) * (config.NUM_PLAYERS / 2));
+            memcpy(game->players_teamB, players_teamB, sizeof(Player) * (config.NUM_PLAYERS / 2));
 
             for (int i = 0; i < config.NUM_PLAYERS/2; i++) {
                 print_with_time1(game, "DEBUG PIPES2 : %d\n", read_fds_team_A[i]);
@@ -217,8 +219,6 @@ int main(int argc, char *argv[]) {
 
             change_player_positions(players_teamA, config.NUM_PLAYERS/2);
             change_player_positions(players_teamB, config.NUM_PLAYERS/2);
-            memcpy(game->players_teamA, players_teamA, sizeof(Player) * (config.NUM_PLAYERS / 2));
-            memcpy(game->players_teamB, players_teamB, sizeof(Player) * (config.NUM_PLAYERS / 2));
             memcpy(game->players_teamA, players_teamA, sizeof(Player) * (config.NUM_PLAYERS / 2));
             memcpy(game->players_teamB, players_teamB, sizeof(Player) * (config.NUM_PLAYERS / 2));
 
