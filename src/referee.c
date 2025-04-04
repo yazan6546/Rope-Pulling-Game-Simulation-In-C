@@ -71,6 +71,14 @@ int main(int argc, char *argv[]) {
     fork_players(players_teamA, config.NUM_PLAYERS/2, TEAM_A, bin_path, read_fds_team_A, pos_pipe_fds_team_A, fd);
     fork_players(players_teamB, config.NUM_PLAYERS/2, TEAM_B, bin_path, read_fds_team_B, pos_pipe_fds_team_B, fd);
 
+    for (int i = 0; i < config.NUM_PLAYERS/2; i++) {
+        print_with_time1(game, "DEBUG PIPES : %d \n", read_fds_team_A[i]);
+    }
+
+    change_player_positions(players_teamA, config.NUM_PLAYERS/2);
+    change_player_positions(players_teamB, config.NUM_PLAYERS/2);
+
+
     sleep(2);
 
     printf("after fork\n");
@@ -138,6 +146,10 @@ int main(int argc, char *argv[]) {
 
             align(players_teamA, config.NUM_PLAYERS/2, read_fds_team_A, pos_pipe_fds_team_A);
             align(players_teamB, config.NUM_PLAYERS/2, read_fds_team_B, pos_pipe_fds_team_B);
+
+            for (int i = 0; i < config.NUM_PLAYERS/2; i++) {
+                print_with_time1(game, "DEBUG PIPES2 : %d\n", read_fds_team_A[i]);
+            }
 
             printf("\n\n");
             // After resetting rounds, send new positions through pipes
