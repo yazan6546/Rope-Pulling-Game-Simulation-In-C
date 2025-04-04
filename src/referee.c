@@ -55,9 +55,6 @@ int main(int argc, char *argv[]) {
         exit(EXIT_FAILURE);
     }
 
-    Player players_teamA[config.NUM_PLAYERS/2];
-    Player players_teamB[config.NUM_PLAYERS/2];
-
 
     int read_fds_team_A[config.NUM_PLAYERS/2];
     int read_fds_team_B[config.NUM_PLAYERS/2];
@@ -65,10 +62,8 @@ int main(int argc, char *argv[]) {
     int pos_pipe_fds_team_B[config.NUM_PLAYERS/2];
 
 
-    generate_and_align(players_teamA, config.NUM_PLAYERS/2, TEAM_A, read_fds_team_A, pos_pipe_fds_team_A);
-    generate_and_align(players_teamB, config.NUM_PLAYERS/2, TEAM_B, read_fds_team_B, pos_pipe_fds_team_B);
-    memcpy(game->players_teamA, players_teamA, sizeof(Player) * (config.NUM_PLAYERS / 2));
-    memcpy(game->players_teamB, players_teamB, sizeof(Player) * (config.NUM_PLAYERS / 2));
+    generate_and_align(game->players_teamA, config.NUM_PLAYERS/2, TEAM_A, read_fds_team_A, pos_pipe_fds_team_A);
+    generate_and_align(game->players_teamB, config.NUM_PLAYERS/2, TEAM_B, read_fds_team_B, pos_pipe_fds_team_B);
 
     // printf("DEBUG Shared Memory - Team A Players:\n");
     // for (int i = 0; i < config.NUM_PLAYERS / 2; i++) {
@@ -88,18 +83,16 @@ int main(int argc, char *argv[]) {
 
 
 
-    fork_players(players_teamA, config.NUM_PLAYERS/2, TEAM_A, bin_path, read_fds_team_A, pos_pipe_fds_team_A, fd);
-    fork_players(players_teamB, config.NUM_PLAYERS/2, TEAM_B, bin_path, read_fds_team_B, pos_pipe_fds_team_B, fd);
+    fork_players(game->players_teamA, config.NUM_PLAYERS/2, TEAM_A, bin_path, read_fds_team_A, pos_pipe_fds_team_A, fd);
+    fork_players(game->players_teamB, config.NUM_PLAYERS/2, TEAM_B, bin_path, read_fds_team_B, pos_pipe_fds_team_B, fd);
 
     for (int i = 0; i < config.NUM_PLAYERS/2; i++) {
         print_with_time1(game, "DEBUG PIPES : %d \n", read_fds_team_A[i]);
     }
 
-    change_player_positions(players_teamA, config.NUM_PLAYERS/2);
-    change_player_positions(players_teamB, config.NUM_PLAYERS/2);
+    change_player_positions(game->players_teamA, config.NUM_PLAYERS/2);
+    change_player_positions(game->players_teamB, config.NUM_PLAYERS/2);
 
-    memcpy(game->players_teamA, players_teamA, sizeof(Player) * (config.NUM_PLAYERS / 2));
-    memcpy(game->players_teamB, players_teamB, sizeof(Player) * (config.NUM_PLAYERS / 2));
 
     // printf("DEBUG Shared Memory - Team A Players:\n");
     // for (int i = 0; i < config.NUM_PLAYERS / 2; i++) {
@@ -131,8 +124,8 @@ int main(int argc, char *argv[]) {
 
         // Send get ready signal to all players
         for (int i = 0; i < config.NUM_PLAYERS/2; i++) {
-            kill(players_teamA[i].pid, SIGUSR1);
-            kill(players_teamB[i].pid, SIGUSR1);
+            kill(game->players_teamA[i].pid, SIGUSR1);
+            kill(game->players_teamB[i].pid, SIGUSR1);
         }
 
         printf("signal SIGUSR1 sent to all players\n");
@@ -146,8 +139,8 @@ int main(int argc, char *argv[]) {
         //
         // Send start signal to all players
         for (int i = 0; i < config.NUM_PLAYERS/2; i++) {
-            kill(players_teamA[i].pid, SIGUSR2);
-            kill(players_teamB[i].pid, SIGUSR2);
+            kill(game->players_teamA[i].pid, SIGUSR2);
+            kill(game->players_teamB[i].pid, SIGUSR2);
         }
         printf("\n\n");
 
@@ -174,16 +167,14 @@ int main(int argc, char *argv[]) {
         if (game->game_running) {
             // send reset signals to all players
             for (int i = 0; i < config.NUM_PLAYERS/2; i++) {
-                kill(players_teamA[i].pid, SIGHUP);
-                kill(players_teamB[i].pid, SIGHUP);
+                kill(game->players_teamA[i].pid, SIGHUP);
+                kill(game->players_teamB[i].pid, SIGHUP);
             }
 
             sleep(1); // Wait for all players to reset
 
-            read_player_energies(players_teamA, config.NUM_PLAYERS/2, read_fds_team_A);
-            read_player_energies(players_teamB, config.NUM_PLAYERS/2, read_fds_team_B);
-            memcpy(game->players_teamA, players_teamA, sizeof(Player) * (config.NUM_PLAYERS / 2));
-            memcpy(game->players_teamB, players_teamB, sizeof(Player) * (config.NUM_PLAYERS / 2));
+            read_player_energies(game->players_teamA, config.NUM_PLAYERS/2, read_fds_team_A);
+            read_player_energies(game->players_teamB, config.NUM_PLAYERS/2, read_fds_team_B);
 
             // printf("DEBUG Shared Memory - Team A Players:\n");
             // for (int i = 0; i < config.NUM_PLAYERS / 2; i++) {
@@ -203,10 +194,8 @@ int main(int argc, char *argv[]) {
 
 
 
-            align(players_teamA, config.NUM_PLAYERS/2, read_fds_team_A, pos_pipe_fds_team_A);
-            align(players_teamB, config.NUM_PLAYERS/2, read_fds_team_B, pos_pipe_fds_team_B);
-            memcpy(game->players_teamA, players_teamA, sizeof(Player) * (config.NUM_PLAYERS / 2));
-            memcpy(game->players_teamB, players_teamB, sizeof(Player) * (config.NUM_PLAYERS / 2));
+            align(game->players_teamA, config.NUM_PLAYERS/2, read_fds_team_A, pos_pipe_fds_team_A);
+            align(game->players_teamB, config.NUM_PLAYERS/2, read_fds_team_B, pos_pipe_fds_team_B);
 
             for (int i = 0; i < config.NUM_PLAYERS/2; i++) {
                 print_with_time1(game, "DEBUG PIPES2 : %d\n", read_fds_team_A[i]);
@@ -214,13 +203,11 @@ int main(int argc, char *argv[]) {
 
             printf("\n\n");
             // After resetting rounds, send new positions through pipes
-            send_new_positions(players_teamA, config.NUM_PLAYERS/2, pos_pipe_fds_team_A);
-            send_new_positions(players_teamB, config.NUM_PLAYERS/2, pos_pipe_fds_team_B);
+            send_new_positions(game->players_teamA, config.NUM_PLAYERS/2, pos_pipe_fds_team_A);
+            send_new_positions(game->players_teamB, config.NUM_PLAYERS/2, pos_pipe_fds_team_B);
 
-            change_player_positions(players_teamA, config.NUM_PLAYERS/2);
-            change_player_positions(players_teamB, config.NUM_PLAYERS/2);
-            memcpy(game->players_teamA, players_teamA, sizeof(Player) * (config.NUM_PLAYERS / 2));
-            memcpy(game->players_teamB, players_teamB, sizeof(Player) * (config.NUM_PLAYERS / 2));
+            change_player_positions(game->players_teamA, config.NUM_PLAYERS/2);
+            change_player_positions(game->players_teamB, config.NUM_PLAYERS/2);
 
             // printf("DEBUG Shared Memory - Team A Players:\n");
             // for (int i = 0; i < config.NUM_PLAYERS / 2; i++) {
@@ -251,7 +238,7 @@ int main(int argc, char *argv[]) {
 
     printf("Cleaning up...\n");
 
-    cleanup_processes(players_teamA, players_teamB, config.NUM_PLAYERS);
+    cleanup_processes(game->players_teamA, game->players_teamB, config.NUM_PLAYERS);
     // free(bin_path);
     return 0;
 
