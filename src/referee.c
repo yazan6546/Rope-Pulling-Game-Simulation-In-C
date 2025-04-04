@@ -67,6 +67,26 @@ int main(int argc, char *argv[]) {
 
     generate_and_align(players_teamA, config.NUM_PLAYERS/2, TEAM_A, read_fds_team_A, pos_pipe_fds_team_A);
     generate_and_align(players_teamB, config.NUM_PLAYERS/2, TEAM_B, read_fds_team_B, pos_pipe_fds_team_B);
+    memcpy(game->players_teamA, players_teamA, sizeof(Player) * (config.NUM_PLAYERS / 2));
+    memcpy(game->players_teamB, players_teamB, sizeof(Player) * (config.NUM_PLAYERS / 2));
+
+    // printf("DEBUG Shared Memory - Team A Players:\n");
+    // for (int i = 0; i < config.NUM_PLAYERS / 2; i++) {
+    //      printf("Player A %d | Energy: %.2f | Position: %d\n",
+    //        game->players_teamA[i].number,
+    //        game->players_teamA[i].attributes.energy,
+    //        game->players_teamA[i].position);
+    // }
+
+    // printf("DEBUG Shared Memory - Team B Players:\n");
+    // for (int i = 0; i < config.NUM_PLAYERS / 2; i++) {
+    //     printf("Player B %d | Energy: %.2f | Position: %d\n",
+    //          game->players_teamB[i].number,
+    //          game->players_teamB[i].attributes.energy,
+    //         game->players_teamB[i].position);
+    // }
+
+
 
     fork_players(players_teamA, config.NUM_PLAYERS/2, TEAM_A, bin_path, read_fds_team_A, pos_pipe_fds_team_A, fd);
     fork_players(players_teamB, config.NUM_PLAYERS/2, TEAM_B, bin_path, read_fds_team_B, pos_pipe_fds_team_B, fd);
@@ -77,6 +97,25 @@ int main(int argc, char *argv[]) {
 
     change_player_positions(players_teamA, config.NUM_PLAYERS/2);
     change_player_positions(players_teamB, config.NUM_PLAYERS/2);
+
+    memcpy(game->players_teamA, players_teamA, sizeof(Player) * (config.NUM_PLAYERS / 2));
+    memcpy(game->players_teamB, players_teamB, sizeof(Player) * (config.NUM_PLAYERS / 2));
+
+    // printf("DEBUG Shared Memory - Team A Players:\n");
+    // for (int i = 0; i < config.NUM_PLAYERS / 2; i++) {
+    //      printf("Player A %d | Energy: %.2f | Position: %d\n",
+    //      game->players_teamA[i].number,
+    //      game->players_teamA[i].attributes.energy,
+    //     game->players_teamA[i].position);
+    // }
+
+    //  printf("DEBUG Shared Memory - Team B Players:\n");
+    //  for (int i = 0; i < config.NUM_PLAYERS / 2; i++) {
+    //      printf("Player B %d | Energy: %.2f | Position: %d\n",
+    //     game->players_teamB[i].number,
+    //     game->players_teamB[i].attributes.energy,
+    //     game->players_teamB[i].position);
+    //  }
 
 
     sleep(2);
@@ -143,6 +182,26 @@ int main(int argc, char *argv[]) {
 
             read_player_energies(players_teamA, config.NUM_PLAYERS/2, read_fds_team_A);
             read_player_energies(players_teamB, config.NUM_PLAYERS/2, read_fds_team_B);
+            memcpy(game->players_teamA, players_teamA, sizeof(Player) * (config.NUM_PLAYERS / 2));
+            memcpy(game->players_teamB, players_teamB, sizeof(Player) * (config.NUM_PLAYERS / 2));
+
+            // printf("DEBUG Shared Memory - Team A Players:\n");
+            // for (int i = 0; i < config.NUM_PLAYERS / 2; i++) {
+            //      printf("Player A %d | Energy: %.2f | Position: %d\n",
+            //      game->players_teamA[i].number,
+            //      game->players_teamA[i].attributes.energy,
+            //     game->players_teamA[i].position);
+            // }
+
+            //  printf("DEBUG Shared Memory - Team B Players:\n");
+            //  for (int i = 0; i < config.NUM_PLAYERS / 2; i++) {
+            //      printf("Player B %d | Energy: %.2f | Position: %d\n",
+            //     game->players_teamB[i].number,
+            //     game->players_teamB[i].attributes.energy,
+            //     game->players_teamB[i].position);
+            //  }
+
+
 
             align(players_teamA, config.NUM_PLAYERS/2, read_fds_team_A, pos_pipe_fds_team_A);
             align(players_teamB, config.NUM_PLAYERS/2, read_fds_team_B, pos_pipe_fds_team_B);
@@ -158,6 +217,27 @@ int main(int argc, char *argv[]) {
 
             change_player_positions(players_teamA, config.NUM_PLAYERS/2);
             change_player_positions(players_teamB, config.NUM_PLAYERS/2);
+            memcpy(game->players_teamA, players_teamA, sizeof(Player) * (config.NUM_PLAYERS / 2));
+            memcpy(game->players_teamB, players_teamB, sizeof(Player) * (config.NUM_PLAYERS / 2));
+            memcpy(game->players_teamA, players_teamA, sizeof(Player) * (config.NUM_PLAYERS / 2));
+            memcpy(game->players_teamB, players_teamB, sizeof(Player) * (config.NUM_PLAYERS / 2));
+
+            // printf("DEBUG Shared Memory - Team A Players:\n");
+            // for (int i = 0; i < config.NUM_PLAYERS / 2; i++) {
+            //      printf("Player A %d | Energy: %.2f | Position: %d\n",
+            //      game->players_teamA[i].number,
+            //      game->players_teamA[i].attributes.energy,
+            //     game->players_teamA[i].position);
+            // }
+
+            //  printf("DEBUG Shared Memory - Team B Players:\n");
+            //  for (int i = 0; i < config.NUM_PLAYERS / 2; i++) {
+            //      printf("Player B %d | Energy: %.2f | Position: %d\n",
+            //     game->players_teamB[i].number,
+            //     game->players_teamB[i].attributes.energy,
+            //     game->players_teamB[i].position);
+            //  }
+
         }
 
         sleep(2);

@@ -218,6 +218,9 @@ void updateGame(int value) {
         if (team2_x[i] < -0.95) team2_x[i] = -0.95;
     }
 
+    
+    
+
     glutPostRedisplay();
     glutTimerFunc(50, updateGame, 0);
 }
@@ -268,6 +271,18 @@ void display() {
         team2_x[PLAYERS_PER_TEAM-1] + grip_offset, -0.1   // Right side of leftmost blue player
     );
 
+    // for (int i = 0; i < PLAYERS_PER_TEAM; i++) {
+    //     printf("DEBUG OpenGL: Player A %d | Energy: %.2f | Position: %d\n",
+    //            game->players_teamA[i].number,
+    //            game->players_teamA[i].attributes.energy,
+    //            game->players_teamA[i].position);
+    
+    //     printf("DEBUG OpenGL: Player B %d | Energy: %.2f | Position: %d\n",
+    //            game->players_teamB[i].number,
+    //            game->players_teamB[i].attributes.energy,
+    //            game->players_teamB[i].position);
+    // }
+    
     // Draw the scoreboard
     drawScoreboard();
 
