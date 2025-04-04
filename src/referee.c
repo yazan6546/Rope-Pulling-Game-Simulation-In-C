@@ -16,10 +16,13 @@
 Config config;
 Game *game;
 
-void fork_players(Player *players, int num_players, Team team, char *binary_path, int read_fds[], int fd);
-void generate_and_align(Player *players, int num_players, Team team);
+void fork_players(Player *players, int num_players, Team team, char *binary_path, int read_fds[], int pos_pipe_fds[], int fd);
+void generate_and_align(Player *players, int num_players, Team team, int *read_fds, int *pos_pipe_fds);
 void cleanup_processes(const Player *players_teamA, const Player *players_teamB, int NUM_PLAYERS);
 void print_with_time(const char *format, ...);
+void send_new_positions(Player *players, int num_players, int pos_pipe_fds[]);
+void read_player_energies(Player *players, int num_players, int read_fds[]);
+void change_player_positions(Player *player, int num_players);
 
 volatile int elapsed_time = 0;
 
@@ -58,13 +61,23 @@ int main(int argc, char *argv[]) {
 
     int read_fds_team_A[config.NUM_PLAYERS/2];
     int read_fds_team_B[config.NUM_PLAYERS/2];
+    int pos_pipe_fds_team_A[config.NUM_PLAYERS/2];
+    int pos_pipe_fds_team_B[config.NUM_PLAYERS/2];
 
 
-    generate_and_align(players_teamA, config.NUM_PLAYERS/2, TEAM_A);
-    generate_and_align(players_teamB, config.NUM_PLAYERS/2, TEAM_B);
+    generate_and_align(players_teamA, config.NUM_PLAYERS/2, TEAM_A, read_fds_team_A, pos_pipe_fds_team_A);
+    generate_and_align(players_teamB, config.NUM_PLAYERS/2, TEAM_B, read_fds_team_B, pos_pipe_fds_team_B);
 
-    fork_players(players_teamA, config.NUM_PLAYERS/2, TEAM_A, bin_path, read_fds_team_A, fd);
-    fork_players(players_teamB, config.NUM_PLAYERS/2, TEAM_B, bin_path, read_fds_team_B, fd);
+    fork_players(players_teamA, config.NUM_PLAYERS/2, TEAM_A, bin_path, read_fds_team_A, pos_pipe_fds_team_A, fd);
+    fork_players(players_teamB, config.NUM_PLAYERS/2, TEAM_B, bin_path, read_fds_team_B, pos_pipe_fds_team_B, fd);
+
+    for (int i = 0; i < config.NUM_PLAYERS/2; i++) {
+        print_with_time1(game, "DEBUG PIPES : %d \n", read_fds_team_A[i]);
+    }
+
+    change_player_positions(players_teamA, config.NUM_PLAYERS/2);
+    change_player_positions(players_teamB, config.NUM_PLAYERS/2);
+
 
     sleep(2);
 
@@ -99,7 +112,7 @@ int main(int argc, char *argv[]) {
         }
         printf("\n\n");
 
-        sleep(1);
+        sleep(1); // Wait for players to start
 
         game->reset_round_time_flag = 0; // Reset the flag for the next round
         while (game->round_running) {
@@ -126,6 +139,25 @@ int main(int argc, char *argv[]) {
                 kill(players_teamB[i].pid, SIGHUP);
             }
 
+            sleep(1); // Wait for all players to reset
+
+            read_player_energies(players_teamA, config.NUM_PLAYERS/2, read_fds_team_A);
+            read_player_energies(players_teamB, config.NUM_PLAYERS/2, read_fds_team_B);
+
+            align(players_teamA, config.NUM_PLAYERS/2, read_fds_team_A, pos_pipe_fds_team_A);
+            align(players_teamB, config.NUM_PLAYERS/2, read_fds_team_B, pos_pipe_fds_team_B);
+
+            for (int i = 0; i < config.NUM_PLAYERS/2; i++) {
+                print_with_time1(game, "DEBUG PIPES2 : %d\n", read_fds_team_A[i]);
+            }
+
+            printf("\n\n");
+            // After resetting rounds, send new positions through pipes
+            send_new_positions(players_teamA, config.NUM_PLAYERS/2, pos_pipe_fds_team_A);
+            send_new_positions(players_teamB, config.NUM_PLAYERS/2, pos_pipe_fds_team_B);
+
+            change_player_positions(players_teamA, config.NUM_PLAYERS/2);
+            change_player_positions(players_teamB, config.NUM_PLAYERS/2);
         }
 
         sleep(2);
@@ -146,17 +178,24 @@ int main(int argc, char *argv[]) {
 }
 
 void fork_players(Player *players, int num_players, Team team,
-                char *binary_path, int read_fds[], int fd) {
+                char *binary_path, int read_fds[], int pos_pipe_fds[], int fd) {
 
     for (int i = 0; i < num_players; i++) {
 
-        int pipe_fds_temp[2];
-        if (pipe(pipe_fds_temp) == -1) {
+        int energy_pipe_fds[2];
+        if (pipe(energy_pipe_fds) == -1) {
             perror("pipe");
             exit(EXIT_FAILURE);
         }
 
-        read_fds[i] = pipe_fds_temp[0];
+        read_fds[i] = energy_pipe_fds[0];
+
+        int pos_pipe_fds_temp[2];
+        if (pipe(pos_pipe_fds_temp) == -1) {
+            perror("pipe");
+            exit(EXIT_FAILURE);
+        }
+        pos_pipe_fds[i] = pos_pipe_fds_temp[1];  // Parent writes on this end later
 
         const pid_t pid = fork();
 
@@ -173,11 +212,12 @@ void fork_players(Player *players, int num_players, Team team,
             char player_path[PATH_MAX];
             snprintf(player_path, PATH_MAX, "%s/player", binary_path);
 
-            char write_fd_str[10], fd_str[10];
-            snprintf(write_fd_str, sizeof(write_fd_str), "%d", pipe_fds_temp[1]);
+            char energy_fd_str[10], pos_fd_str[10], fd_str[10];
+            snprintf(energy_fd_str, sizeof(energy_fd_str), "%d", energy_pipe_fds[1]);
+            snprintf(pos_fd_str, sizeof(pos_fd_str), "%d", pos_pipe_fds_temp[0]);
             snprintf(fd_str, sizeof(fd_str), "%d", fd);
 
-            if (execl("./player", "player", buffer, write_fd_str, fd_str, NULL)) {
+            if (execl("./player", "player", buffer, energy_fd_str, pos_fd_str, fd_str, NULL)) {
                 perror("execl");
                 printf("Child process %d failed to exec and will terminate\n", getpid());
                 // Sleep briefly to allow output to be written
@@ -186,17 +226,18 @@ void fork_players(Player *players, int num_players, Team team,
             }
         } else { // Parent process
             players[i].pid = pid;
-            close(pipe_fds_temp[1]); // Close the write end of the pipe in the parent
+            close(energy_pipe_fds[1]); // Close the write end of the pipe in the parent
+            close(pos_pipe_fds_temp[0]); // Close read end for dedicated pos pipe in parent
         }
     }
 }
 
-void generate_and_align(Player *players, int num_players, Team team) {
+void generate_and_align(Player *players, int num_players, Team team, int *read_fds, int *pos_pipe_fds) {
     for (int i = 0; i<num_players; i++) {
         generate_random_player(&players[i], &config, team, i);
     }
 
-    align(players, num_players);
+    align(players, num_players, read_fds, pos_pipe_fds);
 }
 
 void print_with_time(const char *format, ...) {
@@ -228,6 +269,38 @@ void cleanup_processes(const Player *players_teamA, const Player *players_teamB,
     }
 
     printf("All child processes terminated.\n");
+}
+
+void send_new_positions(Player *players, int num_players, int pos_pipe_fds[]) {
+    for (int i = 0; i < num_players; i++) {
+        if (write(pos_pipe_fds[i], &players[i].new_position, sizeof(int)) <=0) {
+            perror("write to pos pipe");
+            fflush(stderr);
+            usleep(10000);
+            // Sleep briefly to allow output to be written
+            exit(1);
+        }
+    }
+}
+
+void read_player_energies(Player *players, int num_players, int pos_pipe_fds[]) {
+    for (int i = 0; i < num_players; i++) {
+        float energy;
+        if (read(pos_pipe_fds[i], &energy, sizeof(float)) <= 0) {
+            perror("read from energy pipe");
+        }
+
+        print_with_time("From referee : Player %d (Team %d) energy: %.2f\n",
+                        players[i].number, players[i].team, energy);
+        // Update player energy
+        players[i].attributes.energy = energy;
+    }
+}
+
+void change_player_positions(Player *player, int num_players) {
+    for (int i = 0; i < num_players; i++) {
+        player[i].position = player[i].new_position;
+    }
 }
 
 
