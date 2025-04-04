@@ -60,6 +60,10 @@ void cleanup_resources(void) {
 }
 
 int main(int argc, char *argv[]) {
+
+    printf("********** The Rope Pulling Game **********\n\n");
+    fflush(stdout);
+
     // Register cleanup function with atexit
     atexit(cleanup_resources);
 

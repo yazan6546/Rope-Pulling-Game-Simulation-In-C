@@ -138,6 +138,7 @@ int main(int argc, char *argv[]) {
             align(players_teamA, config.NUM_PLAYERS/2);
             align(players_teamB, config.NUM_PLAYERS/2);
 
+            printf("\n\n");
             // After resetting rounds, send new positions through pipes
             send_new_positions(players_teamA, config.NUM_PLAYERS/2, pos_pipe_fds_team_A);
             send_new_positions(players_teamB, config.NUM_PLAYERS/2, pos_pipe_fds_team_B);
@@ -256,8 +257,12 @@ void cleanup_processes(const Player *players_teamA, const Player *players_teamB,
 
 void send_new_positions(Player *players, int num_players, int pos_pipe_fds[]) {
     for (int i = 0; i < num_players; i++) {
-        if (write(pos_pipe_fds[i], &players[i].new_position, sizeof(int)) == -1) {
+        if (write(pos_pipe_fds[i], &players[i].new_position, sizeof(int)) <=0) {
             perror("write to pos pipe");
+            fflush(stderr);
+            usleep(10000);
+            // Sleep briefly to allow output to be written
+            exit(1);
         }
     }
 }
@@ -265,9 +270,13 @@ void send_new_positions(Player *players, int num_players, int pos_pipe_fds[]) {
 void read_player_energies(Player *players, int num_players, int pos_pipe_fds[]) {
     for (int i = 0; i < num_players; i++) {
         float energy;
-        if (read(pos_pipe_fds[i], &energy, sizeof(float)) == -1) {
+        if (read(pos_pipe_fds[i], &energy, sizeof(float)) <= 0) {
             perror("read from energy pipe");
         }
+
+        print_with_time("From referee : Player %d (Team %d) energy: %.2f\n",
+                        players[i].number, players[i].team, energy);
+        // Update player energy
         players[i].attributes.energy = energy;
     }
 }

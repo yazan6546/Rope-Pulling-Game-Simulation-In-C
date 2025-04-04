@@ -170,12 +170,22 @@ int main(int argc, char *argv[]) {
 
             if (write(write_fd, &current_player->attributes.energy, sizeof(float)) <= 0) {
                 perror("write");
+                fflush(stderr);
+                usleep(10000);
+                // Sleep briefly to allow output to be written
+                exit(1);
             }
             if (read(pos_pipe_fd, &new_position, sizeof(int)) > 0) {
+                print_with_time1(game, "Player %d (Team %d) received new position: %d\n\n", current_player->number,
+                    current_player->team, new_position);
                 current_player->new_position = new_position;
             }
             else {
                 perror("read");
+                fflush(stderr);
+                usleep(10000);
+                // Sleep briefly to allow output to be written
+                exit(1);
             }
 
             fflush(stdout);
