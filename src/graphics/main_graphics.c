@@ -218,6 +218,9 @@ void updateGame(int value) {
         if (team2_x[i] < -0.95) team2_x[i] = -0.95;
     }
 
+    
+    
+
     glutPostRedisplay();
     glutTimerFunc(50, updateGame, 0);
 }
@@ -233,20 +236,93 @@ void drawRopeSegment(float x1, float y1, float x2, float y2) {
     glEnd();
 }
 
+
+void drawEnergyBar(float x, float y, float energy, float maxEnergy) {
+    // Very basic safety checks
+    if (maxEnergy <= 0.0f) maxEnergy = 100.0f;
+    if (energy < 0.0f) energy = 0.0f;
+    if (energy > maxEnergy) energy = maxEnergy;
+
+    float percentage = energy / maxEnergy;
+
+    // Simple dimensions
+    float barWidth = 0.06f;
+    float barHeight = 0.01f;
+    float barY = y + 0.12f;
+    float barLeft = x - barWidth/2.0f;
+
+    // Draw background (grey)
+    glColor3f(0.3f, 0.3f, 0.3f);
+    glBegin(GL_QUADS);
+    glVertex2f(barLeft, barY);
+    glVertex2f(barLeft + barWidth, barY);
+    glVertex2f(barLeft + barWidth, barY + barHeight);
+    glVertex2f(barLeft, barY + barHeight);
+    glEnd();
+
+    // Fixed color thresholds (no complex calculations)
+    if (percentage > 0.7f) {
+        glColor3f(0.0f, 1.0f, 0.0f); // Green
+    } else if (percentage > 0.3f) {
+        glColor3f(1.0f, 1.0f, 0.0f); // Yellow
+    } else {
+        glColor3f(1.0f, 0.0f, 0.0f); // Red
+    }
+
+    // Draw filled portion
+    glBegin(GL_QUADS);
+    glVertex2f(barLeft, barY);
+    glVertex2f(barLeft + barWidth * percentage, barY);
+    glVertex2f(barLeft + barWidth * percentage, barY + barHeight);
+    glVertex2f(barLeft, barY + barHeight);
+    glEnd();
+}
+
+
+
 void display() {
     glClear(GL_COLOR_BUFFER_BIT);
     drawBackground();
 
-    // Draw all stickmen first
+    // Define maximum energy for scaling
+    float maxEnergy = 150.0f;
+
+    // Draw stickmen and energy bars
     for (int i = 0; i < PLAYERS_PER_TEAM; i++) {
-        drawStickman(team1_x[i], -0.1, 0.7, 1.0, 0.0, 0.0);  // Red team
-        drawStickman(team2_x[i], -0.1, 0.7, 0.0, 0.0, 1.0);  // Blue team
+        // Team A (Red)
+        drawStickman(team1_x[i], -0.1, 0.7, 1.0, 0.0, 0.0);
+
+        // Team B (Blue)
+        drawStickman(team2_x[i], -0.1, 0.7, 0.0, 0.0, 1.0);
+
+        // Draw energy bars using actual game data
+        if (game != NULL && game != MAP_FAILED) {
+            float energyA = game->players_teamA[i].attributes.energy;
+            float energyB = game->players_teamB[i].attributes.energy;
+
+            // Add bounds checking for safety
+            if (energyA < 0.0f) energyA = 0.0f;
+            if (energyB < 0.0f) energyB = 0.0f;
+
+            // Draw energy bars
+            drawEnergyBar(team1_x[i], -0.1, energyA, maxEnergy);
+            drawEnergyBar(team2_x[i], -0.1, energyB, maxEnergy);
+
+            // Draw energy numbers above bars
+            char energyTextA[10], energyTextB[10];
+            sprintf(energyTextA, "%.2f", energyA);
+            sprintf(energyTextB, "%.2f", energyB);
+
+            // Position text above energy bars (y coordinate: -0.1 + 0.14)
+            renderText(team1_x[i] - 0.02, 0.04, energyTextA, 1.0, 0.0, 0.0); // Red team
+            renderText(team2_x[i] - 0.02, 0.04, energyTextB, 0.0, 0.0, 1.0); // Blue team
+        }
     }
 
-    // Calculate rope positions
-    float grip_offset = 0.05;  // Distance from player center to rope attachment
+    // Draw rope segments
+    float grip_offset = 0.05;
 
-    //Red team rope segments
+    // Red team rope segments
     for (int i = 0; i < PLAYERS_PER_TEAM - 1; i++) {
         drawRopeSegment(
             team1_x[i] + grip_offset, -0.1,
@@ -257,15 +333,15 @@ void display() {
     // Blue team rope segments
     for (int i = PLAYERS_PER_TEAM - 1; i > 0; i--) {
         drawRopeSegment(
-            team2_x[i] + grip_offset, -0.1,     // Right side of leftmost player
-            team2_x[i-1] - grip_offset, -0.1    // Left side of player to the right
+            team2_x[i] + grip_offset, -0.1,
+            team2_x[i-1] - grip_offset, -0.1
         );
     }
 
     // Middle rope segment
     drawRopeSegment(
-        team1_x[PLAYERS_PER_TEAM-1] + grip_offset, -0.1,  // Right side of rightmost red player
-        team2_x[PLAYERS_PER_TEAM-1] + grip_offset, -0.1   // Right side of leftmost blue player
+        team1_x[PLAYERS_PER_TEAM-1] + grip_offset, -0.1,
+        team2_x[PLAYERS_PER_TEAM-1] + grip_offset, -0.1
     );
 
     // Draw the scoreboard
