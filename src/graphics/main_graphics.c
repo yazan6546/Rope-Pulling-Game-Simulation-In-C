@@ -197,15 +197,12 @@ void drawBackground() {
     drawCloud(-0.1, 0.6, 0.8);
 }
 
+//Making sure players don't go out of the screen
 void updateGame(int value) {
-    // Calculate the rope position based on the score difference between teams
-    float score_diff = game->total_effort_A - game->total_effort_B;
+    float energy_diff = game->total_effort_A - game->total_effort_B;
+    rope_center += energy_diff * 0.005;
 
-    // Set rope_center directly based on score difference
-    // Negative sign ensures positive diff (team A ahead) moves left, negative (team B ahead) moves right
-    rope_center = -score_diff * 0.01;  // Scale factor can be adjusted for sensitivity
-
-    // Limiting rope movement
+    //Limiting rope movement
     if (rope_center > 0.6) rope_center = 0.6;
     if (rope_center < -0.6) rope_center = -0.6;
 
@@ -222,7 +219,7 @@ void updateGame(int value) {
     }
 
     glutPostRedisplay();
-    glutTimerFunc(30, updateGame, 0);
+    glutTimerFunc(50, updateGame, 0);
 }
 //rope between players
 void drawRopeSegment(float x1, float y1, float x2, float y2) {
