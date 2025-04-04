@@ -102,7 +102,7 @@ int main(int argc, char *argv[]) {
         }
         printf("\n\n");
 
-        sleep(1);
+        sleep(1); // Wait for players to start
 
         game->reset_round_time_flag = 0; // Reset the flag for the next round
         while (game->round_running) {
@@ -128,6 +128,8 @@ int main(int argc, char *argv[]) {
                 kill(players_teamA[i].pid, SIGHUP);
                 kill(players_teamB[i].pid, SIGHUP);
             }
+
+            sleep(1); // Wait for all players to reset
 
             // After resetting rounds, send new positions through pipes
             send_new_positions(players_teamA, config.NUM_PLAYERS/2, pos_pipe_fds_team_A);

@@ -21,7 +21,6 @@ float previous_energy = 0;
 
 volatile sig_atomic_t energy_update = 0;
 volatile sig_atomic_t recovery_complete = 0;
-int elapsed_time;
 Game *game;
 volatile sig_atomic_t is_round_reset = 0;
 volatile sig_atomic_t remaining_recovery_time = 0;
@@ -47,7 +46,7 @@ void process_player_state() {
         if (random_float(0, 1) < current_player->attributes.falling_chance) {
             previous_energy = current_player->attributes.energy;
             current_player->attributes.energy = 0;
-            print_with_time1(game, "Player %d (Team %d) has fallen!\n", current_player->number, my_team);
+            print_with_time1(game, "Player %d (Team %d) has fallen! (Energy = %f)\n", current_player->number, my_team, previous_energy);
             current_player->state = FALLEN;
             remaining_recovery_time = current_player->attributes.recovery_time;  // Set recovery timer
             fflush(stdout);
@@ -96,11 +95,12 @@ void process_player_state() {
 void handle_get_ready(int signum) {
     print_with_time1(game, "Player %d (Team %d) getting ready\n", current_player->number, my_team);
 
-    if (current_player->position != current_player->new_position)
+    if (current_player->position != current_player->new_position) {
         print_with_time1(game, "Player %d (Team %d) Repositioned from %d to %d\n",
         current_player->number, my_team, current_player->position, current_player->new_position);
 
-    current_player->position = current_player->new_position;
+        current_player->position = current_player->new_position;
+    }
     current_player->state = READY;
     fflush(stdout);
 }
@@ -162,25 +162,20 @@ int main(int argc, char *argv[]) {
         // reset round
         if(is_round_reset) {
             // Read new position from the dedicated position pipe
+            alarm(0);  // Cancel the alarm to avoid multiple signals
             int new_position;
             if (read(pos_pipe_fd, &new_position, sizeof(int)) > 0) {
                 current_player->new_position = new_position;
-                print_with_time1(game, "Player %d (Team %d) received new position: %d\n",
-                                  current_player->number, my_team, new_position);
-
-                current_player->position = current_player->new_position;
             }
             current_player->attributes.energy = current_player->attributes.inital_energy *
                                                 current_player->attributes.endurance;
 
             fflush(stdout);
             current_player->state = IDLE;
-            elapsed_time = 0;
             is_round_reset = 0;
 
             print_with_time1(game, "Player %d (Team %d) resetting round with energy : %f\n", current_player->number, my_team, current_player->attributes.energy);
 
-            alarm(0);  // cancel time updates from the previous round
             pause();
         }
         // continue simulation
