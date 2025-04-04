@@ -21,6 +21,7 @@ void generate_and_align(Player *players, int num_players, Team team);
 void cleanup_processes(const Player *players_teamA, const Player *players_teamB, int NUM_PLAYERS);
 void print_with_time(const char *format, ...);
 void send_new_positions(Player *players, int num_players, int pos_pipe_fds[]);
+void read_player_energies(Player *players, int num_players, int read_fds[]);
 
 volatile int elapsed_time = 0;
 
@@ -130,6 +131,12 @@ int main(int argc, char *argv[]) {
             }
 
             sleep(1); // Wait for all players to reset
+
+            read_player_energies(players_teamA, config.NUM_PLAYERS/2, read_fds_team_A);
+            read_player_energies(players_teamB, config.NUM_PLAYERS/2, read_fds_team_B);
+
+            align(players_teamA, config.NUM_PLAYERS/2);
+            align(players_teamB, config.NUM_PLAYERS/2);
 
             // After resetting rounds, send new positions through pipes
             send_new_positions(players_teamA, config.NUM_PLAYERS/2, pos_pipe_fds_team_A);
@@ -252,6 +259,16 @@ void send_new_positions(Player *players, int num_players, int pos_pipe_fds[]) {
         if (write(pos_pipe_fds[i], &players[i].new_position, sizeof(int)) == -1) {
             perror("write to pos pipe");
         }
+    }
+}
+
+void read_player_energies(Player *players, int num_players, int pos_pipe_fds[]) {
+    for (int i = 0; i < num_players; i++) {
+        float energy;
+        if (read(pos_pipe_fds[i], &energy, sizeof(float)) == -1) {
+            perror("read from energy pipe");
+        }
+        players[i].attributes.energy = energy;
     }
 }
 

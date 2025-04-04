@@ -164,11 +164,19 @@ int main(int argc, char *argv[]) {
             // Read new position from the dedicated position pipe
             alarm(0);  // Cancel the alarm to avoid multiple signals
             int new_position;
+
+            current_player->attributes.energy = current_player->attributes.inital_energy *
+                                                current_player->attributes.endurance;
+
+            if (write(write_fd, &current_player->attributes.energy, sizeof(float)) <= 0) {
+                perror("write");
+            }
             if (read(pos_pipe_fd, &new_position, sizeof(int)) > 0) {
                 current_player->new_position = new_position;
             }
-            current_player->attributes.energy = current_player->attributes.inital_energy *
-                                                current_player->attributes.endurance;
+            else {
+                perror("read");
+            }
 
             fflush(stdout);
             current_player->state = IDLE;
