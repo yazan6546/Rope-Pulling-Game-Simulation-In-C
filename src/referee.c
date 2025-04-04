@@ -157,7 +157,7 @@ int main(int argc, char *argv[]) {
         while (game->round_running) {
 
             team_win = simulate_round(read_fds_team_A, read_fds_team_B,
-                                        &config, game, players_teamA, players_teamB);
+                                        &config, game);
 
 
             if (team_win != NONE) {

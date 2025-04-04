@@ -23,8 +23,7 @@ void init_game(Game *game) {
 }
 
 
-Team simulate_round(int pipe_fds_team_A[], int pipe_fds_team_B[], const Config *config, Game *game,
-    const Player *players_teamA, const Player *players_teamB) {
+Team simulate_round(int pipe_fds_team_A[], int pipe_fds_team_B[], const Config *config, Game *game) {
     float total_effort_A = 0, total_effort_B = 0;
     char output_buffer[4096] = "";  // Large buffer for all output
     char temp_buffer[256];          // Temporary buffer for formatting
@@ -38,9 +37,10 @@ Team simulate_round(int pipe_fds_team_A[], int pipe_fds_team_B[], const Config *
 
         if (bytes == sizeof(float) || bytes == 0) {
             snprintf(temp_buffer, sizeof(temp_buffer),
-                     "Team A - Player %d effort: %.2f\n", players_teamA[i].number, effort);
+                     "Team A - Player %d effort: %.2f\n", game->players_teamA[i].number, effort);
             strcat(output_buffer, temp_buffer);
             total_effort_A += effort;
+            game->players_teamA[i].attributes.energy = effort / game->players_teamA[i].position;
         }
     }
 
@@ -51,9 +51,11 @@ Team simulate_round(int pipe_fds_team_A[], int pipe_fds_team_B[], const Config *
 
         if (bytes == sizeof(float) || bytes == 0) {
             snprintf(temp_buffer, sizeof(temp_buffer),
-                     "Team B - Player %d effort: %.2f\n", players_teamB[i].number, effort);
+                     "Team B - Player %d effort: %.2f\n", game->players_teamB[i].number, effort);
             strcat(output_buffer, temp_buffer);
             total_effort_B += effort;
+            game->players_teamB[i].attributes.energy = effort / game->players_teamB[i].position;
+
         }
     }
 
