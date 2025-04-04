@@ -17,7 +17,7 @@ Config config;
 Game *game;
 
 void fork_players(Player *players, int num_players, Team team, char *binary_path, int read_fds[], int pos_pipe_fds[], int fd);
-void generate_and_align(Player *players, int num_players, Team team);
+void generate_and_align(Player *players, int num_players, Team team, int *read_fds, int *pos_pipe_fds);
 void cleanup_processes(const Player *players_teamA, const Player *players_teamB, int NUM_PLAYERS);
 void print_with_time(const char *format, ...);
 void send_new_positions(Player *players, int num_players, int pos_pipe_fds[]);
@@ -65,14 +65,11 @@ int main(int argc, char *argv[]) {
     int pos_pipe_fds_team_B[config.NUM_PLAYERS/2];
 
 
-    generate_and_align(players_teamA, config.NUM_PLAYERS/2, TEAM_A);
-    generate_and_align(players_teamB, config.NUM_PLAYERS/2, TEAM_B);
+    generate_and_align(players_teamA, config.NUM_PLAYERS/2, TEAM_A, read_fds_team_A, pos_pipe_fds_team_A);
+    generate_and_align(players_teamB, config.NUM_PLAYERS/2, TEAM_B, read_fds_team_B, pos_pipe_fds_team_B);
 
     fork_players(players_teamA, config.NUM_PLAYERS/2, TEAM_A, bin_path, read_fds_team_A, pos_pipe_fds_team_A, fd);
     fork_players(players_teamB, config.NUM_PLAYERS/2, TEAM_B, bin_path, read_fds_team_B, pos_pipe_fds_team_B, fd);
-
-    change_player_positions(players_teamA, config.NUM_PLAYERS/2);
-    change_player_positions(players_teamB, config.NUM_PLAYERS/2);
 
     sleep(2);
 
@@ -139,13 +136,16 @@ int main(int argc, char *argv[]) {
             read_player_energies(players_teamA, config.NUM_PLAYERS/2, read_fds_team_A);
             read_player_energies(players_teamB, config.NUM_PLAYERS/2, read_fds_team_B);
 
-            align(players_teamA, config.NUM_PLAYERS/2);
-            align(players_teamB, config.NUM_PLAYERS/2);
+            align(players_teamA, config.NUM_PLAYERS/2, read_fds_team_A, pos_pipe_fds_team_A);
+            align(players_teamB, config.NUM_PLAYERS/2, read_fds_team_B, pos_pipe_fds_team_B);
 
             printf("\n\n");
             // After resetting rounds, send new positions through pipes
             send_new_positions(players_teamA, config.NUM_PLAYERS/2, pos_pipe_fds_team_A);
             send_new_positions(players_teamB, config.NUM_PLAYERS/2, pos_pipe_fds_team_B);
+
+            change_player_positions(players_teamA, config.NUM_PLAYERS/2);
+            change_player_positions(players_teamB, config.NUM_PLAYERS/2);
         }
 
         sleep(2);
@@ -220,12 +220,12 @@ void fork_players(Player *players, int num_players, Team team,
     }
 }
 
-void generate_and_align(Player *players, int num_players, Team team) {
+void generate_and_align(Player *players, int num_players, Team team, int *read_fds, int *pos_pipe_fds) {
     for (int i = 0; i<num_players; i++) {
         generate_random_player(&players[i], &config, team, i);
     }
 
-    align(players, num_players);
+    align(players, num_players, read_fds, pos_pipe_fds);
 }
 
 void print_with_time(const char *format, ...) {
