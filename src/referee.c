@@ -25,13 +25,14 @@ void read_player_energies(Player *players, int num_players, int read_fds[]);
 void change_player_positions(Player *player, int num_players);
 
 volatile int elapsed_time = 0;
+int gui_pid;
+
 
 int main(int argc, char *argv[]) {
+    
 
-
-
-    if (argc < 2) {
-        fprintf(stderr, "Usage: referee <fd>\n");
+    if (argc < 3) {
+        fprintf(stderr, "Usage: referee <fd> <gui_pid>\n");
         exit(EXIT_FAILURE);
     }
     printf("%s", argv[1]);
@@ -54,6 +55,12 @@ int main(int argc, char *argv[]) {
         perror("mmap failed");
         exit(EXIT_FAILURE);
     }
+
+    // Store GUI’s PID from argv[2] in game structure (or local variable)
+    gui_pid = atoi(argv[2]);
+
+    Player players_teamA[config.NUM_PLAYERS/2];
+    Player players_teamB[config.NUM_PLAYERS/2];
 
 
     int read_fds_team_A[config.NUM_PLAYERS/2];
@@ -128,6 +135,9 @@ int main(int argc, char *argv[]) {
             kill(game->players_teamB[i].pid, SIGUSR1);
         }
 
+        // Send READY signal to the GUI
+        kill(gui_pid, SIGUSR1);
+
         printf("signal SIGUSR1 sent to all players\n");
         fflush(stdout);
 
@@ -142,6 +152,10 @@ int main(int argc, char *argv[]) {
             kill(game->players_teamA[i].pid, SIGUSR2);
             kill(game->players_teamB[i].pid, SIGUSR2);
         }
+
+        // Send START signal to the GUI
+        kill(gui_pid, SIGUSR2);
+
         printf("\n\n");
 
         sleep(1); // Wait for players to start

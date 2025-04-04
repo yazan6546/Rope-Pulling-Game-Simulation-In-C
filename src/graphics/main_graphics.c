@@ -2,6 +2,7 @@
 #include <GL/glut.h>
 #include <math.h>
 #include <sys/mman.h>
+#include <signal.h>
 
 #include "game.h"
 #include "config.h"
@@ -16,6 +17,19 @@ float energy_team1 = 10.0;
 float energy_team2 = 9.0;
 Game *game;
 
+// NEW: Global flags for animations.
+volatile sig_atomic_t readyAnimation = 0;
+volatile sig_atomic_t startAnimation = 0;
+
+void handle_ready_signal(int signum) {
+    readyAnimation = 1;
+    glutPostRedisplay();
+}
+
+void handle_start_signal(int signum) {
+    startAnimation = 1;
+    glutPostRedisplay();
+}
 
 // Function to render text in OpenGL
 void renderText(float x, float y, const char* text, float r, float g, float b) {
@@ -85,6 +99,15 @@ void drawScoreboard() {
 
     // Draw winning indicator below scoreboard
     renderText(-0.4, 0.63, winning_text, text_r, text_g, text_b);
+
+    // NEW: If readyAnimation flag is set, overlay a "READY" animation.
+    if (readyAnimation) {
+        renderText(-0.95, 0.55, "READY!", 1.0, 1.0, 0.0);
+    }
+    // If startAnimation flag is set, overlay a "START" animation.
+    if (startAnimation) {
+        renderText(-0.95, 0.50, "START!", 0.0, 1.0, 0.0);
+    }
 }
 
 void initializePlayers(float team1[], float team2[], int count) {
@@ -369,6 +392,9 @@ int main(int argc, char** argv) {
     glutInitWindowSize(800, 600);
     glutCreateWindow("Tug-of-War with Rectangular Rope");
     initializePlayers(team1_x, team2_x, PLAYERS_PER_TEAM);
+    // Install signal handlers for ready and start animations.
+    signal(SIGUSR1, handle_ready_signal);
+    signal(SIGUSR2, handle_start_signal);
     glutDisplayFunc(display);
     glutTimerFunc(50, updateGame, 0);
     glutMainLoop();
