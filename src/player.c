@@ -95,7 +95,11 @@ void process_player_state() {
 
 void handle_get_ready(int signum) {
     print_with_time1(game, "Player %d (Team %d) getting ready\n", current_player->number, my_team);
-    print_with_time1(game, "Player %d (Team %d) Repositioned from %d to %d\n", current_player->number, my_team, current_player->position, current_player->new_position);
+
+    if (current_player->position != current_player->new_position)
+        print_with_time1(game, "Player %d (Team %d) Repositioned from %d to %d\n",
+        current_player->number, my_team, current_player->position, current_player->new_position);
+
     current_player->position = current_player->new_position;
     current_player->state = READY;
     fflush(stdout);
@@ -163,6 +167,8 @@ int main(int argc, char *argv[]) {
                 current_player->new_position = new_position;
                 print_with_time1(game, "Player %d (Team %d) received new position: %d\n",
                                   current_player->number, my_team, new_position);
+
+                current_player->position = current_player->new_position;
             }
             current_player->attributes.energy = current_player->attributes.inital_energy *
                                                 current_player->attributes.endurance;
