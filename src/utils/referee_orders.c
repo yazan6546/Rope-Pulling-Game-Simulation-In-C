@@ -17,10 +17,7 @@ void align(Player* team, int num_players) {
     
     for (int i = 0; i < num_players; i++) {
         team[i].new_position = i+1;
-
-        if (team[i].new_position != team[i].position) {
-            printf("From referee : Player %d (Team %d) Repositioned from %d to %d\n\n",
-                            team[i].number, team[i].team, team[i].position, team[i].new_position);
-        }
+        // Print the new position for debugging
+        printf("Referee DEBUG : Player %d old position : %d new position: %d\n", team[i].number, team[i].position ,team[i].new_position);
     }
 }

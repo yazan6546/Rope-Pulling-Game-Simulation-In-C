@@ -22,6 +22,7 @@ void cleanup_processes(const Player *players_teamA, const Player *players_teamB,
 void print_with_time(const char *format, ...);
 void send_new_positions(Player *players, int num_players, int pos_pipe_fds[]);
 void read_player_energies(Player *players, int num_players, int read_fds[]);
+void change_player_positions(Player *player, int num_players);
 
 volatile int elapsed_time = 0;
 
@@ -69,6 +70,9 @@ int main(int argc, char *argv[]) {
 
     fork_players(players_teamA, config.NUM_PLAYERS/2, TEAM_A, bin_path, read_fds_team_A, pos_pipe_fds_team_A, fd);
     fork_players(players_teamB, config.NUM_PLAYERS/2, TEAM_B, bin_path, read_fds_team_B, pos_pipe_fds_team_B, fd);
+
+    change_player_positions(players_teamA, config.NUM_PLAYERS/2);
+    change_player_positions(players_teamB, config.NUM_PLAYERS/2);
 
     sleep(2);
 
@@ -278,6 +282,12 @@ void read_player_energies(Player *players, int num_players, int pos_pipe_fds[]) 
                         players[i].number, players[i].team, energy);
         // Update player energy
         players[i].attributes.energy = energy;
+    }
+}
+
+void change_player_positions(Player *player, int num_players) {
+    for (int i = 0; i < num_players; i++) {
+        player[i].position = player[i].new_position;
     }
 }
 
