@@ -16,7 +16,7 @@ void handle_alarm(int signum);
 void handle_sigint(int signum); // Renamed from handle_sigkill to match actual signal
 void cleanup_resources(void);   // New function for atexit
 pid_t start_graphics_process(char *fd_str);
-pid_t start_referee_process(char *fd_str);
+pid_t start_referee_process(char *fd_str, char *gui_pid_str);
 
 void handle_alarm(int signum) {
 
@@ -97,7 +97,10 @@ int main(int argc, char *argv[]) {
     init_game(shared_game);
     //
     pid_graphics = start_graphics_process(fd_str);
-    pid_referee = start_referee_process(fd_str);
+    // Pass the graphics pid additionally to referee exec call.
+    char gui_pid_str[16];
+    sprintf(gui_pid_str, "%d", pid_graphics);
+    pid_referee = start_referee_process(fd_str, gui_pid_str);
 
     // Setup signal handler for time management
     signal(SIGALRM, handle_alarm);
@@ -142,7 +145,7 @@ pid_t start_graphics_process(char *fd_str) {
     return pid;
 }
 
-pid_t start_referee_process(char *fd_str) {
+pid_t start_referee_process(char *fd_str, char *gui_pid_str) {
     pid_t pid = fork();
     if (pid == -1) {
         perror("fork");
@@ -150,8 +153,8 @@ pid_t start_referee_process(char *fd_str) {
     }
 
     if (pid == 0) {
-        // Child process
-        if (execl("./referee", "./referee", fd_str, NULL)) {
+        // Now pass two arguments: shared memory fd and GUI pid.
+        if (execl("./referee", "./referee", fd_str, gui_pid_str, NULL)) {
             perror("execl referee");
             exit(EXIT_FAILURE);
         }
