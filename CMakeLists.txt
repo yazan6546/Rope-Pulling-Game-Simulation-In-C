@@ -18,7 +18,7 @@ add_executable(rope_pulling_game_main src/main.c src/game.c)
 target_link_libraries(rope_game_graphics
     PRIVATE
     ${OPENGL_LIBRARIES}
-    ${GLUT_LIBRARIES}
+    ${GLUT_LIBRARIES} m
 )
 
 target_include_directories(rope_game_graphics
