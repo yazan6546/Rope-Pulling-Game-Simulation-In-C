@@ -272,9 +272,9 @@ void drawRopeSegment(float x1, float y1, float x2, float y2) {
 
 void drawEnergyBar(float x, float y, float energy, float maxEnergy) {
     // Very basic safety checks
-    if (maxEnergy <= 0.0f) maxEnergy = 100.0f;
-    if (energy < 0.0f) energy = 0.0f;
-    if (energy > maxEnergy) energy = maxEnergy;
+    // if (maxEnergy <= 0.0f) maxEnergy = 200.0f;
+    // if (energy < 0.0f) energy = 0.0f;
+    // if (energy > maxEnergy) energy = maxEnergy;
 
     float percentage = energy / maxEnergy;
 
@@ -318,7 +318,6 @@ void display() {
     drawBackground();
 
     // Define maximum energy for scaling
-    float maxEnergy = 150.0f;
 
     // Draw stickmen and energy bars
     for (int i = 0; i < PLAYERS_PER_TEAM; i++) {
@@ -338,8 +337,8 @@ void display() {
             if (energyB < 0.0f) energyB = 0.0f;
 
             // Draw energy bars
-            drawEnergyBar(team1_x[i], -0.1, energyA, maxEnergy);
-            drawEnergyBar(team2_x[i], -0.1, energyB, maxEnergy);
+            drawEnergyBar(team1_x[i], -0.1, energyA, game->players_teamA[i].attributes.inital_energy);
+            drawEnergyBar(team2_x[i], -0.1, energyB, game->players_teamB[i].attributes.inital_energy);
 
             // Draw energy numbers above bars
             char energyTextA[10], energyTextB[10];
