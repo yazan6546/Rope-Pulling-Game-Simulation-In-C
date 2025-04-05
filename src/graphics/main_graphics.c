@@ -21,6 +21,8 @@ Game *game;
 volatile sig_atomic_t readyAnimation = 0;
 volatile sig_atomic_t startAnimation = 0;
 
+int timer = 0;
+
 void handle_ready_signal(int signum) {
     readyAnimation = 1;
     glutPostRedisplay();
@@ -31,6 +33,13 @@ void handle_start_signal(int signum) {
     glutPostRedisplay();
 }
 
+void handle_alarm(int signum) {
+    startAnimation = 0; // Reset the start animation flag
+    readyAnimation = 0; // Reset the ready animation flag
+    // Update the display
+    glutPostRedisplay();
+}
+
 // Function to render text in OpenGL
 void renderText(float x, float y, const char* text, float r, float g, float b) {
     glColor3f(r, g, b);
@@ -38,6 +47,15 @@ void renderText(float x, float y, const char* text, float r, float g, float b) {
 
     for (const char* c = text; *c != '\0'; c++) {
         glutBitmapCharacter(GLUT_BITMAP_9_BY_15, *c);
+    }
+}
+
+// NEW: Add a helper function to render bigger text using a larger font.
+void renderBigText(float x, float y, const char* text, float r, float g, float b) {
+    glColor3f(r, g, b);
+    glRasterPos2f(x, y);
+    for (const char* c = text; *c != '\0'; c++) {
+        glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, *c);
     }
 }
 
@@ -100,14 +118,7 @@ void drawScoreboard() {
     // Draw winning indicator below scoreboard
     renderText(-0.4, 0.63, winning_text, text_r, text_g, text_b);
 
-    // NEW: If readyAnimation flag is set, overlay a "READY" animation.
-    if (readyAnimation) {
-        renderText(-0.95, 0.55, "READY!", 1.0, 1.0, 0.0);
-    }
-    // If startAnimation flag is set, overlay a "START" animation.
-    if (startAnimation) {
-        renderText(-0.95, 0.50, "START!", 0.0, 1.0, 0.0);
-    }
+  
 }
 
 void initializePlayers(float team1[], float team2[], int count) {
@@ -243,7 +254,6 @@ void updateGame(int value) {
 
     
     
-
     glutPostRedisplay();
     glutTimerFunc(50, updateGame, 0);
 }
@@ -339,6 +349,21 @@ void display() {
             // Position text above energy bars (y coordinate: -0.1 + 0.14)
             renderText(team1_x[i] - 0.02, 0.04, energyTextA, 1.0, 0.0, 0.0); // Red team
             renderText(team2_x[i] - 0.02, 0.04, energyTextB, 0.0, 0.0, 1.0); // Blue team
+
+              // NEW: Render ready and start animations bigger and at the center of the screen.
+            if (readyAnimation) {
+                renderBigText(-0.1, 0.5, "READY!", 1.0, 1.0, 0.0); // Centered and bigger.
+            }
+            
+            if (startAnimation) {
+                readyAnimation = 0; // Reset the ready animation flag
+                timer++;
+                if (timer > 50) {
+                    timer = 0; // Reset timer after 50 frames
+                    startAnimation = 0; // Reset the start animation flag
+                }
+                renderBigText(-0.1, 0.5, "START!", 0.0, 1.0, 0.0); // Centered and bigger.
+            }
         }
     }
 
@@ -395,6 +420,7 @@ int main(int argc, char** argv) {
     // Install signal handlers for ready and start animations.
     signal(SIGUSR1, handle_ready_signal);
     signal(SIGUSR2, handle_start_signal);
+    signal(SIGALRM, handle_alarm);
     glutDisplayFunc(display);
     glutTimerFunc(50, updateGame, 0);
     glutMainLoop();
