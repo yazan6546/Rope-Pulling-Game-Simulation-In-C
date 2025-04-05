@@ -363,6 +363,10 @@ void display() {
                 }
                 renderBigText(-0.1, 0.5, "START!", 0.0, 1.0, 0.0); // Centered and bigger.
             }
+
+            if(game->game_running == 0) {
+                renderBigText(-0.1, 0.5, "GAME OVER!", 1.0, 0.0, 0.0); // Centered and bigger.
+            }
         }
     }
 
