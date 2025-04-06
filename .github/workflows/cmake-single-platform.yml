@@ -39,10 +39,10 @@ jobs:
       - name: Prepare binaries
         run: |
           mkdir -p dist
-          cp build/bin/referee dist/ || (echo "referee not found" && exit 1)
-          cp build/bin/player dist/ || (echo "player not found" && exit 1)
-          cp build/bin/rope_game_graphics dist/ || (echo "rope_game_graphics not found" && exit 1)
-          cp build/bin/rope_pulling_game_main dist/ || (echo "rope_pulling_game_main not found" && exit 1)
+          cp bin/referee dist/ || (echo "referee not found" && exit 1)
+          cp bin/player dist/ || (echo "player not found" && exit 1)
+          cp bin/rope_game_graphics dist/ || (echo "rope_game_graphics not found" && exit 1)
+          cp bin/rope_pulling_game_main dist/ || (echo "rope_pulling_game_main not found" && exit 1)
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
