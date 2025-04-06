@@ -1,0 +1,7 @@
+/mnt/c/Users/-/CLionProjects/Rope-Pulling-Game-Simulation-In-C/build/CMakeFiles/referee.dir
+/mnt/c/Users/-/CLionProjects/Rope-Pulling-Game-Simulation-In-C/build/CMakeFiles/player.dir
+/mnt/c/Users/-/CLionProjects/Rope-Pulling-Game-Simulation-In-C/build/CMakeFiles/rope_game_graphics.dir
+/mnt/c/Users/-/CLionProjects/Rope-Pulling-Game-Simulation-In-C/build/CMakeFiles/rope_pulling_game_main.dir
+/mnt/c/Users/-/CLionProjects/Rope-Pulling-Game-Simulation-In-C/build/CMakeFiles/run.dir
+/mnt/c/Users/-/CLionProjects/Rope-Pulling-Game-Simulation-In-C/build/CMakeFiles/edit_cache.dir
+/mnt/c/Users/-/CLionProjects/Rope-Pulling-Game-Simulation-In-C/build/CMakeFiles/rebuild_cache.dir

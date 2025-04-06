@@ -1,0 +1,1 @@
+/usr/bin/cc CMakeFiles/rope_pulling_game_main.dir/src/main.c.o CMakeFiles/rope_pulling_game_main.dir/src/game.c.o CMakeFiles/rope_pulling_game_main.dir/src/utils/config.c.o -o /mnt/c/Users/-/CLionProjects/Rope-Pulling-Game-Simulation-In-C/bin/rope_pulling_game_main 
