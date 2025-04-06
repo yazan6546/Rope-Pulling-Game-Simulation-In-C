@@ -24,8 +24,11 @@ volatile sig_atomic_t readyAnimation = 0;
 volatile sig_atomic_t startAnimation = 0;
 
 int timer = 0;
+int display_timer = 0;
 
 int movement_timer = 0;
+
+int display_team_win = 0;
 
 typedef struct {
     int is_falling;          // Flag to indicate if player is falling
@@ -450,6 +453,29 @@ void display() {
             // game over
             if(game->game_running == 0) {
                 renderBigText(-0.1, 0.5, "GAME OVER!", 1.0, 0.0, 0.0);
+            }
+
+            if(game->round_running == 0) {
+                printf("Round finished\n");
+                display_team_win = 1;
+            }
+
+            if(display_team_win) {
+                display_timer++;
+               
+                // Display the winning team
+                if(game->last_winner == TEAM_A) {
+                    renderBigText(-0.1, 0.5, "RED TEAM WINS!", 1.0, 0.0, 0.0);
+                } else if(game->last_winner == TEAM_B) {
+                    renderBigText(-0.1, 0.5, "BLUE TEAM WINS!", 0.0, 0.0, 1.0);
+                } else {
+                    renderBigText(-0.1, 0.5, "DRAW!", 1.0, 1.0, 1.0);
+                }
+
+                if(display_timer > 50) {
+                    display_team_win = 0;
+                    display_timer = 0;
+                }
             }
         }
     }
