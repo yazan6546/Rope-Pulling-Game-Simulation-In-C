@@ -550,13 +550,9 @@ void display() {
                 display_timer++;
 
                 // Display the winning team
-                if(game->last_winner == TEAM_A) {
-                    renderBigText(-0.1, 0.3, "RED TEAM WINS!", 1.0, 0.0, 0.0);
-                } else if(game->last_winner == TEAM_B) {
-                    renderBigText(-0.1, 0.3, "BLUE TEAM WINS!", 0.0, 0.0, 1.0);
-                } else {
-                    renderBigText(-0.1, 0.3, "DRAW!", 1.0, 1.0, 1.0);
-                }
+                
+                renderBigText(-0.1, 0.3, "ROUND OVER!", 1.0, 1.0, 1.0);
+                
 
                 if(display_timer > 50) {
                     display_team_win = 0;
