@@ -49,11 +49,11 @@ set_target_properties(rope_pulling_game_main
 
 
 add_custom_target(
-        run
-        COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/bin/rope_pulling_game_main
-        DEPENDS rope_pulling_game_main
-        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-        master
+
+    run
+    COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/bin/rope_pulling_game_main
+    DEPENDS rope_pulling_game_main
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
 include_directories(include)

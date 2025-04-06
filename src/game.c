@@ -36,7 +36,8 @@ Team simulate_round(int pipe_fds_team_A[], int pipe_fds_team_B[], const Config *
     // Process Team A efforts
     for (int i = 0; i < config->NUM_PLAYERS/2; i++) {
         Message message;
-        ssize_t bytes = read(pipe_fds_team_A[i], &message, sizeof(Message));
+        int index_pipe = game->players_teamA[i].number;
+        ssize_t bytes = read(pipe_fds_team_A[index_pipe], &message, sizeof(Message));
 
         if (bytes == sizeof(Message) || bytes == 0) {
             snprintf(temp_buffer, sizeof(temp_buffer),
@@ -59,7 +60,8 @@ Team simulate_round(int pipe_fds_team_A[], int pipe_fds_team_B[], const Config *
     // Process Team B efforts
     for (int i = 0; i < config->NUM_PLAYERS/2; i++) {
         Message message;
-        ssize_t bytes = read(pipe_fds_team_B[i], &message, sizeof(Message));
+        int index_pipe = game->players_teamB[i].number;
+        ssize_t bytes = read(pipe_fds_team_B[index_pipe], &message, sizeof(Message));
 
         if (bytes == sizeof(Message) || bytes == 0) {
             snprintf(temp_buffer, sizeof(temp_buffer),
