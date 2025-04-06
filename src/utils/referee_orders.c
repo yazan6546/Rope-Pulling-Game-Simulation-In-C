@@ -21,8 +21,6 @@ void align(Player* team, int num_players, int *read_fds, int *pos_pipe_fds) {
     
     for (int i = 0; i < num_players; i++) {
         team[i].new_position = i+1;
-        // Print the new position for debugging
-        printf("Referee DEBUG : Player %d (Team %d) old position : %d new position: %d\n", team[i].number, team[i].team, team[i].position ,team[i].new_position);
     }
 
     for (int i = 0; i < num_players; i++) {

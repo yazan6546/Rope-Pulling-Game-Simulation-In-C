@@ -54,10 +54,6 @@ int main(int argc, char *argv[]) {
     // Store GUI’s PID from argv[2] in game structure (or local variable)
     gui_pid = atoi(argv[3]);
 
-    Player players_teamA[config.NUM_PLAYERS/2];
-    Player players_teamB[config.NUM_PLAYERS/2];
-
-
     int read_fds_team_A[config.NUM_PLAYERS/2];
     int read_fds_team_B[config.NUM_PLAYERS/2];
     int pos_pipe_fds_team_A[config.NUM_PLAYERS/2];
@@ -70,10 +66,6 @@ int main(int argc, char *argv[]) {
 
     fork_players(game->players_teamA, config.NUM_PLAYERS/2, TEAM_A, read_fds_team_A, pos_pipe_fds_team_A, fd);
     fork_players(game->players_teamB, config.NUM_PLAYERS/2, TEAM_B, read_fds_team_B, pos_pipe_fds_team_B, fd);
-
-    for (int i = 0; i < config.NUM_PLAYERS/2; i++) {
-        print_with_time1(game, "DEBUG PIPES : %d \n", read_fds_team_A[i]);
-    }
 
     change_player_positions(game->players_teamA, config.NUM_PLAYERS/2);
     change_player_positions(game->players_teamB, config.NUM_PLAYERS/2);
@@ -269,8 +261,6 @@ void read_player_energies(Player *players, int num_players, int pos_pipe_fds[]) 
             perror("read from energy pipe");
         }
 
-        print_with_time("From referee : Player %d (Team %d) energy: %.2f\n",
-                        players[i].number, players[i].team, energy);
         // Update player energy
         players[i].attributes.energy = energy;
     }
