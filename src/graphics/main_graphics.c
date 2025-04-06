@@ -88,68 +88,152 @@ void renderBigText(float x, float y, const char* text, float r, float g, float b
         glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, *c);
     }
 }
-
-// Function to draw the scoreboard
 void drawScoreboard() {
     char buffer[100];
 
-    // Draw scoreboard background - pure black
-    glColor3f(0.0, 0.0, 0.0);
+    // Gradient background for scoreboard
     glBegin(GL_QUADS);
+    glColor3f(0.12, 0.12, 0.18);  // Dark top
     glVertex2f(-0.98, 0.98);
     glVertex2f(0.98, 0.98);
+    glColor3f(0.18, 0.18, 0.25);  // Slightly lighter bottom
     glVertex2f(0.98, 0.75);
     glVertex2f(-0.98, 0.75);
     glEnd();
 
-    // Left side - Team A (Red)
-    sprintf(buffer, "Team A Wins: %d", game->team_wins_A);
-    renderText(-0.95, 0.93, buffer, 1.0, 0.0, 0.0);
+    // Team A panel (left side)
+    glColor3f(0.6, 0.1, 0.1);  // Dark red
+    glBegin(GL_QUADS);
+    glVertex2f(-0.96, 0.96);
+    glVertex2f(-0.51, 0.96);
+    glVertex2f(-0.51, 0.78);
+    glVertex2f(-0.96, 0.78);
+    glEnd();
 
-    sprintf(buffer, "Round Score A: %.1f", game->total_effort_A);
-    renderText(-0.95, 0.85, buffer, 1.0, 0.0, 0.0);
+    // Team B panel (right side)
+    glColor3f(0.1, 0.1, 0.6);  // Dark blue
+    glBegin(GL_QUADS);
+    glVertex2f(0.51, 0.96);
+    glVertex2f(0.96, 0.96);
+    glVertex2f(0.96, 0.78);
+    glVertex2f(0.51, 0.78);
+    glEnd();
 
-    // Middle - Round and timing info
-    sprintf(buffer, "Round: %d", game->round_num);
-    renderText(-0.15, 0.93, buffer, 1.0, 1.0, 1.0);
+    // Center info panel
+    glColor3f(0.2, 0.2, 0.2);  // Dark gray
+    glBegin(GL_QUADS);
+    glVertex2f(-0.45, 0.96);
+    glVertex2f(0.45, 0.96);
+    glVertex2f(0.45, 0.78);
+    glVertex2f(-0.45, 0.78);
+    glEnd();
 
-    sprintf(buffer, "Total Score: %.1f", game->total_score);
-    renderText(-0.15, 0.85, buffer, 1.0, 1.0, 1.0);
+    // Highlighted header bars for teams
+    glColor3f(0.8, 0.2, 0.2);  // Brighter red
+    glBegin(GL_QUADS);
+    glVertex2f(-0.96, 0.96);
+    glVertex2f(-0.51, 0.96);
+    glVertex2f(-0.51, 0.92);
+    glVertex2f(-0.96, 0.92);
+    glEnd();
 
-    // Time information (stacked)
-    sprintf(buffer, "Elapsed Time: %ds", game->elapsed_time);
-    renderText(-0.15, 0.77, buffer, 1.0, 1.0, 1.0);
+    glColor3f(0.2, 0.2, 0.8);  // Brighter blue
+    glBegin(GL_QUADS);
+    glVertex2f(0.51, 0.96);
+    glVertex2f(0.96, 0.96);
+    glVertex2f(0.96, 0.92);
+    glVertex2f(0.51, 0.92);
+    glEnd();
 
-    sprintf(buffer, "Round Time: %ds", game->round_time);
-    renderText(-0.15, 0.69, buffer, 1.0, 1.0, 1.0);
+    glColor3f(0.3, 0.3, 0.3);  // Accent for round
+    glBegin(GL_QUADS);
+    glVertex2f(-0.25, 0.96);
+    glVertex2f(0.25, 0.96);
+    glVertex2f(0.25, 0.92);
+    glVertex2f(-0.25, 0.92);
+    glEnd();
 
-    // Right side - Team B (Blue)
-    sprintf(buffer, "Team B Wins: %d", game->team_wins_B);
-    renderText(0.5, 0.93, buffer, 0.0, 0.0, 1.0);
+    // Team A info - centered
+    renderBigText(-0.735, 0.94, "TEAM A", 1.0, 1.0, 1.0);
+    sprintf(buffer, "Wins: %d", game->team_wins_A);
+    renderText(-0.93, 0.88, buffer, 1.0, 1.0, 1.0);
+    sprintf(buffer, "Score: %.1f", game->total_effort_A);
+    renderText(-0.93, 0.82, buffer, 1.0, 1.0, 1.0);
 
-    sprintf(buffer, "Round Score B: %.1f", game->total_effort_B);
-    renderText(0.5, 0.85, buffer, 0.0, 0.0, 1.0);
+    // Center game info - centered and prominent
+    sprintf(buffer, "ROUND %d", game->round_num);
+    renderBigText(-0.09, 0.94, buffer, 1.0, 1.0, 0.7);
+    sprintf(buffer, "Total: %.1f", game->total_score);
+    renderText(-0.08, 0.88, buffer, 0.9, 0.9, 0.9);
 
-    // Who's winning indicator with modified text
+    // Divider line
+    glColor3f(0.5, 0.5, 0.5);
+    glBegin(GL_LINES);
+    glVertex2f(-0.1, 0.86);
+    glVertex2f(0.1, 0.86);
+    glEnd();
+
+    // Time display
+    sprintf(buffer, "Game: %ds", game->elapsed_time);
+    renderText(-0.35, 0.82, buffer, 0.8, 0.8, 0.8);
+    sprintf(buffer, "Round: %ds", game->round_time);
+    renderText(0.1, 0.82, buffer, 0.8, 0.8, 0.8);
+
+    // Team B info - centered
+    renderBigText(0.735, 0.94, "TEAM B", 1.0, 1.0, 1.0);
+    sprintf(buffer, "Wins: %d", game->team_wins_B);
+    renderText(0.55, 0.88, buffer, 1.0, 1.0, 1.0);
+    sprintf(buffer, "Score: %.1f", game->total_effort_B);
+    renderText(0.55, 0.82, buffer, 1.0, 1.0, 1.0);
+
+    // Progress bar background
+    glColor3f(0.3, 0.3, 0.3);
+    glBegin(GL_QUADS);
+    glVertex2f(-0.6, 0.73);
+    glVertex2f(0.6, 0.73);
+    glVertex2f(0.6, 0.7);
+    glVertex2f(-0.6, 0.7);
+    glEnd();
+
+    // Calculate team strength ratio
+    float total_effort = game->total_effort_A + game->total_effort_B;
+    float ratio_A = 0.5;  // Default to 50/50
+
+    if (total_effort > 0) {
+        ratio_A = game->total_effort_A / total_effort;
+        if (ratio_A > 1.0) ratio_A = 1.0;
+        if (ratio_A < 0.0) ratio_A = 0.0;
+    }
+
+    // Team A's portion of progress bar
+    glColor3f(0.8, 0.1, 0.1);  // Bright red
+    glBegin(GL_QUADS);
+    glVertex2f(-0.6, 0.73);
+    glVertex2f(-0.6 + 1.2 * ratio_A, 0.73);
+    glVertex2f(-0.6 + 1.2 * ratio_A, 0.7);
+    glVertex2f(-0.6, 0.7);
+    glEnd();
+
+    // Determine leading team text
     const char* winning_text;
     float text_r, text_g, text_b;
 
     if (game->total_effort_A > game->total_effort_B) {
-        winning_text = "Red Team is taking the lead!";
-        text_r = 1.0; text_g = 0.0; text_b = 0.0;
+        winning_text = "Red Team Leading";
+        text_r = 1.0; text_g = 0.6; text_b = 0.6;
     } else if (game->total_effort_B > game->total_effort_A) {
-        winning_text = "Blue Team is taking the lead!";
-        text_r = 0.0; text_g = 0.0; text_b = 1.0;
+        winning_text = "Blue Team Leading";
+        text_r = 0.6; text_g = 0.6; text_b = 1.0;
     } else {
-        winning_text = "Teams are tied - pull harder!";
+        winning_text = "Teams Tied";
         text_r = 1.0; text_g = 1.0; text_b = 1.0;
     }
 
-    // Draw winning indicator below scoreboard
-    renderText(-0.4, 0.63, winning_text, text_r, text_g, text_b);
-
-  
+    // Display winning team indicator
+    renderText(-0.12, 0.65, winning_text, text_r, text_g, text_b);
 }
+
+
 
 void initializePlayers(float team1[], float team2[], int count) {
     float spacing = 0.15;
@@ -462,7 +546,7 @@ void display() {
 
             if(display_team_win) {
                 display_timer++;
-               
+
                 // Display the winning team
                 if(game->last_winner == TEAM_A) {
                     renderBigText(-0.1, 0.5, "RED TEAM WINS!", 1.0, 0.0, 0.0);
