@@ -257,6 +257,11 @@ void drawBackground() {
 
 //Making sure players don't go out of the screen
 void updateGame(int value) {
+    if (game == NULL || game == MAP_FAILED) {
+        glutTimerFunc(50, updateGame, 0);
+        return;
+    }
+
     float energy_diff = game->total_effort_A - game->total_effort_B;
     rope_center += energy_diff * 0.005;
 
@@ -275,67 +280,39 @@ void updateGame(int value) {
         if (team2_x[i] > 0.95) team2_x[i] = 0.95;
         if (team2_x[i] < -0.95) team2_x[i] = -0.95;
 
-        // Check for fallen or exhausted players in Team A
-        if (game != NULL && game != MAP_FAILED) {
-            // Team A falling animation
-            if ((game->players_teamA[i].state == FALLEN || game->players_teamA[i].state == EXHAUSTED) &&
-                !team1_animation[i].is_falling) {
+        // Team A animation updates
+        if (game->players_teamA[i].state == FALLEN || game->players_teamA[i].state == EXHAUSTED) {
+            if (!team1_animation[i].is_falling) {
                 // Start new falling animation
                 team1_animation[i].is_falling = 1;
                 team1_animation[i].falling_frames = 0;
-                team1_animation[i].vertical_offset = 0.0f;
             }
+            // Update ongoing animation
+            if (team1_animation[i].is_falling && team1_animation[i].falling_frames < 10) {
+                team1_animation[i].falling_frames++;
+                float progress = (float)team1_animation[i].falling_frames / 10.0f;
+                team1_animation[i].vertical_offset = -0.08f * (progress * progress);
+            }
+        } else {
+            // Reset if player is no longer fallen
+            team1_animation[i].is_falling = 0;
+            team1_animation[i].vertical_offset = 0.0f;
+        }
 
-            // Team B falling animation
-            if ((game->players_teamB[i].state == FALLEN || game->players_teamB[i].state == EXHAUSTED) &&
-                !team2_animation[i].is_falling) {
-                // Start new falling animation
+        // Team B animation updates (same logic as Team A)
+        if (game->players_teamB[i].state == FALLEN || game->players_teamB[i].state == EXHAUSTED) {
+            if (!team2_animation[i].is_falling) {
                 team2_animation[i].is_falling = 1;
                 team2_animation[i].falling_frames = 0;
-                team2_animation[i].vertical_offset = 0.0f;
             }
-
-            // Update ongoing animations for Team A
-            if (team1_animation[i].is_falling) {
-                team1_animation[i].falling_frames++;
-
-                // Calculate vertical offset with a smooth curve
-                float progress = (float)team1_animation[i].falling_frames / 10.0f; // 10 frames = 0.5 seconds at 50ms timer
-                if (progress <= 1.0f) {
-                    // Apply a smooth falling curve
-                    team1_animation[i].vertical_offset = -0.08f * (progress * progress);
-                } else {
-                    // Keep fallen on the ground
-                    team1_animation[i].vertical_offset = -0.08f;
-
-                    // Reset animation if player is no longer fallen/exhausted
-                    if (game->players_teamA[i].state != FALLEN && game->players_teamA[i].state != EXHAUSTED) {
-                        team1_animation[i].is_falling = 0;
-                        team1_animation[i].vertical_offset = 0.0f;
-                    }
-                }
-            }
-
-            // Update ongoing animations for Team B
-            if (team2_animation[i].is_falling) {
+            if (team2_animation[i].is_falling && team2_animation[i].falling_frames < 10) {
                 team2_animation[i].falling_frames++;
-
-                // Calculate vertical offset with a smooth curve
-                float progress = (float)team2_animation[i].falling_frames / 10.0f; // 10 frames = 0.5 seconds at 50ms timer
-                if (progress <= 1.0f) {
-                    // Apply a smooth falling curve
-                    team2_animation[i].vertical_offset = -0.08f * (progress * progress);
-                } else {
-                    // Keep fallen on the ground
-                    team2_animation[i].vertical_offset = -0.08f;
-
-                    // Reset animation if player is no longer fallen/exhausted
-                    if (game->players_teamB[i].state != FALLEN && game->players_teamB[i].state != EXHAUSTED) {
-                        team2_animation[i].is_falling = 0;
-                        team2_animation[i].vertical_offset = 0.0f;
-                    }
-                }
+                float progress = (float)team2_animation[i].falling_frames / 10.0f;
+                team2_animation[i].vertical_offset = -0.08f * (progress * progress);
             }
+        } else {
+            team2_animation[i].is_falling = 0;
+            team2_animation[i].vertical_offset = 0.0f;
         }
     }
 
@@ -515,5 +492,4 @@ int main(int argc, char** argv) {
     glutTimerFunc(50, updateGame, 0);
     glutMainLoop();
     return 0;
-
 }
