@@ -4,6 +4,7 @@
 #include <fcntl.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
+#include "config.h"
 
 // Global pointer to shared game state
 Game *shared_game;
@@ -15,8 +16,8 @@ pid_t pid_referee;
 void handle_alarm(int signum);
 void handle_sigint(int signum); // Renamed from handle_sigkill to match actual signal
 void cleanup_resources(void);   // New function for atexit
-pid_t start_graphics_process(char *fd_str);
-pid_t start_referee_process(char *fd_str, char *gui_pid_str);
+pid_t start_graphics_process(Config *config, char *fd_str);
+pid_t start_referee_process(Config *config, char *fd_str, char *gui_pid_str);
 
 void handle_alarm(int signum) {
 
@@ -64,6 +65,12 @@ int main(int argc, char *argv[]) {
     printf("********** The Rope Pulling Game **********\n\n");
     fflush(stdout);
 
+    Config config;
+
+    if (load_config("../config.txt", &config) == -1) {
+        return 1;
+    }
+
     // Register cleanup function with atexit
     atexit(cleanup_resources);
 
@@ -96,11 +103,11 @@ int main(int argc, char *argv[]) {
     // Initialize game state
     init_game(shared_game);
     //
-    pid_graphics = start_graphics_process(fd_str);
+    pid_graphics = start_graphics_process(&config, fd_str);
     // Pass the graphics pid additionally to referee exec call.
     char gui_pid_str[16];
     sprintf(gui_pid_str, "%d", pid_graphics);
-    pid_referee = start_referee_process(fd_str, gui_pid_str);
+    pid_referee = start_referee_process(&config, fd_str, gui_pid_str);
 
     // Setup signal handler for time management
     signal(SIGALRM, handle_alarm);
@@ -128,7 +135,7 @@ int main(int argc, char *argv[]) {
 }
 
 
-pid_t start_graphics_process(char *fd_str) {
+pid_t start_graphics_process(Config *config, char *fd_str) {
     pid_t pid = fork();
     if (pid == -1) {
         perror("fork");
@@ -137,7 +144,9 @@ pid_t start_graphics_process(char *fd_str) {
 
     if (pid == 0) {
         // Child process
-        if (execlp("./rope_game_graphics", "rope_pulling_game_main", fd_str, NULL)) {
+        char buffer[50];
+        serialize_config(config, buffer);
+        if (execlp("./rope_game_graphics", "rope_pulling_game_main", buffer, fd_str, NULL)) {
             perror("execl graphics");
             exit(EXIT_FAILURE);
         }
@@ -145,7 +154,7 @@ pid_t start_graphics_process(char *fd_str) {
     return pid;
 }
 
-pid_t start_referee_process(char *fd_str, char *gui_pid_str) {
+pid_t start_referee_process(Config *config, char *fd_str, char *gui_pid_str) {
     pid_t pid = fork();
     if (pid == -1) {
         perror("fork");
@@ -154,7 +163,9 @@ pid_t start_referee_process(char *fd_str, char *gui_pid_str) {
 
     if (pid == 0) {
         // Now pass two arguments: shared memory fd and GUI pid.
-        if (execl("./referee", "./referee", fd_str, gui_pid_str, NULL)) {
+        char buffer[50];
+        serialize_config(config, buffer);
+        if (execl("./referee", "./referee", buffer, fd_str, gui_pid_str, NULL)) {
             perror("execl referee");
             exit(EXIT_FAILURE);
         }

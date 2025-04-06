@@ -198,3 +198,46 @@ int check_parameter_correctness(const Config *config) {
     return 0; // Return success if all checks pass
 }
 
+
+void serialize_config(Config *config, char *buffer) {
+    sprintf(buffer, "%f %f %f %f %f %f %f %f %f %f %d %f %f %f %d %f %f",
+            config->MIN_ENERGY,
+            config->MAX_ENERGY,
+            config->MAX_SCORE,
+            config->MAX_TIME,
+            config->NUM_ROUNDS,
+            config->MIN_RATE_DECAY,
+            config->MAX_RATE_DECAY,
+            config->MIN_RECOVERY_TIME,
+            config->MAX_RECOVERY_TIME,
+            config->WINNING_THRESHOLD,
+            config->NUM_PLAYERS,
+            config->UPDATE_RATE,
+            config->MIN_FALLING_CHANCE,
+            config->MAX_FALLING_CHANCE,
+            config->MAX_ROUND_TIME,
+            config->MIN_ENDURANCE,
+            config->MAX_ENDURANCE);
+}
+
+void deserialize_config(Config *config, char *buffer) {
+    sscanf(buffer, "%f %f %f %f %f %f %f %f %f %f %d %f %f %f %d %f %f",
+           &config->MIN_ENERGY,
+           &config->MAX_ENERGY,
+           &config->MAX_SCORE,
+           &config->MAX_TIME,
+           &config->NUM_ROUNDS,
+           &config->MIN_RATE_DECAY,
+           &config->MAX_RATE_DECAY,
+           &config->MIN_RECOVERY_TIME,
+           &config->MAX_RECOVERY_TIME,
+           &config->WINNING_THRESHOLD,
+           &config->NUM_PLAYERS,
+           &config->UPDATE_RATE,
+           &config->MIN_FALLING_CHANCE,
+           &config->MAX_FALLING_CHANCE,
+           &config->MAX_ROUND_TIME,
+           &config->MIN_ENDURANCE,
+           &config->MAX_ENDURANCE);
+}
+
