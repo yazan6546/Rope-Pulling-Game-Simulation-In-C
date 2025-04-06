@@ -3,9 +3,18 @@
 //
 
 #include "random.h"
+#include <sys/time.h>
+#include <stdint.h>
+
+
+uint64_t current_time_millis() {
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    return (uint64_t)(tv.tv_sec) * 1000 + (uint64_t)(tv.tv_usec) / 1000;
+}
 
 void init_random(pid_t pid) {
-    srand( (unsigned int) pid + time(NULL) );
+    srand( (unsigned int) pid + time(NULL));
 }
 
 float random_float(float min, float max) {
