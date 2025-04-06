@@ -162,14 +162,14 @@ void fork_players(Player *players, int num_players, Team team,
             exit(EXIT_FAILURE);
         }
 
-        read_fds[i] = energy_pipe_fds[0];
+        read_fds[players[i].number] = energy_pipe_fds[0];
 
         int pos_pipe_fds_temp[2];
         if (pipe(pos_pipe_fds_temp) == -1) {
             perror("pipe");
             exit(EXIT_FAILURE);
         }
-        pos_pipe_fds[i] = pos_pipe_fds_temp[1];  // Parent writes on this end later
+        pos_pipe_fds[players[i].number] = pos_pipe_fds_temp[1];  // Parent writes on this end later
 
         const pid_t pid = fork();
 
@@ -244,7 +244,8 @@ void cleanup_processes(const Player *players_teamA, const Player *players_teamB,
 
 void send_new_positions(Player *players, int num_players, int pos_pipe_fds[]) {
     for (int i = 0; i < num_players; i++) {
-        if (write(pos_pipe_fds[i], &players[i].new_position, sizeof(int)) <=0) {
+        int index_pipe = players[i].number;
+        if (write(pos_pipe_fds[index_pipe], &players[i].new_position, sizeof(int)) <=0) {
             perror("write to pos pipe");
             fflush(stderr);
             usleep(10000);
@@ -257,7 +258,8 @@ void send_new_positions(Player *players, int num_players, int pos_pipe_fds[]) {
 void read_player_energies(Player *players, int num_players, int pos_pipe_fds[]) {
     for (int i = 0; i < num_players; i++) {
         float energy;
-        if (read(pos_pipe_fds[i], &energy, sizeof(float)) <= 0) {
+        int index_pipe = players[i].number;
+        if (read(pos_pipe_fds[index_pipe], &energy, sizeof(float)) <= 0) {
             perror("read from energy pipe");
         }
 
