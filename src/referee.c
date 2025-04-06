@@ -22,6 +22,8 @@ void print_with_time(const char *format, ...);
 void send_new_positions(Player *players, int num_players, int pos_pipe_fds[]);
 void read_player_energies(Player *players, int num_players, int pos_pipe_fds[]);
 void change_player_positions(Player *player, int num_players);
+void handle_new_round(Game *game, int *read_fds_team_A, int *read_fds_team_B,
+                      int *pos_pipe_fds_team_A, int *pos_pipe_fds_team_B);
 
 volatile int elapsed_time = 0;
 int gui_pid;
@@ -52,10 +54,6 @@ int main(int argc, char *argv[]) {
     // Store GUI’s PID from argv[2] in game structure (or local variable)
     gui_pid = atoi(argv[3]);
 
-    Player players_teamA[config.NUM_PLAYERS/2];
-    Player players_teamB[config.NUM_PLAYERS/2];
-
-
     int read_fds_team_A[config.NUM_PLAYERS/2];
     int read_fds_team_B[config.NUM_PLAYERS/2];
     int pos_pipe_fds_team_A[config.NUM_PLAYERS/2];
@@ -68,10 +66,6 @@ int main(int argc, char *argv[]) {
 
     fork_players(game->players_teamA, config.NUM_PLAYERS/2, TEAM_A, read_fds_team_A, pos_pipe_fds_team_A, fd);
     fork_players(game->players_teamB, config.NUM_PLAYERS/2, TEAM_B, read_fds_team_B, pos_pipe_fds_team_B, fd);
-
-    for (int i = 0; i < config.NUM_PLAYERS/2; i++) {
-        print_with_time1(game, "DEBUG PIPES : %d \n", read_fds_team_A[i]);
-    }
 
     change_player_positions(game->players_teamA, config.NUM_PLAYERS/2);
     change_player_positions(game->players_teamB, config.NUM_PLAYERS/2);
@@ -133,70 +127,11 @@ int main(int argc, char *argv[]) {
         }
 
         game->total_score += game->round_score;
-        go_to_next_round(game);
         game->game_running = check_game_conditions(game , &config, team_win);
 
         if (game->game_running) {
-            // send reset signals to all players
-            for (int i = 0; i < config.NUM_PLAYERS/2; i++) {
-                kill(game->players_teamA[i].pid, SIGHUP);
-                kill(game->players_teamB[i].pid, SIGHUP);
-            }
-
-            sleep(1); // Wait for all players to reset
-
-            read_player_energies(game->players_teamA, config.NUM_PLAYERS/2, read_fds_team_A);
-            read_player_energies(game->players_teamB, config.NUM_PLAYERS/2, read_fds_team_B);
-
-            // printf("DEBUG Shared Memory - Team A Players:\n");
-            // for (int i = 0; i < config.NUM_PLAYERS / 2; i++) {
-            //      printf("Player A %d | Energy: %.2f | Position: %d\n",
-            //      game->players_teamA[i].number,
-            //      game->players_teamA[i].attributes.energy,
-            //     game->players_teamA[i].position);
-            // }
-
-            //  printf("DEBUG Shared Memory - Team B Players:\n");
-            //  for (int i = 0; i < config.NUM_PLAYERS / 2; i++) {
-            //      printf("Player B %d | Energy: %.2f | Position: %d\n",
-            //     game->players_teamB[i].number,
-            //     game->players_teamB[i].attributes.energy,
-            //     game->players_teamB[i].position);
-            //  }
-
-
-
-            align(game->players_teamA, config.NUM_PLAYERS/2, read_fds_team_A, pos_pipe_fds_team_A);
-            align(game->players_teamB, config.NUM_PLAYERS/2, read_fds_team_B, pos_pipe_fds_team_B);
-
-            for (int i = 0; i < config.NUM_PLAYERS/2; i++) {
-                print_with_time1(game, "DEBUG PIPES2 : %d\n", read_fds_team_A[i]);
-            }
-
-            printf("\n\n");
-            // After resetting rounds, send new positions through pipes
-            send_new_positions(game->players_teamA, config.NUM_PLAYERS/2, pos_pipe_fds_team_A);
-            send_new_positions(game->players_teamB, config.NUM_PLAYERS/2, pos_pipe_fds_team_B);
-
-            change_player_positions(game->players_teamA, config.NUM_PLAYERS/2);
-            change_player_positions(game->players_teamB, config.NUM_PLAYERS/2);
-
-            // printf("DEBUG Shared Memory - Team A Players:\n");
-            // for (int i = 0; i < config.NUM_PLAYERS / 2; i++) {
-            //      printf("Player A %d | Energy: %.2f | Position: %d\n",
-            //      game->players_teamA[i].number,
-            //      game->players_teamA[i].attributes.energy,
-            //     game->players_teamA[i].position);
-            // }
-
-            //  printf("DEBUG Shared Memory - Team B Players:\n");
-            //  for (int i = 0; i < config.NUM_PLAYERS / 2; i++) {
-            //      printf("Player B %d | Energy: %.2f | Position: %d\n",
-            //     game->players_teamB[i].number,
-            //     game->players_teamB[i].attributes.energy,
-            //     game->players_teamB[i].position);
-            //  }
-
+            handle_new_round(game, read_fds_team_A, read_fds_team_B,
+                             pos_pipe_fds_team_A, pos_pipe_fds_team_B);
         }
 
         sleep(2);
@@ -326,8 +261,6 @@ void read_player_energies(Player *players, int num_players, int pos_pipe_fds[]) 
             perror("read from energy pipe");
         }
 
-        print_with_time("From referee : Player %d (Team %d) energy: %.2f\n",
-                        players[i].number, players[i].team, energy);
         // Update player energy
         players[i].attributes.energy = energy;
     }
@@ -339,6 +272,35 @@ void change_player_positions(Player *player, int num_players) {
     }
 }
 
+
+void handle_new_round(Game *game, int *read_fds_team_A, int *read_fds_team_B,
+                      int *pos_pipe_fds_team_A, int *pos_pipe_fds_team_B) {
+
+    // send reset signals to all players
+    go_to_next_round(game);
+
+    for (int i = 0; i < config.NUM_PLAYERS/2; i++) {
+        kill(game->players_teamA[i].pid, SIGHUP);
+        kill(game->players_teamB[i].pid, SIGHUP);
+    }
+
+    sleep(1); // Wait for all players to reset
+
+    read_player_energies(game->players_teamA, config.NUM_PLAYERS/2, read_fds_team_A);
+    read_player_energies(game->players_teamB, config.NUM_PLAYERS/2, read_fds_team_B);
+
+
+    align(game->players_teamA, config.NUM_PLAYERS/2, read_fds_team_A, pos_pipe_fds_team_A);
+    align(game->players_teamB, config.NUM_PLAYERS/2, read_fds_team_B, pos_pipe_fds_team_B);
+
+    printf("\n\n");
+    // After resetting rounds, send new positions through pipes
+    send_new_positions(game->players_teamA, config.NUM_PLAYERS/2, pos_pipe_fds_team_A);
+    send_new_positions(game->players_teamB, config.NUM_PLAYERS/2, pos_pipe_fds_team_B);
+
+    change_player_positions(game->players_teamA, config.NUM_PLAYERS/2);
+    change_player_positions(game->players_teamB, config.NUM_PLAYERS/2);
+}
 
 
 
