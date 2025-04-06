@@ -39,6 +39,7 @@ int main(int argc, char *argv[]) {
     printf("%s", argv[2]);
     printf("\n");
 
+    init_random(getpid());
     // In child
     int fd = atoi(argv[2]);
     game = mmap(NULL, sizeof(Game), PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
