@@ -53,7 +53,6 @@ add_custom_target(
     COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/bin/rope_pulling_game_main
     DEPENDS rope_pulling_game_main
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
- master
 )
 
 include_directories(include)
