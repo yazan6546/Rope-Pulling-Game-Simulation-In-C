@@ -123,3 +123,9 @@ make
 cd bin && ./rope_pulling_game_main
 ```
 
+## Team Members
+
+- [Yazan Abualoun](https://github.com/yazan6546)
+- [Ghazi Al-Hajj Qasem](https://github.com/ghazicc)
+- [Ahmad Qaimari](https://github.com/ahmadqaimari)
+- [Emil Khoury](https://github.com/khouryEmil)
