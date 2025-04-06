@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.28)
+cmake_minimum_required(VERSION 3.11.2)
 project(Rope_Pulling_Game_Simulation_In_C C)
 
 set(CMAKE_C_STANDARD 11)

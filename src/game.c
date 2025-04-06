@@ -4,13 +4,16 @@
 
 #include "game.h"
 
+#include <message.h>
+#include <string.h>
+
 
 void init_game(Game *game) {
     game->round_time = 0;
     game->elapsed_time = 0;
     game->total_effort_A = 0;
     game->total_effort_B = 0;
-    game->round_num = 0;
+    game->round_num = 1;
     game->game_running = 1;
     game->team_wins_A = 0;
     game->team_wins_B = 0;
@@ -23,8 +26,7 @@ void init_game(Game *game) {
 }
 
 
-Team simulate_round(int pipe_fds_team_A[], int pipe_fds_team_B[], const Config *config, Game *game,
-    const Player *players_teamA, const Player *players_teamB) {
+Team simulate_round(int pipe_fds_team_A[], int pipe_fds_team_B[], const Config *config, Game *game) {
     float total_effort_A = 0, total_effort_B = 0;
     char output_buffer[4096] = "";  // Large buffer for all output
     char temp_buffer[256];          // Temporary buffer for formatting
@@ -33,27 +35,46 @@ Team simulate_round(int pipe_fds_team_A[], int pipe_fds_team_B[], const Config *
 
     // Process Team A efforts
     for (int i = 0; i < config->NUM_PLAYERS/2; i++) {
-        float effort;
-        ssize_t bytes = read(pipe_fds_team_A[i], &effort, sizeof(float));
+        Message message;
+        ssize_t bytes = read(pipe_fds_team_A[i], &message, sizeof(Message));
 
-        if (bytes == sizeof(float) || bytes == 0) {
+        if (bytes == sizeof(Message) || bytes == 0) {
             snprintf(temp_buffer, sizeof(temp_buffer),
-                     "Team A - Player %d effort: %.2f\n", players_teamA[i].number, effort);
+                     "Team A - Player %d effort: %.2f\n", game->players_teamA[i].number, message.effort);
             strcat(output_buffer, temp_buffer);
-            total_effort_A += effort;
+            total_effort_A += message.effort;
+            game->players_teamA[i].attributes.energy = message.effort / game->players_teamA[i].position;
+            game->players_teamA[i].state = message.state;
         }
+        else {
+            perror("read");
+            fflush(stderr);
+            usleep(10000);
+            // Sleep briefly to allow output to be written
+            exit(1);
+        }
+
     }
 
     // Process Team B efforts
     for (int i = 0; i < config->NUM_PLAYERS/2; i++) {
-        float effort;
-        ssize_t bytes = read(pipe_fds_team_B[i], &effort, sizeof(float));
+        Message message;
+        ssize_t bytes = read(pipe_fds_team_B[i], &message, sizeof(Message));
 
-        if (bytes == sizeof(float) || bytes == 0) {
+        if (bytes == sizeof(Message) || bytes == 0) {
             snprintf(temp_buffer, sizeof(temp_buffer),
-                     "Team B - Player %d effort: %.2f\n", players_teamB[i].number, effort);
+                     "Team B - Player %d effort: %.2f\n", game->players_teamB[i].number, message.effort);
             strcat(output_buffer, temp_buffer);
-            total_effort_B += effort;
+            total_effort_B += message.effort;
+            game->players_teamB[i].attributes.energy = message.effort / game->players_teamB[i].position;
+            game->players_teamB[i].state = message.state;
+        }
+        else {
+            perror("read");
+            fflush(stderr);
+            usleep(10000);
+            // Sleep briefly to allow output to be written
+            exit(1);
         }
     }
 
@@ -124,7 +145,7 @@ Team simulate_round(int pipe_fds_team_A[], int pipe_fds_team_B[], const Config *
 }
 
 int check_game_conditions(const Game *game, const Config *config, Team team_win) {
-    if (game->round_num >= config->NUM_ROUNDS) {
+    if (game->round_num > config->NUM_ROUNDS) {
         printf("NUM ROUNDS\n");
         fflush(stdout);
         return 0;
