@@ -9,7 +9,6 @@
 
 #define PLAYERS_PER_TEAM 4
 
-
 Config config;
 
 float team1_x[PLAYERS_PER_TEAM];
@@ -25,6 +24,11 @@ volatile sig_atomic_t readyAnimation = 0;
 volatile sig_atomic_t startAnimation = 0;
 
 int timer = 0;
+int display_timer = 0;
+
+int movement_timer = 0;
+
+int display_team_win = 0;
 
 typedef struct {
     int is_falling;          // Flag to indicate if player is falling
@@ -260,13 +264,23 @@ void drawBackground() {
 
 //Making sure players don't go out of the screen
 void updateGame(int value) {
-    if (game == NULL || game == MAP_FAILED) {
+    if (game == NULL || game == MAP_FAILED || game->game_running == 0) {
+        glutPostRedisplay();
         glutTimerFunc(50, updateGame, 0);
         return;
     }
 
     float energy_diff = game->total_effort_A - game->total_effort_B;
-    rope_center = energy_diff/config.WINNING_THRESHOLD * 0.15;
+    float target = -energy_diff/config.WINNING_THRESHOLD * 0.15;
+
+    if(movement_timer == 0) {
+        rope_center = 0.0;
+    } else if(movement_timer < 20) {
+        rope_center += target/20.0;
+    } else if(movement_timer == 20)
+        movement_timer = 0;
+
+    movement_timer++;
 
     // Limiting rope movement
     if (rope_center > 0.15) rope_center = 0.15;
@@ -416,6 +430,13 @@ void display() {
 
             // Animation text displays
             if (readyAnimation) {
+                rope_center = 0.0;
+                // reset player animation structs
+                for (int j = 0; j < PLAYERS_PER_TEAM; j++) {
+                    team1_animation[j].is_falling = 0;
+                    team2_animation[j].is_falling = 0;
+                }
+
                 renderBigText(-0.1, 0.5, "READY!", 1.0, 1.0, 0.0);
             }
 
@@ -429,8 +450,32 @@ void display() {
                 renderBigText(-0.1, 0.5, "START!", 0.0, 1.0, 0.0);
             }
 
+            // game over
             if(game->game_running == 0) {
                 renderBigText(-0.1, 0.5, "GAME OVER!", 1.0, 0.0, 0.0);
+            }
+
+            if(game->round_running == 0) {
+                printf("Round finished\n");
+                display_team_win = 1;
+            }
+
+            if(display_team_win) {
+                display_timer++;
+               
+                // Display the winning team
+                if(game->last_winner == TEAM_A) {
+                    renderBigText(-0.1, 0.5, "RED TEAM WINS!", 1.0, 0.0, 0.0);
+                } else if(game->last_winner == TEAM_B) {
+                    renderBigText(-0.1, 0.5, "BLUE TEAM WINS!", 0.0, 0.0, 1.0);
+                } else {
+                    renderBigText(-0.1, 0.5, "DRAW!", 1.0, 1.0, 1.0);
+                }
+
+                if(display_timer > 50) {
+                    display_team_win = 0;
+                    display_timer = 0;
+                }
             }
         }
     }
