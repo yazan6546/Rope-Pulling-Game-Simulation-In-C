@@ -8,7 +8,8 @@
 #include "config.h"
 
 #define PLAYERS_PER_TEAM 4
-#define WINNING_THRESHOLD 500
+
+Config config;
 
 float team1_x[PLAYERS_PER_TEAM];
 float team2_x[PLAYERS_PER_TEAM];
@@ -266,8 +267,8 @@ void updateGame(int value) {
     }
 
     float energy_diff = game->total_effort_A - game->total_effort_B;
-    float target = -energy_diff/WINNING_THRESHOLD * 0.15;
-    
+    float target = -energy_diff/config.WINNING_THRESHOLD * 0.15;
+
     if(movement_timer == 0) {
         rope_center = 0.0;
     } else if(movement_timer < 20) {
@@ -281,10 +282,8 @@ void updateGame(int value) {
     if (rope_center > 0.15) rope_center = 0.15;
     if (rope_center < -0.15) rope_center = -0.15;
 
-    
-
     // Update player positions
-    for (int i = 0; i < PLAYERS_PER_TEAM; i++) {
+    for (int i = 0; i < config.NUM_PLAYERS/2; i++) {
         team1_x[i] = (-0.8 + i * 0.15) + rope_center;
         team2_x[i] = (0.8 - i * 0.15) + rope_center;
 
@@ -491,11 +490,15 @@ int main(int argc, char** argv) {
 
     // Check command-line argument
 
-    if (argc < 2) {
-        fprintf(stderr, "Usage: %s <fd>\n", argv[0]);
+    if (argc < 3) {
+        fprintf(stderr, "Usage: %s <config buffer> <fd>\n",argv[0]);
         return 1;
     }
-    int fd = atoi(argv[1]);
+    int fd = atoi(argv[2]);
+
+    // Deserialize the config
+    deserialize_config(&config, argv[1]);
+
     game = mmap(NULL, sizeof(Game), PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
     if (game == MAP_FAILED) {
         perror("mmap failed");

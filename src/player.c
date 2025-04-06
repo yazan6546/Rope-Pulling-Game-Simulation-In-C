@@ -102,10 +102,6 @@ void process_player_state() {
 void handle_get_ready(int signum) {
     print_with_time1(game, "Player %d (Team %d) getting ready\n", current_player->number, my_team);
 
-    print_with_time1(game, "DEBUG: Player %d (Team %d) new position: %d, old position : %d\n",
-                           current_player->number, current_player->team,
-                           current_player->new_position, current_player->position);
-
     if (current_player->position != current_player->new_position) {
         print_with_time1(game, "Player %d (Team %d) Repositioned from %d to %d\n",
         current_player->number, my_team, current_player->position, current_player->new_position);
