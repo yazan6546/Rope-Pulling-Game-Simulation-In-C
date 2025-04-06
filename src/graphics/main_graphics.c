@@ -262,6 +262,7 @@ void drawBackground() {
 //Making sure players don't go out of the screen
 void updateGame(int value) {
     if (game == NULL || game == MAP_FAILED || game->game_running == 0) {
+        glutPostRedisplay();
         glutTimerFunc(50, updateGame, 0);
         return;
     }
