@@ -8,6 +8,7 @@
 #include "config.h"
 
 #define PLAYERS_PER_TEAM 4
+#define WINNING_THRESHOLD 500
 
 float team1_x[PLAYERS_PER_TEAM];
 float team2_x[PLAYERS_PER_TEAM];
@@ -21,6 +22,31 @@ Game *game;
 volatile sig_atomic_t readyAnimation = 0;
 volatile sig_atomic_t startAnimation = 0;
 
+int timer = 0;
+
+typedef struct {
+    int is_falling;          // Flag to indicate if player is falling
+    int falling_frames;      // Counter for animation frames
+    float vertical_offset;   // Vertical position offset for animation
+} PlayerAnimation;
+
+// Animation data for each player
+PlayerAnimation team1_animation[PLAYERS_PER_TEAM];
+PlayerAnimation team2_animation[PLAYERS_PER_TEAM];
+
+// Add this to your initialization function or add a new function
+void initializeAnimations() {
+    for (int i = 0; i < PLAYERS_PER_TEAM; i++) {
+        team1_animation[i].is_falling = 0;
+        team1_animation[i].falling_frames = 0;
+        team1_animation[i].vertical_offset = 0.0f;
+
+        team2_animation[i].is_falling = 0;
+        team2_animation[i].falling_frames = 0;
+        team2_animation[i].vertical_offset = 0.0f;
+    }
+}
+
 void handle_ready_signal(int signum) {
     readyAnimation = 1;
     glutPostRedisplay();
@@ -31,6 +57,13 @@ void handle_start_signal(int signum) {
     glutPostRedisplay();
 }
 
+void handle_alarm(int signum) {
+    startAnimation = 0; // Reset the start animation flag
+    readyAnimation = 0; // Reset the ready animation flag
+    // Update the display
+    glutPostRedisplay();
+}
+
 // Function to render text in OpenGL
 void renderText(float x, float y, const char* text, float r, float g, float b) {
     glColor3f(r, g, b);
@@ -38,6 +71,15 @@ void renderText(float x, float y, const char* text, float r, float g, float b) {
 
     for (const char* c = text; *c != '\0'; c++) {
         glutBitmapCharacter(GLUT_BITMAP_9_BY_15, *c);
+    }
+}
+
+// NEW: Add a helper function to render bigger text using a larger font.
+void renderBigText(float x, float y, const char* text, float r, float g, float b) {
+    glColor3f(r, g, b);
+    glRasterPos2f(x, y);
+    for (const char* c = text; *c != '\0'; c++) {
+        glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, *c);
     }
 }
 
@@ -100,14 +142,7 @@ void drawScoreboard() {
     // Draw winning indicator below scoreboard
     renderText(-0.4, 0.63, winning_text, text_r, text_g, text_b);
 
-    // NEW: If readyAnimation flag is set, overlay a "READY" animation.
-    if (readyAnimation) {
-        renderText(-0.95, 0.55, "READY!", 1.0, 1.0, 0.0);
-    }
-    // If startAnimation flag is set, overlay a "START" animation.
-    if (startAnimation) {
-        renderText(-0.95, 0.50, "START!", 0.0, 1.0, 0.0);
-    }
+  
 }
 
 void initializePlayers(float team1[], float team2[], int count) {
@@ -121,13 +156,14 @@ void initializePlayers(float team1[], float team2[], int count) {
     }
 }
 
-void drawStickman(float x, float y, float scale, float r, float g, float b) {
+void drawStickman(float x, float y, float scale, float r, float g, float b, float vertical_offset) {
+    // Apply the vertical offset to the y position
+    y += vertical_offset;
+
     glColor3f(r, g, b);
-
-
     glLineWidth(2.0);
 
-
+    // Draw head (circle)
     glBegin(GL_LINE_LOOP);
     for (int i = 0; i < 360; i += 10) {
         float angle = i * 3.14159 / 180;
@@ -135,15 +171,15 @@ void drawStickman(float x, float y, float scale, float r, float g, float b) {
     }
     glEnd();
 
-    //Body and limbs (lines)
+    // Body and limbs (lines)
     glBegin(GL_LINES);
-    //Body
+    // Body
     glVertex2f(x, y + 0.03 * scale);
     glVertex2f(x, y - 0.04 * scale);
-    //Arms
+    // Arms
     glVertex2f(x - 0.05 * scale, y);
     glVertex2f(x + 0.05 * scale, y);
-    //Legs
+    // Legs
     glVertex2f(x, y - 0.04 * scale);
     glVertex2f(x - 0.04 * scale, y - 0.08 * scale);
     glVertex2f(x, y - 0.04 * scale);
@@ -151,7 +187,7 @@ void drawStickman(float x, float y, float scale, float r, float g, float b) {
     glEnd();
 
     // Reset line width to default after drawing stickman
-    glLineWidth(1.0);  // Add this line to reset line width
+    glLineWidth(1.0);
 }
 
 //Draw the rope as a rectangle
@@ -222,12 +258,17 @@ void drawBackground() {
 
 //Making sure players don't go out of the screen
 void updateGame(int value) {
-    float energy_diff = game->total_effort_A - game->total_effort_B;
-    rope_center += energy_diff * 0.005;
+    if (game == NULL || game == MAP_FAILED) {
+        glutTimerFunc(50, updateGame, 0);
+        return;
+    }
 
-    //Limiting rope movement
-    if (rope_center > 0.6) rope_center = 0.6;
-    if (rope_center < -0.6) rope_center = -0.6;
+    float energy_diff = game->total_effort_A - game->total_effort_B;
+    rope_center = energy_diff/WINNING_THRESHOLD * 0.15;
+
+    // Limiting rope movement
+    if (rope_center > 0.15) rope_center = 0.15;
+    if (rope_center < -0.15) rope_center = -0.15;
 
     // Update player positions
     for (int i = 0; i < PLAYERS_PER_TEAM; i++) {
@@ -239,10 +280,42 @@ void updateGame(int value) {
         if (team1_x[i] < -0.95) team1_x[i] = -0.95;
         if (team2_x[i] > 0.95) team2_x[i] = 0.95;
         if (team2_x[i] < -0.95) team2_x[i] = -0.95;
-    }
 
-    
-    
+        // Team A animation updates
+        if (game->players_teamA[i].state == FALLEN || game->players_teamA[i].state == EXHAUSTED) {
+            if (!team1_animation[i].is_falling) {
+                // Start new falling animation
+                team1_animation[i].is_falling = 1;
+                team1_animation[i].falling_frames = 0;
+            }
+            // Update ongoing animation
+            if (team1_animation[i].is_falling && team1_animation[i].falling_frames < 10) {
+                team1_animation[i].falling_frames++;
+                float progress = (float)team1_animation[i].falling_frames / 10.0f;
+                team1_animation[i].vertical_offset = -0.08f * (progress * progress);
+            }
+        } else {
+            // Reset if player is no longer fallen
+            team1_animation[i].is_falling = 0;
+            team1_animation[i].vertical_offset = 0.0f;
+        }
+
+        // Team B animation updates (same logic as Team A)
+        if (game->players_teamB[i].state == FALLEN || game->players_teamB[i].state == EXHAUSTED) {
+            if (!team2_animation[i].is_falling) {
+                team2_animation[i].is_falling = 1;
+                team2_animation[i].falling_frames = 0;
+            }
+            if (team2_animation[i].is_falling && team2_animation[i].falling_frames < 10) {
+                team2_animation[i].falling_frames++;
+                float progress = (float)team2_animation[i].falling_frames / 10.0f;
+                team2_animation[i].vertical_offset = -0.08f * (progress * progress);
+            }
+        } else {
+            team2_animation[i].is_falling = 0;
+            team2_animation[i].vertical_offset = 0.0f;
+        }
+    }
 
     glutPostRedisplay();
     glutTimerFunc(50, updateGame, 0);
@@ -263,9 +336,9 @@ void drawRopeSegment(float x1, float y1, float x2, float y2) {
 
 void drawEnergyBar(float x, float y, float energy, float maxEnergy) {
     // Very basic safety checks
-    if (maxEnergy <= 0.0f) maxEnergy = 100.0f;
-    if (energy < 0.0f) energy = 0.0f;
-    if (energy > maxEnergy) energy = maxEnergy;
+    // if (maxEnergy <= 0.0f) maxEnergy = 200.0f;
+    // if (energy < 0.0f) energy = 0.0f;
+    // if (energy > maxEnergy) energy = maxEnergy;
 
     float percentage = energy / maxEnergy;
 
@@ -309,16 +382,13 @@ void display() {
     glClear(GL_COLOR_BUFFER_BIT);
     drawBackground();
 
-    // Define maximum energy for scaling
-    float maxEnergy = 150.0f;
-
     // Draw stickmen and energy bars
     for (int i = 0; i < PLAYERS_PER_TEAM; i++) {
         // Team A (Red)
-        drawStickman(team1_x[i], -0.1, 0.7, 1.0, 0.0, 0.0);
+        drawStickman(team1_x[i], -0.1, 0.7, 1.0, 0.0, 0.0, team1_animation[i].vertical_offset);
 
         // Team B (Blue)
-        drawStickman(team2_x[i], -0.1, 0.7, 0.0, 0.0, 1.0);
+        drawStickman(team2_x[i], -0.1, 0.7, 0.0, 0.0, 1.0, team2_animation[i].vertical_offset);
 
         // Draw energy bars using actual game data
         if (game != NULL && game != MAP_FAILED) {
@@ -330,8 +400,8 @@ void display() {
             if (energyB < 0.0f) energyB = 0.0f;
 
             // Draw energy bars
-            drawEnergyBar(team1_x[i], -0.1, energyA, maxEnergy);
-            drawEnergyBar(team2_x[i], -0.1, energyB, maxEnergy);
+            drawEnergyBar(team1_x[i], -0.1 + team1_animation[i].vertical_offset, energyA, game->players_teamA[i].attributes.inital_energy);
+            drawEnergyBar(team2_x[i], -0.1 + team2_animation[i].vertical_offset, energyB, game->players_teamB[i].attributes.inital_energy);
 
             // Draw energy numbers above bars
             char energyTextA[10], energyTextB[10];
@@ -339,11 +409,31 @@ void display() {
             sprintf(energyTextB, "%.2f", energyB);
 
             // Position text above energy bars (y coordinate: -0.1 + 0.14)
-            renderText(team1_x[i] - 0.02, 0.04, energyTextA, 1.0, 0.0, 0.0); // Red team
-            renderText(team2_x[i] - 0.02, 0.04, energyTextB, 0.0, 0.0, 1.0); // Blue team
+            renderText(team1_x[i] - 0.02, 0.04 + team1_animation[i].vertical_offset, energyTextA, 1.0, 0.0, 0.0); // Red team
+            renderText(team2_x[i] - 0.02, 0.04 + team2_animation[i].vertical_offset, energyTextB, 0.0, 0.0, 1.0); // Blue team
+
+            // Animation text displays
+            if (readyAnimation) {
+                renderBigText(-0.1, 0.5, "READY!", 1.0, 1.0, 0.0);
+            }
+
+            if (startAnimation) {
+                readyAnimation = 0;
+                timer++;
+                if (timer > 50) {
+                    timer = 0;
+                    startAnimation = 0;
+                }
+                renderBigText(-0.1, 0.5, "START!", 0.0, 1.0, 0.0);
+            }
+
+            if(game->game_running == 0) {
+                renderBigText(-0.1, 0.5, "GAME OVER!", 1.0, 0.0, 0.0);
+            }
         }
     }
 
+    // Rest of display function remains the same
     // Draw rope segments
     float grip_offset = 0.05;
 
@@ -394,9 +484,12 @@ int main(int argc, char** argv) {
     glutInitWindowSize(800, 600);
     glutCreateWindow("Tug-of-War with Rectangular Rope");
     initializePlayers(team1_x, team2_x, PLAYERS_PER_TEAM);
-    // Install signal handlers for ready and start animations.
+    initializeAnimations(); // Add this line to initialize animations
+
+    // Rest of main function remains the same
     signal(SIGUSR1, handle_ready_signal);
     signal(SIGUSR2, handle_start_signal);
+    signal(SIGALRM, handle_alarm);
     glutDisplayFunc(display);
     glutTimerFunc(50, updateGame, 0);
     glutMainLoop();
