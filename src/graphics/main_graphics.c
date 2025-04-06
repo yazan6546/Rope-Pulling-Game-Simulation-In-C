@@ -8,6 +8,7 @@
 #include "config.h"
 
 #define PLAYERS_PER_TEAM 4
+#define WINNING_THRESHOLD 500
 
 float team1_x[PLAYERS_PER_TEAM];
 float team2_x[PLAYERS_PER_TEAM];
@@ -263,11 +264,11 @@ void updateGame(int value) {
     }
 
     float energy_diff = game->total_effort_A - game->total_effort_B;
-    rope_center += energy_diff * 0.005;
+    rope_center = energy_diff/WINNING_THRESHOLD * 0.15;
 
     // Limiting rope movement
-    if (rope_center > 0.6) rope_center = 0.6;
-    if (rope_center < -0.6) rope_center = -0.6;
+    if (rope_center > 0.15) rope_center = 0.15;
+    if (rope_center < -0.15) rope_center = -0.15;
 
     // Update player positions
     for (int i = 0; i < PLAYERS_PER_TEAM; i++) {
@@ -439,23 +440,23 @@ void display() {
     // Red team rope segments
     for (int i = 0; i < PLAYERS_PER_TEAM - 1; i++) {
         drawRopeSegment(
-            team1_x[i] + grip_offset, -0.1 + team1_animation[i].vertical_offset,
-            team1_x[i+1] - grip_offset, -0.1 + team1_animation[i+1].vertical_offset
+            team1_x[i] + grip_offset, -0.1,
+            team1_x[i+1] - grip_offset, -0.1
         );
     }
 
     // Blue team rope segments
     for (int i = PLAYERS_PER_TEAM - 1; i > 0; i--) {
         drawRopeSegment(
-            team2_x[i] + grip_offset, -0.1 + team2_animation[i].vertical_offset,
-            team2_x[i-1] - grip_offset, -0.1 + team2_animation[i-1].vertical_offset
+            team2_x[i] + grip_offset, -0.1,
+            team2_x[i-1] - grip_offset, -0.1
         );
     }
 
     // Middle rope segment
     drawRopeSegment(
-        team1_x[PLAYERS_PER_TEAM-1] + grip_offset, -0.1 + team1_animation[PLAYERS_PER_TEAM-1].vertical_offset,
-        team2_x[PLAYERS_PER_TEAM-1] + grip_offset, -0.1 + team2_animation[PLAYERS_PER_TEAM-1].vertical_offset
+        team1_x[PLAYERS_PER_TEAM-1] + grip_offset, -0.1,
+        team2_x[PLAYERS_PER_TEAM-1] + grip_offset, -0.1
     );
 
     // Draw the scoreboard
