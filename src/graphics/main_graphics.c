@@ -154,7 +154,7 @@ void drawScoreboard() {
     glEnd();
 
     // Team A info - centered
-    renderBigText(-0.735, 0.94, "TEAM A", 1.0, 1.0, 1.0);
+    renderText(-0.8, 0.925, "TEAM A", 1.0, 1.0, 1.0);
     sprintf(buffer, "Wins: %d", game->team_wins_A);
     renderText(-0.93, 0.88, buffer, 1.0, 1.0, 1.0);
     sprintf(buffer, "Score: %.1f", game->total_effort_A);
@@ -162,7 +162,7 @@ void drawScoreboard() {
 
     // Center game info - centered and prominent
     sprintf(buffer, "ROUND %d", game->round_num);
-    renderBigText(-0.09, 0.94, buffer, 1.0, 1.0, 0.7);
+    renderText(-0.09, 0.925, buffer, 1.0, 1.0, 0.7);
     sprintf(buffer, "Total: %.1f", game->total_score);
     renderText(-0.08, 0.88, buffer, 0.9, 0.9, 0.9);
 
@@ -180,7 +180,7 @@ void drawScoreboard() {
     renderText(0.1, 0.82, buffer, 0.8, 0.8, 0.8);
 
     // Team B info - centered
-    renderBigText(0.735, 0.94, "TEAM B", 1.0, 1.0, 1.0);
+    renderText(0.7, 0.925, "TEAM B", 1.0, 1.0, 1.0);
     sprintf(buffer, "Wins: %d", game->team_wins_B);
     renderText(0.55, 0.88, buffer, 1.0, 1.0, 1.0);
     sprintf(buffer, "Score: %.1f", game->total_effort_B);
@@ -535,25 +535,27 @@ void display() {
             }
 
             // game over
-            if(game->game_running == 0) {
-                renderBigText(-0.1, 0.5, "GAME OVER!", 1.0, 0.0, 0.0);
-            }
-
             if(game->round_running == 0) {
-                printf("Round finished\n");
                 display_team_win = 1;
             }
+
+            if(game->game_running == 0) {
+                renderBigText(-0.1, 0.5, "GAME OVER!", 1.0, 0.0, 0.0);
+                display_team_win = 0;
+            }
+
+            
 
             if(display_team_win) {
                 display_timer++;
 
                 // Display the winning team
                 if(game->last_winner == TEAM_A) {
-                    renderBigText(-0.1, 0.5, "RED TEAM WINS!", 1.0, 0.0, 0.0);
+                    renderBigText(-0.1, 0.3, "RED TEAM WINS!", 1.0, 0.0, 0.0);
                 } else if(game->last_winner == TEAM_B) {
-                    renderBigText(-0.1, 0.5, "BLUE TEAM WINS!", 0.0, 0.0, 1.0);
+                    renderBigText(-0.1, 0.3, "BLUE TEAM WINS!", 0.0, 0.0, 1.0);
                 } else {
-                    renderBigText(-0.1, 0.5, "DRAW!", 1.0, 1.0, 1.0);
+                    renderBigText(-0.1, 0.3, "DRAW!", 1.0, 1.0, 1.0);
                 }
 
                 if(display_timer > 50) {

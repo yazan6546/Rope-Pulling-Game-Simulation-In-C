@@ -126,6 +126,8 @@ int main(int argc, char *argv[]) {
 
         }
 
+        usleep(50000); // Sleep for 5 seconds to simulate round time
+
         game->total_score += game->round_score;
         game->game_running = check_game_conditions(game , &config, team_win);
 
