@@ -1,5 +1,3 @@
-# This starter workflow is for a CMake project running on a single platform. There is a different starter workflow if you need cross-platform coverage.
-# See: https://github.com/actions/starter-workflows/blob/main/ci/cmake-multi-platform.yml
 name: CMake on a single platform
 
 on:
@@ -8,15 +6,15 @@ on:
   pull_request:
     branches: [ "master" ]
 
+# Add permissions to allow release creation and asset uploads
+permissions:
+  contents: write
+
 env:
-  # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
   BUILD_TYPE: Release
 
 jobs:
   build:
-    # The CMake configure and build commands are platform agnostic and should work equally well on Windows or Mac.
-    # You can convert this to a matrix build if you need cross-platform coverage.
-    # See: https://docs.github.com/en/free-pro-team@latest/actions/learn-github-actions/managing-complex-workflows#using-a-build-matrix
     runs-on: ubuntu-latest
 
     steps:
@@ -25,19 +23,77 @@ jobs:
       - name: Install OpenGL and GLUT
         run: sudo apt-get update && sudo apt-get install -y freeglut3-dev libglu1-mesa-dev
 
-
       - name: Configure CMake
-        # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
-        # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
-        run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
+        run: cmake -B ${{ github.workspace }}/build -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }}
 
       - name: Build
-        # Build your program with the given configuration
-        run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
+        run: cmake --build ${{ github.workspace }}/build --config ${{ env.BUILD_TYPE }}
 
       - name: Test
-        working-directory: ${{github.workspace}}/build
-        # Execute tests defined by the CMake configuration.
-        # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
-        run: ctest -C ${{env.BUILD_TYPE}}
+        working-directory: ${{ github.workspace }}/build
+        run: ctest -C ${{ env.BUILD_TYPE }}
 
+      # Only create release on PR merge to master
+      - name: Check if PR merge
+        id: check_pr_merge
+        if: github.event_name == 'push'
+        run: |
+          PR_MERGE=$(git log -1 --pretty=format:%s | grep -c "^Merge pull request")
+          echo "is_pr_merge=$PR_MERGE" >> $GITHUB_OUTPUT
+
+      - name: Create Release
+        id: create_release
+        if: github.event_name == 'push' && steps.check_pr_merge.outputs.is_pr_merge == '1'
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.sha }}
+          release_name: Release ${{ github.sha }}
+          body: ${{ github.event.head_commit.message }}
+          draft: false
+          prerelease: false
+
+      - name: Upload referee
+        if: github.event_name == 'push' && steps.check_pr_merge.outputs.is_pr_merge == '1'
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ${{ github.workspace }}/bin/referee
+          asset_name: referee
+          asset_content_type: application/octet-stream
+
+      - name: Upload player
+        if: github.event_name == 'push' && steps.check_pr_merge.outputs.is_pr_merge == '1'
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ${{ github.workspace }}/bin/player
+          asset_name: player
+          asset_content_type: application/octet-stream
+
+      - name: Upload rope_game_graphics
+        if: github.event_name == 'push' && steps.check_pr_merge.outputs.is_pr_merge == '1'
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ${{ github.workspace }}/bin/rope_game_graphics
+          asset_name: rope_game_graphics
+          asset_content_type: application/octet-stream
+
+      - name: Upload rope_pulling_game_main
+        if: github.event_name == 'push' && steps.check_pr_merge.outputs.is_pr_merge == '1'
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ${{ github.workspace }}/bin/rope_pulling_game_main
+          asset_name: rope_pulling_game_main
+          asset_content_type: application/octet-stream
