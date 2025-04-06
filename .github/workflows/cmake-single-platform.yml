@@ -42,7 +42,7 @@ jobs:
           cp build/rope_pulling_game_main dist/
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: binaries
           path: dist/
