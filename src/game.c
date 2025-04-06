@@ -3,6 +3,8 @@
 //
 
 #include "game.h"
+
+#include <message.h>
 #include <string.h>
 
 
@@ -33,30 +35,46 @@ Team simulate_round(int pipe_fds_team_A[], int pipe_fds_team_B[], const Config *
 
     // Process Team A efforts
     for (int i = 0; i < config->NUM_PLAYERS/2; i++) {
-        float effort;
-        ssize_t bytes = read(pipe_fds_team_A[i], &effort, sizeof(float));
+        Message message;
+        ssize_t bytes = read(pipe_fds_team_A[i], &message, sizeof(Message));
 
-        if (bytes == sizeof(float) || bytes == 0) {
+        if (bytes == sizeof(Message) || bytes == 0) {
             snprintf(temp_buffer, sizeof(temp_buffer),
-                     "Team A - Player %d effort: %.2f\n", game->players_teamA[i].number, effort);
+                     "Team A - Player %d effort: %.2f\n", game->players_teamA[i].number, message.effort);
             strcat(output_buffer, temp_buffer);
-            total_effort_A += effort;
-            game->players_teamA[i].attributes.energy = effort / game->players_teamA[i].position;
+            total_effort_A += message.effort;
+            game->players_teamA[i].attributes.energy = message.effort / game->players_teamA[i].position;
+            game->players_teamA[i].state = message.state;
         }
+        else {
+            perror("read");
+            fflush(stderr);
+            usleep(10000);
+            // Sleep briefly to allow output to be written
+            exit(1);
+        }
+
     }
 
     // Process Team B efforts
     for (int i = 0; i < config->NUM_PLAYERS/2; i++) {
-        float effort;
-        ssize_t bytes = read(pipe_fds_team_B[i], &effort, sizeof(float));
+        Message message;
+        ssize_t bytes = read(pipe_fds_team_B[i], &message, sizeof(Message));
 
-        if (bytes == sizeof(float) || bytes == 0) {
+        if (bytes == sizeof(Message) || bytes == 0) {
             snprintf(temp_buffer, sizeof(temp_buffer),
-                     "Team B - Player %d effort: %.2f\n", game->players_teamB[i].number, effort);
+                     "Team B - Player %d effort: %.2f\n", game->players_teamB[i].number, message.effort);
             strcat(output_buffer, temp_buffer);
-            total_effort_B += effort;
-            game->players_teamB[i].attributes.energy = effort / game->players_teamB[i].position;
-
+            total_effort_B += message.effort;
+            game->players_teamB[i].attributes.energy = message.effort / game->players_teamB[i].position;
+            game->players_teamB[i].state = message.state;
+        }
+        else {
+            perror("read");
+            fflush(stderr);
+            usleep(10000);
+            // Sleep briefly to allow output to be written
+            exit(1);
         }
     }
 

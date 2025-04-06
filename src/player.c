@@ -12,6 +12,7 @@
 #include <stdarg.h>
 #include <sys/mman.h>
 #include "game.h"
+#include "message.h"
 
 int write_fd;
 Team my_team;
@@ -81,8 +82,14 @@ void process_player_state() {
 
     // send energy updates every 1 sec
     // if (energy_update){
+
     float effort = current_player->attributes.energy * ((float) current_player->position);
-    write(write_fd, &effort, sizeof(float));
+
+        Message message;
+        message.state = current_player->state;
+        message.effort = effort;
+
+    write(write_fd, &message, sizeof(Message));
     // } else {
     //     alarm(1);  // Schedule next energy update
     // }
