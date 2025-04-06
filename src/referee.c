@@ -21,7 +21,7 @@ void generate_and_align(Player *players, int num_players, Team team, int *read_f
 void cleanup_processes(const Player *players_teamA, const Player *players_teamB, int NUM_PLAYERS);
 void print_with_time(const char *format, ...);
 void send_new_positions(Player *players, int num_players, int pos_pipe_fds[]);
-void read_player_energies(Player *players, int num_players, int read_fds[]);
+void read_player_energies(Player *players, int num_players, int pos_pipe_fds[]);
 void change_player_positions(Player *player, int num_players);
 
 volatile int elapsed_time = 0;

@@ -366,6 +366,7 @@ void drawEnergyBar(float x, float y, float energy, float maxEnergy) {
     }
 
     // Draw filled portion
+
     glBegin(GL_QUADS);
     glVertex2f(barLeft, barY);
     glVertex2f(barLeft + barWidth * percentage, barY);
