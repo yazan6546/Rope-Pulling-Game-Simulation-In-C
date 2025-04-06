@@ -7,29 +7,29 @@ find_package(OpenGL REQUIRED)
 find_package(GLUT REQUIRED)
 
 add_executable(referee src/referee.c src/utils/config.c
-src/utils/random.c src/utils/player_utils.c src/utils/file.c src/utils/referee_orders.c src/game.c)
+        src/utils/random.c src/utils/player_utils.c src/utils/referee_orders.c src/game.c)
 
 add_executable(player src/player.c src/utils/player_utils.c src/utils/random.c src/utils/config.c src/utils/file.c src/utils/referee_orders.c src/game.c)
 
-add_executable(rope_game_graphics src/graphics/main_graphics.c)
+add_executable(rope_game_graphics src/graphics/main_graphics.c src/utils/config.c)
 
-add_executable(rope_pulling_game_main src/main.c src/game.c)
+add_executable(rope_pulling_game_main src/main.c src/game.c src/utils/config.c)
 
 target_link_libraries(rope_game_graphics
-    PRIVATE
-    ${OPENGL_LIBRARIES}
-    ${GLUT_LIBRARIES} m
+        PRIVATE
+        ${OPENGL_LIBRARIES}
+        ${GLUT_LIBRARIES} m
 )
 
 target_include_directories(rope_game_graphics
-    PRIVATE
-    ${OPENGL_INCLUDE_DIRS}
-    ${GLUT_INCLUDE_DIRS}
+        PRIVATE
+        ${OPENGL_INCLUDE_DIRS}
+        ${GLUT_INCLUDE_DIRS}
 )
 
 set_target_properties(referee
-    PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin
+        PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin
 )
 
 set_target_properties(player
@@ -49,11 +49,11 @@ set_target_properties(rope_pulling_game_main
 
 
 add_custom_target(
-    run
-    COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/bin/rope_pulling_game_main
-    DEPENDS rope_pulling_game_main
-    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
- master
+        run
+        COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/bin/rope_pulling_game_main
+        DEPENDS rope_pulling_game_main
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+        master
 )
 
 include_directories(include)
