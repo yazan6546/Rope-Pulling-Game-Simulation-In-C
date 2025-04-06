@@ -507,9 +507,26 @@ void display() {
             sprintf(energyTextA, "%.2f", energyA);
             sprintf(energyTextB, "%.2f", energyB);
 
-            // Position text above energy bars (y coordinate: -0.1 + 0.14)
-            renderText(team1_x[i] - 0.02, 0.04 + team1_animation[i].vertical_offset, energyTextA, 1.0, 0.0, 0.0); // Red team
-            renderText(team2_x[i] - 0.02, 0.04 + team2_animation[i].vertical_offset, energyTextB, 0.0, 0.0, 1.0); // Blue team
+            // Position text above energy bars
+            renderText(team1_x[i] - 0.02, 0.04 + team1_animation[i].vertical_offset, energyTextA, 1.0, 0.0, 0.0);
+            renderText(team2_x[i] - 0.02, 0.04 + team2_animation[i].vertical_offset, energyTextB, 0.0, 0.0, 1.0);
+
+            // Draw player numbers above heads
+            char playerNum[10];
+
+            // Team A player number
+            sprintf(playerNum, "#%d", game->players_teamA[i].number);
+            renderText(team1_x[i] - 0.02,
+                     0.12 + team1_animation[i].vertical_offset,  // Position above energy text
+                     playerNum,
+                     0, 0, 0);  // Light red
+
+            // Team B player number
+            sprintf(playerNum, "#%d", game->players_teamB[i].number);
+            renderText(team2_x[i] - 0.02,
+                     0.12 + team2_animation[i].vertical_offset,
+                     playerNum,
+                     0, 0, 0);  // Light blue
 
             // Animation text displays
             if (readyAnimation) {
@@ -539,13 +556,12 @@ void display() {
             }
 
             if(game->round_running == 0) {
-                printf("Round finished\n");
                 display_team_win = 1;
             }
 
             if(display_team_win) {
                 display_timer++;
-               
+
                 // Display the winning team
                 if(game->last_winner == TEAM_A) {
                     renderBigText(-0.1, 0.5, "RED TEAM WINS!", 1.0, 0.0, 0.0);
