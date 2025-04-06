@@ -6,6 +6,10 @@ on:
   pull_request:
     branches: [ "master" ]
 
+# Add permissions to allow release creation and asset uploads
+permissions:
+  contents: write
+
 env:
   BUILD_TYPE: Release
 
@@ -29,54 +33,67 @@ jobs:
         working-directory: ${{ github.workspace }}/build
         run: ctest -C ${{ env.BUILD_TYPE }}
 
+      # Only create release on PR merge to master
+      - name: Check if PR merge
+        id: check_pr_merge
+        if: github.event_name == 'push'
+        run: |
+          PR_MERGE=$(git log -1 --pretty=format:%s | grep -c "^Merge pull request")
+          echo "is_pr_merge=$PR_MERGE" >> $GITHUB_OUTPUT
+
       - name: Create Release
         id: create_release
+        if: github.event_name == 'push' && steps.check_pr_merge.outputs.is_pr_merge == '1'
         uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: ${{ github.sha }}
           release_name: Release ${{ github.sha }}
-          body: ${{ github.event.pull_request.body || 'No description provided' }}
+          body: ${{ github.event.head_commit.message }}
           draft: false
           prerelease: false
 
       - name: Upload referee
+        if: github.event_name == 'push' && steps.check_pr_merge.outputs.is_pr_merge == '1'
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ${{ github.workspace }}/build/referee
+          asset_path: ${{ github.workspace }}/bin/referee
           asset_name: referee
           asset_content_type: application/octet-stream
 
       - name: Upload player
+        if: github.event_name == 'push' && steps.check_pr_merge.outputs.is_pr_merge == '1'
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ${{ github.workspace }}/build/player
+          asset_path: ${{ github.workspace }}/bin/player
           asset_name: player
           asset_content_type: application/octet-stream
 
-      - name: Upload rope\_game\_graphics
+      - name: Upload rope_game_graphics
+        if: github.event_name == 'push' && steps.check_pr_merge.outputs.is_pr_merge == '1'
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ${{ github.workspace }}/build/rope_game_graphics
+          asset_path: ${{ github.workspace }}/bin/rope_game_graphics
           asset_name: rope_game_graphics
           asset_content_type: application/octet-stream
 
-      - name: Upload rope\_pulling\_game\_main
+      - name: Upload rope_pulling_game_main
+        if: github.event_name == 'push' && steps.check_pr_merge.outputs.is_pr_merge == '1'
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ${{ github.workspace }}/build/rope_pulling_game_main
+          asset_path: ${{ github.workspace }}/bin/rope_pulling_game_main
           asset_name: rope_pulling_game_main
           asset_content_type: application/octet-stream
