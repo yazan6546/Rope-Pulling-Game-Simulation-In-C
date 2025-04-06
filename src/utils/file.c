@@ -58,6 +58,7 @@ char* find_config_file(char *argv) {
 
 void handling_file(int argc, char* argv, char **config_path) {
 
+
     // Check command-line argument first
     if (argc > 1) {
         *config_path = argv;

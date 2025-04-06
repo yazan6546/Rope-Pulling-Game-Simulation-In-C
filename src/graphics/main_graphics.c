@@ -247,6 +247,7 @@ void updateGame(int value) {
     glutPostRedisplay();
     glutTimerFunc(50, updateGame, 0);
 }
+
 //rope between players
 void drawRopeSegment(float x1, float y1, float x2, float y2) {
     float thickness = 0.01;
@@ -293,6 +294,7 @@ void drawEnergyBar(float x, float y, float energy, float maxEnergy) {
     }
 
     // Draw filled portion
+
     glBegin(GL_QUADS);
     glVertex2f(barLeft, barY);
     glVertex2f(barLeft + barWidth * percentage, barY);

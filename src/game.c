@@ -3,6 +3,7 @@
 //
 
 #include "game.h"
+#include <string.h>
 
 
 void init_game(Game *game) {
@@ -10,7 +11,7 @@ void init_game(Game *game) {
     game->elapsed_time = 0;
     game->total_effort_A = 0;
     game->total_effort_B = 0;
-    game->round_num = 0;
+    game->round_num = 1;
     game->game_running = 1;
     game->team_wins_A = 0;
     game->team_wins_B = 0;
@@ -126,7 +127,7 @@ Team simulate_round(int pipe_fds_team_A[], int pipe_fds_team_B[], const Config *
 }
 
 int check_game_conditions(const Game *game, const Config *config, Team team_win) {
-    if (game->round_num >= config->NUM_ROUNDS) {
+    if (game->round_num > config->NUM_ROUNDS) {
         printf("NUM ROUNDS\n");
         fflush(stdout);
         return 0;
