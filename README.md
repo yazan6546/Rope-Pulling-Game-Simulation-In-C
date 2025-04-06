@@ -110,7 +110,7 @@ sudo apt-get install build-essential libgl1-mesa-dev freeglut3-dev
 
 To build and run the program, execute the following commands in the terminal:
 ```bash
-chmod 777 build.sh
+chmod +x build.sh
 ./build.sh
 cd bin && ./rope_pulling_game_main
 ```
