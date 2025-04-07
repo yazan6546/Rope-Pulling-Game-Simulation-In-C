@@ -118,7 +118,7 @@ cd bin && ./rope_pulling_game_main
 or 
 ```bash
 mkdir build
-cmake ..
+cmake -B build -S .
 make 
 cd bin && ./rope_pulling_game_main
 ```
