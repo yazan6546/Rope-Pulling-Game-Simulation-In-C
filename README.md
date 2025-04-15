@@ -2,6 +2,25 @@
 
 This project is a multi-process simulation of a rope pulling (tug-of-war) game using C. The simulation involves two teams competing in rounds, with a referee process coordinating the game. The program uses signals, pipes, and shared memory for inter-process communication and visualizes the game using OpenGL.
 
+
+## Table of Contents
+
+- [Project Structure](#project-structure)
+- [Overview](#overview)
+  - [Key Components](#key-components)
+- [Player Attributes and States](#player-attributes-and-states)
+  - [Player Attributes](#player-attributes)
+  - [Player States](#player-states)
+- [Configuration Parameters](#configuration-parameters)
+- [Inter-Process Communication](#inter-process-communication)
+- [Game Mechanics](#game-mechanics)
+- [Dependencies](#dependencies)
+- [Build and Run](#build-and-run)
+- [Demo Video](#demo-video)
+- [Team Members](#team-members)
+
+
+
 ## Project Structure
 
 ```plaintext
@@ -122,6 +141,12 @@ cmake -B build -S .
 make 
 cd bin && ./rope_pulling_game_main
 ```
+
+## Demo Video
+
+Watch the simulation demo on YouTube:
+
+[![Demo Video](https://img.youtube.com/vi/AXqjdOPp4Ww/0.jpg)](https://youtu.be/AXqjdOPp4Ww)
 
 ## Team Members
 
