@@ -16,8 +16,6 @@ This project is a multi-process simulation of a rope pulling (tug-of-war) game u
 - [Game Mechanics](#game-mechanics)
 - [Dependencies](#dependencies)
 - [Build and Run](#build-and-run)
-  - [Option 1: Using build.sh](#option-1-using-buildsh)
-  - [Option 2: Using CMake](#option-2-using-cmake)
 - [Demo Video](#demo-video)
 - [Team Members](#team-members)
 
@@ -142,7 +140,7 @@ mkdir build
 cmake -B build -S .
 make 
 cd bin && ./rope_pulling_game_main
-
+```
 
 ## Demo Video
 
